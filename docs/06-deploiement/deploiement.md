@@ -170,21 +170,31 @@ Les secrets de production sont saisis dans les tableaux de bord Vercel et Render
 
 ## 4. Intégration et déploiement continus
 
-**Proposition** : GitHub Actions, avec le déploiement automatique de Vercel et de Render branchés sur la branche `main`.
+L'intégration continue est un workflow GitHub Actions, `.github/workflows/ci.yml`. Il se lance à chaque pull request vers `develop`, `main` ou une branche `release/…`, et à chaque push sur `develop`, `main` et les branches `release/…` (non protégées, elles peuvent recevoir un push direct pendant la recette). Trois tâches tournent en parallèle ; un nouveau push sur la même branche annule le passage en cours.
 
 ```mermaid
 flowchart LR
-  P["Push / pull request"] --> L["npm ci<br/>lint + typecheck"]
-  L --> U["Tests unitaires"]
-  U --> I["Tests d'intégration<br/>+ temps réel<br/>(service postgres:17)"]
-  I --> B["docker build web et api"]
-  B --> E{"Branche main ?"}
-  E -- oui --> E2E["Tests end-to-end<br/>docker compose + Playwright"]
-  E2E --> D["Déploiement automatique<br/>Vercel (web) · Render (api)"]
-  E -- non --> F["Fin : statut sur la PR"]
+  P["Pull request / push"] --> C["checks<br/>format, lint, types,<br/>tests unitaires et d'intégration, build"]
+  P --> D["database-e2e<br/>service postgres:17 :<br/>migrations, seeds, Playwright"]
+  P --> K["docker<br/>construction des images api et web"]
+  C --> S{"Tout est vert ?"}
+  D --> S
+  K --> S
+  S -- oui --> M["Fusion possible"]
+  S -- non --> R["Fusion bloquée"]
 ```
 
-Une pull request ne peut être fusionnée que si la CI est verte.
+| Tâche | Étapes |
+|---|---|
+| `checks` | `npm ci` (Node lu dans `.nvmrc`, cache npm), génération du client Prisma, `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` |
+| `database-e2e` | Base `postgres:17` fournie par GitHub ; fichiers `.env` créés à partir des `.env.example` (secrets propres à la CI) ; `prisma migrate deploy`, `npm run seed`, `npm run seed:demo` (valident la migration et les seeds sur une base neuve) ; Chromium installé, puis `npm run test:e2e`. En cas d'échec, le rapport Playwright est téléchargeable dans les artefacts du passage (7 jours) |
+| `docker` | `docker build` des images `api` et `web`, sans publication |
+
+En CI, le script `db:up` ne lance pas `docker compose` (variable `CI`) : la base est le service PostgreSQL de GitHub.
+
+Le ruleset GitHub de `main` et `develop` exige que ces trois tâches réussissent (« Require status checks to pass ») : une pull request ne peut être fusionnée que si la CI est verte.
+
+Le déploiement continu (Vercel pour le front, Render pour l'API, Neon pour la base) est branché sur `main` : chaque release fusionnée dans `main` est déployée automatiquement (voir §5).
 
 ---
 
