@@ -1,0 +1,14 @@
+@use 'sass:map';
+@use '../../variables' as *;
+@use '../../mixins' as *;
+
+.icon {
+  display: inline-block;
+  line-height: 1;
+}
+
+@each $name in map.keys($icons-names) {
+  .icon--#{$name} {
+    @include add-icon($name);
+  }
+}

@@ -6,7 +6,7 @@ playwright-report
 docs
 
 # Fichiers générés
-apps/web/src/styles/icons/_names.scss
+apps/web/src/styles/variables/_icons.scss
 
 # Fichiers fournis par des outils externes (IcoMoon…)
 apps/web/src/assets
