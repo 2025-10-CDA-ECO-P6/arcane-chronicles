@@ -28,7 +28,7 @@ Vérifier en priorité ce qui casserait la fonctionnalité principale : les **dr
 | Commandes | `npm test` (Vitest) et `npm run test:e2e` (Playwright, qui lance l'application si elle ne tourne pas) |
 | Configuration Playwright | Deux profils sur Chromium : `mj-desktop` et `joueur-mobile` (375 px). Firefox et WebKit (NF-03) seront ajoutés avec les premiers parcours complets |
 | Premiers tests | `GET /api/health` (intégration), utilitaire d'appel à l'API `apiFetch` (unitaire), affichage de la page d'accueil (end-to-end, deux profils) |
-| CI | À mettre en place (GitHub Actions) avec le premier déploiement |
+| CI | GitHub Actions (`.github/workflows/ci.yml`) à chaque pull request : tests unitaires et d'intégration, puis migrations, seeds et tests end-to-end sur une base PostgreSQL 17 neuve (voir [déploiement §4](../06-deploiement/deploiement.md)) |
 | Recette manuelle | — | Scénario de recette du MVP, accessibilité, navigateurs | En fin d'itération |
 
 ---

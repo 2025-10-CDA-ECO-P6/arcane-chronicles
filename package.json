@@ -17,6 +17,7 @@
     "build": "npm run build -w packages/shared && npm run build -w apps/api && npm run build -w apps/web",
     "lint": "eslint .",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "typecheck": "npm run build -w packages/shared && npm run typecheck -w apps/api && npm run typecheck -w apps/web",
     "test": "vitest run",
     "test:e2e": "playwright test",
@@ -28,7 +29,7 @@
     "seed:demo": "npm run seed:demo -w apps/api",
     "icons": "npm run icons -w apps/web",
     "prisma": "npm exec -w apps/api -- prisma",
-    "db:up": "[ -n \"$DEVCONTAINER\" ] || docker compose up -d --wait db"
+    "db:up": "[ -n \"$DEVCONTAINER\" ] || [ -n \"$CI\" ] || docker compose up -d --wait db"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

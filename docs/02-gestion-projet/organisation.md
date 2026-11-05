@@ -50,7 +50,7 @@ Une user story est terminée quand :
 | `hotfix/<clé Jira>` | Correction urgente d'un bug en production, créée depuis `main` et fusionnée dans `main` ; `main` est ensuite fusionnée dans `develop` et dans la release en recette s'il y en a une |
 | Fin de release | La release validée est fusionnée dans `main` (déploiement), puis `main` est fusionnée dans `develop` : `develop` récupère les corrections de la release et le commit de fusion, et les deux branches restent alignées |
 | Méthodes de fusion | `feature/…` → `develop`, `releasefix/…` → `release/…` et `hotfix/…` → `main` : **squash** (un commit par ticket). `release/…` → `main`, `main` → `develop` et `main` → `release/…` : **merge**, jamais squash, pour que les branches partagent les mêmes commits |
-| Protection | Un ruleset GitHub protège `main` et `develop` : suppression et force push interdits, pull request obligatoire |
+| Protection | Un ruleset GitHub protège `main`, `develop` et les branches `release/**` : suppression et force push interdits, pull request obligatoire et CI verte avant toute fusion. Les branches de release sont conservées comme historique des versions |
 | Commits | En anglais, préfixés par la clé Jira : `KAN-514: sort turn order by initiative`. Les commits d'initialisation du projet, sans ticket, utilisent `init(<partie>): …` et `design-system: …` |
 | Pull requests | Titre au format `<branche source> into <branche cible>`, par exemple `feature/KAN-514 into develop` ; fusionnée quand la CI est verte |
 
