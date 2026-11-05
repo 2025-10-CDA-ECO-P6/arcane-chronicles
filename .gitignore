@@ -1,0 +1,33 @@
+node_modules/
+.env
+.env.*
+!.env.example
+
+# Next.js
+apps/web/.next/
+apps/web/out/
+# Régénérés par Next.js à chaque `next dev` / `next build`
+apps/web/next-env.d.ts
+apps/web/AGENTS.md
+
+# Build output
+apps/api/dist/
+packages/shared/dist/
+
+# Prisma
+apps/api/prisma/*.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Tests / coverage
+coverage/
+test-results/
+playwright-report/
+
+# OS / editor
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+apps/web/src/assets/images_originals_backup/

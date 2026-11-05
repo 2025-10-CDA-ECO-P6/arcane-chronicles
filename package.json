@@ -1,0 +1,51 @@
+{
+  "name": "arcane-chronicles",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Application web d'aide au Maître du Jeu pour Donjons & Dragons 5e.",
+  "engines": {
+    "node": ">=24.0.0 <25.0.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "predev": "npm run db:up && npm run build -w packages/shared",
+    "dev": "npm run dev -w packages/shared & npm run dev -w apps/api & npm run dev -w apps/web",
+    "build": "npm run build -w packages/shared && npm run build -w apps/api && npm run build -w apps/web",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "typecheck": "npm run build -w packages/shared && npm run typecheck -w apps/api && npm run typecheck -w apps/web",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "prisma:generate": "npm run prisma:generate -w apps/api",
+    "prisma:migrate": "npm run prisma:migrate -w apps/api",
+    "seed": "npm run seed -w apps/api",
+    "predb:reset": "npm run db:up",
+    "db:reset": "npm run db:reset -w apps/api",
+    "seed:demo": "npm run seed:demo -w apps/api",
+    "icons": "npm run icons -w apps/web",
+    "prisma": "npm exec -w apps/api -- prisma",
+    "db:up": "[ -n \"$DEVCONTAINER\" ] || docker compose up -d --wait db"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.64.1",
+    "eslint": "10.14.0",
+    "prettier": "3.9.10",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.1",
+    "vitest": "5.1.0"
+  },
+  "allowScripts": {
+    "argon2@0.45.2": true,
+    "prisma@7.10.1": true,
+    "@prisma/engines@7.10.1": true,
+    "@parcel/watcher@2.6.0": true,
+    "@scarf/scarf@1.4.0": true,
+    "esbuild@0.28.2": true,
+    "fsevents@2.3.3": true
+  }
+}
