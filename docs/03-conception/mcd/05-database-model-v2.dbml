@@ -1,0 +1,658 @@
+// =====================================================================
+// Arcane Chronicles — Data model v2 (proposal, to be validated)
+// D&D 5e only · PostgreSQL (Neon) + Prisma
+// Rules: only the Game Master (GM) has an account; players join a game
+// through a link with a nickname. Game state (HP, attitudes, quests) is
+// stored directly on the campaign's elements; duplicating a campaign
+// resets that state.
+// Simplified rules, "paper" spirit: players roll real dice, the GM
+// applies the result (e.g. removes HP). Nothing is auto-resolved.
+// Derived values are NOT stored (computed in code):
+//  - ability modifiers = (score - 10) / 2, rounded down
+//  - proficiency bonus (from level)
+//  - skill modifiers: skills.ability modifier (+ proficiency bonus if the
+//    skill is in race_skills, class_skills or background_skills)
+//  - armor class = worn armor value (or 10 if none) + DEX modifier
+//  - initiative bonus = DEX modifier ; "Instinct" = perception bonus
+//  - hit dice shown on the sheet ("5D10") = level x class hit die
+//  - combat turn order = combatants sorted by initiative
+//  - dead = current_hp is 0
+//  - quest / chapter progress = completed objectives / total
+//    (a chapter counts its side quests + the main quest objectives of that chapter)
+// Resuming months later: all state lives on campaign elements, and
+// chapters.current_scene_id + scenes.played_at say where the group stopped.
+// Unique characters (heroes, quest NPCs) keep ONE live state on their
+// sheet across scenes and chapters; generic NPCs/monsters (guards...)
+// get one independent row per placement in a scene.
+// =====================================================================
+
+// ---------- Enums ----------
+
+enum chapter_status {
+  NEW          // never played yet
+  IN_PROGRESS  // started, possibly over several sessions
+  COMPLETED    // closed by the GM
+}
+
+enum character_type {
+  HERO
+  NPC
+  MONSTER
+}
+
+enum alignment {
+  LAWFUL_GOOD
+  NEUTRAL_GOOD
+  CHAOTIC_GOOD
+  LAWFUL_NEUTRAL
+  TRUE_NEUTRAL
+  CHAOTIC_NEUTRAL
+  LAWFUL_EVIL
+  NEUTRAL_EVIL
+  CHAOTIC_EVIL
+}
+
+enum attitude {
+  FRIENDLY
+  NEUTRAL
+  HOSTILE
+}
+
+enum creature_status {
+  ACTIVE
+  WAITING
+  // no DEAD value: dead = current_hp is 0 (the "Kill" button sets HP to 0)
+}
+
+enum ability_score {
+  STRENGTH
+  DEXTERITY
+  CONSTITUTION
+  INTELLIGENCE
+  WISDOM
+  CHARISMA
+}
+
+enum ability_source {
+  CLASS
+  RACE
+  BACKGROUND
+  LEARNED
+  ITEM
+}
+
+enum action_type {
+  ACTION
+  BONUS_ACTION
+  REACTION
+  PASSIVE
+}
+
+enum item_type {
+  WEAPON
+  ARMOR
+  CONSUMABLE
+  TOOL
+  ARTIFACT
+  MISC
+}
+
+enum quest_type {
+  MAIN  // campaign quest: exactly one per campaign, spans every chapter
+  SIDE  // chapter quest only
+}
+
+enum quest_status {
+  INACTIVE
+  ACTIVE
+  COMPLETED
+  FAILED
+}
+
+enum game_status {
+  LOBBY
+  IN_PROGRESS
+  ENDED
+}
+
+enum participant_status {
+  CONNECTED
+  READY
+  DISCONNECTED
+}
+
+enum combat_status {
+  IN_PROGRESS
+  ENDED
+}
+
+// ---------- Accounts and campaigns ----------
+
+Table users {
+  id uuid [pk]
+  display_name varchar [not null]
+  email varchar [not null, unique]
+  password_hash varchar [not null]
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null]
+  Note: 'Game Masters only (players have no account).'
+}
+
+Table campaigns {
+  id uuid [pk]
+  gm_id uuid [ref: > users.id, not null]
+  source_campaign_id uuid [ref: > campaigns.id, note: 'Catalogue campaign this one was duplicated from']
+  title varchar [not null]
+  description text
+  image_url varchar
+  is_public boolean [not null, default: false, note: 'Shown in the visitor catalogue and can be duplicated. Publishing a campaign automatically publishes every item, ability and effect it uses (informative message to confirm at publication); a duplicated campaign then simply points to these public elements']
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null]
+}
+
+Table chapters {
+  id uuid [pk]
+  campaign_id uuid [ref: > campaigns.id, not null]
+  title varchar [not null]
+  position int [not null]
+  narration text [note: 'Chapter description = narration read at the start of the session']
+  image_url varchar
+  map_url varchar [note: 'Uploaded map (image)']
+  status chapter_status [not null, default: 'NEW', note: 'NEW until first played; IN_PROGRESS while unfinished (can span sessions); COMPLETED when the GM closes it']
+  current_scene_id uuid [ref: > scenes.id, note: 'Where the group stopped; a new game on this chapter resumes here']
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null]
+
+  indexes {
+    (campaign_id, position) [unique]
+  }
+}
+
+Table scenes {
+  id uuid [pk]
+  chapter_id uuid [ref: > chapters.id, not null]
+  title varchar [not null]
+  position int [not null, note: 'position 1 = starting scene']
+  narration text
+  image_url varchar
+  map_url varchar [note: 'Uploaded map (image)']
+  played_at timestamp [note: 'Set the first time the group enters the scene; empty = never played']
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null]
+
+  indexes {
+    (chapter_id, position) [unique]
+  }
+}
+
+Table gm_notes {
+  id uuid [pk]
+  chapter_id uuid [ref: > chapters.id, not null]
+  content text [not null, note: 'The GM names the scene by hand if needed, e.g. "On the ship deck: ..."']
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null]
+  Note: 'GM private notes for the whole chapter (= the whole session), readable from every scene. Never sent to players.'
+}
+
+// ---------- Characters (heroes, NPCs, monsters: one single sheet) ----------
+
+Table races {
+  id uuid [pk]
+  name varchar [not null, unique]
+  image_url varchar
+  Note: 'D&D 5e reference data (seed).'
+}
+
+Table classes {
+  id uuid [pk]
+  name varchar [not null, unique]
+  image_url varchar
+  hit_die varchar [not null, note: 'e.g. D10']
+  Note: 'D&D 5e reference data (seed).'
+}
+
+Table race_abilities {
+  race_id uuid [ref: > races.id, not null]
+  ability_id uuid [ref: > abilities.id, not null]
+
+  indexes {
+    (race_id, ability_id) [pk]
+  }
+  Note: 'Innate racial traits (e.g. orc: Relentless Endurance). Copied to the character at creation.'
+}
+
+Table class_abilities {
+  class_id uuid [ref: > classes.id, not null]
+  ability_id uuid [ref: > abilities.id, not null]
+  required_level int [not null, default: 1, note: 'e.g. monk: Martial Arts = 1, Ki = 2']
+
+  indexes {
+    (class_id, ability_id) [pk]
+  }
+  Note: 'Class features unlocked by level. Copied to the character at creation and on level-up.'
+}
+
+Table skills {
+  id uuid [pk]
+  name varchar [not null, unique, note: 'e.g. Acrobatics, Athletics, Perception']
+  ability ability_score [not null, note: 'Ability used for the modifier, e.g. Acrobatics -> DEXTERITY']
+  Note: 'The 18 D&D 5e skills (reference data, seed). Skill modifier = ability modifier (+ proficiency bonus if the character\'s race, class or background grants the skill).'
+}
+
+Table race_skills {
+  race_id uuid [ref: > races.id, not null]
+  skill_id uuid [ref: > skills.id, not null]
+
+  indexes {
+    (race_id, skill_id) [pk]
+  }
+  Note: 'Skill proficiencies granted by the race (e.g. orc: Intimidation). Read live to compute the character\'s skill modifiers.'
+}
+
+Table class_skills {
+  class_id uuid [ref: > classes.id, not null]
+  skill_id uuid [ref: > skills.id, not null]
+
+  indexes {
+    (class_id, skill_id) [pk]
+  }
+  Note: 'Fixed list of skill proficiencies granted by the class (no choice). Read live to compute the character\'s skill modifiers.'
+}
+
+Table backgrounds {
+  id uuid [pk]
+  name varchar [not null, unique, note: 'e.g. Soldier, Sage, Criminal']
+  image_url varchar
+  Note: 'D&D 5e reference data (seed).'
+}
+
+Table background_abilities {
+  background_id uuid [ref: > backgrounds.id, not null]
+  ability_id uuid [ref: > abilities.id, not null]
+
+  indexes {
+    (background_id, ability_id) [pk]
+  }
+  Note: 'Background feature (e.g. Soldier: Military Rank). Copied to the character at creation.'
+}
+
+Table background_skills {
+  background_id uuid [ref: > backgrounds.id, not null]
+  skill_id uuid [ref: > skills.id, not null]
+
+  indexes {
+    (background_id, skill_id) [pk]
+  }
+  Note: 'Skill proficiencies granted by the background (e.g. Soldier: Athletics, Intimidation). Read live to compute the character\'s skill modifiers.'
+}
+
+Table characters {
+  id uuid [pk]
+  campaign_id uuid [ref: > campaigns.id, not null]
+  source_id uuid [ref: > characters.id, note: 'Catalogue character it was imported or duplicated from']
+  type character_type [not null]
+  name varchar [not null]
+  image_url varchar
+  race_id uuid [ref: > races.id]
+  class_id uuid [ref: > classes.id, note: 'Usually empty for a monster']
+  level int [not null, default: 1, note: 'Goes up automatically when xp crosses a D&D threshold; the GM can also change it with +/- (e.g. create a level 10 monster)']
+  xp int [not null, default: 0]
+  is_unique boolean [not null, default: false, note: 'true for heroes and quest NPCs: one live state shared by every scene/chapter they appear in']
+  alignment alignment
+  background_id uuid [ref: > backgrounds.id]
+  occupation varchar [note: 'NPC: Armorer, Herbalist, Merchant...']
+  strength int [not null, default: 10]
+  dexterity int [not null, default: 10]
+  constitution int [not null, default: 10]
+  intelligence int [not null, default: 10]
+  wisdom int [not null, default: 10]
+  charisma int [not null, default: 10]
+  worn_armor_id uuid [ref: > items.id, note: 'Single armor worn (an ARMOR item from the inventory). AC is computed, not stored']
+  max_hp int [not null, note: 'Rolled with the class hit die at creation; +1 roll every 5 levels']
+  current_hp int [not null, note: 'Live value for unique characters; template value for generic ones']
+  attitude attitude [note: 'Live value for unique NPCs (persists everywhere); empty for heroes']
+  status creature_status [not null, default: 'ACTIVE', note: 'Live value for unique characters']
+  gold int [not null, default: 0]
+  is_boss boolean [not null, default: false]
+  biography text
+  personality text
+  personal_quest text
+  secrets text
+  gm_notes text [note: 'Private hints for the GM']
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null]
+  Note: 'Sheet for heroes, NPCs and monsters. Placed in a scene through scene_creatures.'
+}
+
+// ---------- Abilities and effects ----------
+
+Table abilities {
+  id uuid [pk]
+  owner_id uuid [ref: > users.id, note: 'GM who owns it; empty = official D&D content (seed)']
+  is_public boolean [not null, default: false, note: 'Published to the global library (set automatically when a campaign using it is published)']
+  name varchar [not null]
+  description text
+  source ability_source [not null]
+  action_type action_type [not null]
+  is_spell boolean [not null, default: false]
+  spell_level int [note: '0 = cantrip; empty if not a spell']
+  max_uses int [note: 'Empty = unlimited']
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null]
+  Note: 'Abilities gained through class, race, background or learning (spells included). User library, not tied to a campaign. Library rules (in code): a GM sees official content + his own (+ public content of others, future version); only the owner can edit; an element already in use cannot be deleted; official content is read-only.'
+}
+
+Table character_abilities {
+  id uuid [pk]
+  character_id uuid [ref: > characters.id, not null]
+  ability_id uuid [ref: > abilities.id, not null]
+  uses_remaining int [note: 'Managed by the GM (decrement on use, reset by hand; no rests in MVP)']
+
+  indexes {
+    (character_id, ability_id) [unique]
+  }
+  Note: 'The character\'s own copy: filled from race_abilities, class_abilities and background_abilities, then the GM can add or remove.'
+}
+
+Table effects {
+  id uuid [pk]
+  owner_id uuid [ref: > users.id, note: 'GM who owns it; empty = official D&D content (seed)']
+  is_public boolean [not null, default: false, note: 'Published to the global library (set automatically when a campaign using it is published)']
+  name varchar [not null, note: 'e.g. Dagger strike, Poison']
+  dice_count int [note: 'e.g. 2 for "2D4"']
+  dice_sides int [note: 'e.g. 4 for "2D4"']
+  bonus int [note: 'e.g. 5 for "+5 DMG"']
+  damage_type varchar [note: 'e.g. poison, fire']
+  repeat_count int [note: 'e.g. 3 for "damage applied 3 times"']
+  description text
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null]
+  Note: 'User library, not tied to a campaign. Library rules (in code): a GM sees official content + his own (+ public content of others, future version); only the owner can edit; an element already in use cannot be deleted; official content is read-only. Descriptive only: players roll real dice and the GM applies the result.'
+}
+
+Table ability_effects {
+  ability_id uuid [ref: > abilities.id, not null]
+  effect_id uuid [ref: > effects.id, not null]
+
+  indexes {
+    (ability_id, effect_id) [pk]
+  }
+}
+
+Table item_effects {
+  item_id uuid [ref: > items.id, not null]
+  effect_id uuid [ref: > effects.id, not null]
+
+  indexes {
+    (item_id, effect_id) [pk]
+  }
+  Note: 'Links an item to its effects (many-to-many): a dagger -> "1D4 piercing", a poisoned dagger -> "1D4" + "+5 poison DMG".'
+}
+
+// ---------- Items and inventories ----------
+
+Table items {
+  id uuid [pk]
+  owner_id uuid [ref: > users.id, note: 'GM who owns it; empty = official D&D content (seed)']
+  is_public boolean [not null, default: false, note: 'Published to the global library (set automatically when a campaign using it is published)']
+  source_id uuid [ref: > items.id, note: 'Item it was copied from (e.g. a GM copies a public item to customize it)']
+  name varchar [not null]
+  description text
+  image_url varchar
+  type item_type [not null]
+  price int [not null, default: 0, note: 'In gold pieces']
+  armor_value int [note: 'ARMOR items only: base AC, e.g. 16. AC = armor_value + DEX modifier']
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null]
+  Note: 'User library, not tied to a campaign. Library rules (in code): a GM sees official content + his own (+ public content of others, future version); only the owner can edit; an element already in use cannot be deleted; official content is read-only. type CONSUMABLE = "Use" button; each use removes 1 from the quantity in the inventory. Effects (damage, poison...) are linked through item_effects: a weapon, an armor, a magic item or a potion can have one or several effects.'
+}
+
+Table character_items {
+  id uuid [pk]
+  character_id uuid [ref: > characters.id, not null]
+  item_id uuid [ref: > items.id, not null]
+  quantity int [not null, default: 1]
+  for_sale boolean [not null, default: false, note: 'true = stock of a unique merchant NPC']
+  unit_price int [note: 'Merchant selling price; empty = items.price']
+
+  indexes {
+    (character_id, item_id, for_sale) [unique]
+  }
+  Note: 'Items of a unique character (hero inventory, quest NPC loot or merchant stock). They follow the character across scenes.'
+}
+
+// ---------- Scene: placed NPCs and monsters ----------
+
+Table scene_groups {
+  id uuid [pk]
+  scene_id uuid [ref: > scenes.id, not null]
+  name varchar [not null, note: 'e.g. Trade, Guards, Enemies']
+  position int [not null]
+}
+
+Table scene_creatures {
+  id uuid [pk]
+  scene_id uuid [ref: > scenes.id, not null]
+  character_id uuid [ref: > characters.id, not null, note: 'Template sheet (NPC or monster)']
+  group_id uuid [ref: > scene_groups.id]
+  display_name varchar [note: 'e.g. "Deck guard 3"; empty = sheet name']
+  current_hp int [note: 'Generic only; empty for a unique character (read the sheet)']
+  attitude attitude [note: 'Generic only, persists between sessions; empty for a unique character']
+  status creature_status [note: 'Generic only; empty for a unique character']
+  is_revealed boolean [not null, default: false, note: 'Visible to players']
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null]
+  Note: 'Presence of a character in a scene. Generic (guards x10): one row each with its own state. Unique (quest NPC): the row only says "present here", the state lives on the sheet.'
+}
+
+Table scene_creature_items {
+  id uuid [pk]
+  scene_creature_id uuid [ref: > scene_creatures.id, not null]
+  item_id uuid [ref: > items.id, not null]
+  quantity int [not null, default: 1]
+  for_sale boolean [not null, default: false, note: 'true = merchant stock; false = loot']
+  unit_price int [note: 'Merchant selling price; empty = items.price']
+  Note: 'Generic creatures only: loot (to share) or merchant stock (trade). Unique characters use character_items.'
+}
+
+// ---------- Quests ----------
+
+Table quests {
+  id uuid [pk]
+  campaign_id uuid [ref: > campaigns.id, not null]
+  chapter_id uuid [ref: > chapters.id, note: 'SIDE: required (chapter quest). MAIN: empty (campaign quest)']
+  scene_id uuid [ref: > scenes.id, note: 'SIDE only: scene where the quest appears']
+  related_character_id uuid [ref: > characters.id, note: 'NPC who gives or is tied to the quest']
+  source_id uuid [ref: > quests.id, note: 'Catalogue quest it was imported or duplicated from']
+  title varchar [not null]
+  description text
+  type quest_type [not null]
+  status quest_status [not null, default: 'INACTIVE']
+  is_revealed boolean [not null, default: false]
+  position int [not null]
+  reward_xp int [not null, default: 0]
+  reward_gold int [not null, default: 0]
+  reward_text varchar [note: 'e.g. "Passage to the archipelago"']
+  created_at timestamp [not null, default: `now()`]
+  updated_at timestamp [not null]
+  Note: 'MAIN = campaign quest, created automatically with the campaign (always present); the GM only adds its objectives chapter by chapter. SIDE = chapter quest. Constraints in the SQL migration: CHECK (type = MAIN) = (chapter_id IS NULL); unique partial index: one MAIN quest per campaign.'
+}
+
+Table objectives {
+  id uuid [pk]
+  quest_id uuid [ref: > quests.id, not null]
+  chapter_id uuid [ref: > chapters.id, note: 'MAIN quest: required, the chapter this objective belongs to. SIDE quest: empty (the quest already has its chapter)']
+  label varchar [not null, note: 'Says what to do, e.g. "Meet captain Atom", "Defeat the deck guards"']
+  narration text [note: 'Optional. Shown to the GM when he opens the linked target (character, chest, riddle...), e.g. what captain Atom says when the heroes meet him']
+  position int [not null]
+  target_character_id uuid [ref: > characters.id, note: 'Character to meet or defeat (for generic guards: their template sheet)']
+  target_riddle_id uuid [ref: > riddles.id]
+  target_chest_id uuid [ref: > chests.id]
+  target_item_id uuid [ref: > items.id, note: 'Item to obtain']
+  target_trap_id uuid [ref: > traps.id]
+  target_scene_id uuid [ref: > scenes.id, note: 'Place to reach']
+  is_completed boolean [not null, default: false]
+  completed_at timestamp
+  Note: 'MVP: at most ONE target per objective (CHECK constraint), none for a free objective. The target is informative only: the GM always checks the objective by hand. Chapter progress = completed / total of (objectives of its SIDE quests + MAIN quest objectives with this chapter_id).'
+}
+
+Table quest_reward_items {
+  id uuid [pk]
+  quest_id uuid [ref: > quests.id, not null]
+  item_id uuid [ref: > items.id, not null]
+  quantity int [not null, default: 1]
+}
+
+// ---------- Live game ----------
+
+Table games {
+  id uuid [pk]
+  chapter_id uuid [ref: > chapters.id, not null]
+  code varchar [not null, unique, note: 'e.g. AX7-K2Q, used for the invite link']
+  status game_status [not null, default: 'LOBBY']
+  started_at timestamp
+  ended_at timestamp
+  created_at timestamp [not null, default: `now()`]
+}
+
+Table participants {
+  id uuid [pk]
+  game_id uuid [ref: > games.id, not null]
+  nickname varchar [not null]
+  token_hash varchar [not null, unique, note: 'Lets the player reconnect without an account']
+  character_id uuid [ref: > characters.id, note: 'Hero assigned by the GM; empty = no hero']
+  status participant_status [not null, default: 'CONNECTED']
+  joined_at timestamp [not null, default: `now()`]
+
+  indexes {
+    (game_id, nickname) [unique]
+    (game_id, character_id) [unique]
+  }
+}
+
+Table combats {
+  id uuid [pk]
+  game_id uuid [ref: > games.id, not null]
+  scene_id uuid [ref: > scenes.id, not null]
+  status combat_status [not null, default: 'IN_PROGRESS']
+  active_combatant_id uuid [ref: > combatants.id, note: 'Whose turn it is']
+  created_at timestamp [not null, default: `now()`]
+}
+
+Table combatants {
+  id uuid [pk]
+  combat_id uuid [ref: > combats.id, not null]
+  character_id uuid [ref: > characters.id, note: 'Hero']
+  scene_creature_id uuid [ref: > scene_creatures.id, note: 'NPC or monster']
+  initiative int [note: 'Total entered by the GM (d20 roll + DEX); turn order = sorted by initiative']
+  Note: 'Unique character -> character_id; generic creature -> scene_creature_id. Exactly one is set (CHECK constraint).'
+}
+
+// ---------- Scene content: chests, riddles, traps (MVP) ----------
+
+Table chests {
+  id uuid [pk]
+  scene_id uuid [ref: > scenes.id, not null]
+  name varchar [not null]
+  is_locked boolean [not null, default: false]
+  is_revealed boolean [not null, default: false]
+  created_at timestamp [not null, default: `now()`]
+}
+
+Table chest_items {
+  id uuid [pk]
+  chest_id uuid [ref: > chests.id, not null]
+  item_id uuid [ref: > items.id, not null]
+  quantity int [not null, default: 1]
+}
+
+Table riddles {
+  id uuid [pk]
+  scene_id uuid [ref: > scenes.id, not null]
+  title varchar [not null]
+  statement text
+  solution text
+  is_revealed boolean [not null, default: false]
+  is_solved boolean [not null, default: false]
+  created_at timestamp [not null, default: `now()`]
+}
+
+Table traps {
+  id uuid [pk]
+  scene_id uuid [ref: > scenes.id, not null]
+  name varchar [not null]
+  description text
+  is_revealed boolean [not null, default: false]
+  is_triggered boolean [not null, default: false]
+  created_at timestamp [not null, default: `now()`]
+}
+
+Table trap_effects {
+  trap_id uuid [ref: > traps.id, not null]
+  effect_id uuid [ref: > effects.id, not null]
+
+  indexes {
+    (trap_id, effect_id) [pk]
+  }
+}
+
+// ---------- Display groups in dbdiagram ----------
+
+TableGroup accounts_campaigns {
+  users
+  campaigns
+  chapters
+  scenes
+  gm_notes
+}
+
+TableGroup characters_group {
+  races
+  classes
+  skills
+  race_abilities
+  class_abilities
+  race_skills
+  class_skills
+  backgrounds
+  background_abilities
+  background_skills
+  characters
+  abilities
+  character_abilities
+  effects
+  ability_effects
+}
+
+TableGroup items_group {
+  items
+  item_effects
+  character_items
+}
+
+TableGroup live_scene {
+  scene_groups
+  scene_creatures
+  scene_creature_items
+}
+
+TableGroup quests_group {
+  quests
+  objectives
+  quest_reward_items
+}
+
+TableGroup live_game {
+  games
+  participants
+  combats
+  combatants
+}
+
+TableGroup scene_content {
+  chests
+  chest_items
+  riddles
+  traps
+  trap_effects
+}
