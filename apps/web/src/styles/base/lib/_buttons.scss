@@ -1,0 +1,64 @@
+@use '../../variables' as *;
+@use '../../mixins' as *;
+
+.btn {
+  @include button-base;
+}
+
+@each $color in $button-colors {
+  .btn--#{$color} {
+    @include button-color($color);
+  }
+}
+
+.btn--filled {
+  @include button-filled;
+}
+
+@each $size in $button-sizes {
+  .btn--#{$size} {
+    @include button-size($size);
+  }
+}
+
+.btn--icon-only {
+  @include button-icon-only;
+}
+
+.btn--round {
+  @include button-round;
+}
+
+@each $color in $button-colors {
+  @each $filled in (false, true) {
+    @each $size in $button-sizes {
+      $name: 'btn-#{$color}';
+
+      @if $filled {
+        $name: '#{$name}-filled';
+      }
+
+      @if $size != $button-default-size {
+        $name: '#{$name}-#{$size}';
+      }
+
+      .#{$name} {
+        @extend .btn;
+        @extend .btn--#{$color};
+
+        @if $filled {
+          @extend .btn--filled;
+        }
+
+        @if $size != $button-default-size {
+          @extend .btn--#{$size};
+        }
+      }
+    }
+  }
+}
+
+.btn__badge {
+  color: var(--text-color-secondary);
+  font-size: $text-caption-size;
+}

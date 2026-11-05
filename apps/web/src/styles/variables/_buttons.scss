@@ -1,0 +1,62 @@
+@use 'sass:map';
+@use 'spacing' as *;
+@use 'typography' as *;
+
+$button-color-values: (
+  'primary': (
+    border: var(--primary-color),
+    fill: var(--primary-color),
+    glow: var(--primary-color),
+    text: var(--primary-color),
+    on-fill: var(--background-color),
+  ),
+  'secondary': (
+    border: var(--secondary-color),
+    fill: var(--secondary-color),
+    glow: var(--secondary-color),
+    text: var(--secondary-color),
+    on-fill: var(--background-color),
+  ),
+  'hostile': (
+    border: var(--hostile-color),
+    fill: var(--hostile-color),
+    glow: var(--hostile-color),
+    text: var(--hostile-color),
+    on-fill: var(--background-color),
+  ),
+  'gold': (
+    border: var(--gold-color),
+    fill: var(--gold-color),
+    glow: var(--gold-color),
+    text: var(--gold-color),
+    on-fill: var(--background-color),
+  ),
+  'neutral': (
+    border: var(--border-color),
+    fill: var(--border-color),
+    glow: var(--text-color-secondary),
+    text: var(--text-color-primary),
+    on-fill: var(--text-color-primary),
+  ),
+);
+
+$button-size-values: (
+  md: (
+    font-size: $text-button-size,
+    padding-block: $space-sm,
+    padding-inline: $space-md,
+    gap: $space-sm,
+  ),
+  sm: (
+    font-size: $text-small-size,
+    padding-block: $space-xs,
+    padding-inline: $space-sm,
+    gap: $space-xs,
+  ),
+);
+
+$button-default-size: sm;
+$button-icon-size: calc(1em + 0.2rem);
+
+$button-colors: map.keys($button-color-values);
+$button-sizes: map.keys($button-size-values);
