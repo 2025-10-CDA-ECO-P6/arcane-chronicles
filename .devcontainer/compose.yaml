@@ -1,0 +1,35 @@
+name: arcane-chronicles-devcontainer
+
+services:
+  db:
+    ports: !reset []
+
+  workspace:
+    build:
+      context: .devcontainer
+      dockerfile: Dockerfile
+    command: sleep infinity
+    network_mode: service:db
+    environment:
+      DEVCONTAINER: 'true'
+    volumes:
+      - .:/workspace:cached
+      - node-modules:/workspace/node_modules
+      - api-node-modules:/workspace/apps/api/node_modules
+      - web-node-modules:/workspace/apps/web/node_modules
+      - shared-node-modules:/workspace/packages/shared/node_modules
+      - web-next:/workspace/apps/web/.next
+      - playwright-browsers:/home/node/.cache/ms-playwright
+      - claude-config:/home/node/.claude
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  node-modules:
+  api-node-modules:
+  web-node-modules:
+  shared-node-modules:
+  web-next:
+  playwright-browsers:
+  claude-config:

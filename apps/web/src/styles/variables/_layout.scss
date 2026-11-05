@@ -1,0 +1,7 @@
+@use 'sass:math';
+@use '../functions' as *;
+@use 'breakpoints' as *;
+@use 'spacing' as *;
+
+$container-max-size: math.div($screen-xl, 10px) * 1rem;
+$container-gutter: fluid($space-md, $space-2xl);

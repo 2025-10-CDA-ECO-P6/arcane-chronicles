@@ -1,0 +1,26 @@
+@use 'sass:map';
+
+$box-glow-values: (
+  'primary': (
+    glow: var(--primary-color),
+    border: var(--primary-color),
+  ),
+  'secondary': (
+    glow: var(--secondary-color),
+    border: var(--secondary-color),
+  ),
+  'hostile': (
+    glow: var(--hostile-color),
+    border: var(--hostile-color),
+  ),
+  'gold': (
+    glow: var(--gold-color),
+    border: var(--gold-color),
+  ),
+  'neutral': (
+    glow: var(--input-color),
+    border: var(--border-color),
+  ),
+);
+
+$box-glow-colors: map.keys($box-glow-values);

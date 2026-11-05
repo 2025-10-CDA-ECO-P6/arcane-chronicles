@@ -1,0 +1,13 @@
+$screen-s: 375px;
+$screen-m: 768px;
+$screen-lg: 1024px;
+$screen-xl: 1440px;
+$screen-xxl: 1920px;
+
+$breakpoints: (
+  's': $screen-s,
+  'm': $screen-m,
+  'lg': $screen-lg,
+  'xl': $screen-xl,
+  'xxl': $screen-xxl,
+);

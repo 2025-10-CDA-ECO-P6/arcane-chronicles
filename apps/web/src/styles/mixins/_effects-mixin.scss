@@ -1,0 +1,16 @@
+@use '../functions' as *;
+@use '../variables/shadows' as *;
+
+@mixin glow($color: var(--primary-color), $blur: $glow-md, $on: box, $x: 0, $y: 0) {
+  $shadow: glow($color, $blur, $x, $y);
+
+  @if $on == box {
+    box-shadow: $shadow;
+  } @else if $on == text {
+    text-shadow: $shadow;
+  } @else if $on == shape {
+    filter: drop-shadow($shadow);
+  } @else {
+    @error "glow : $on doit valoir box, text ou shape, pas '#{$on}'.";
+  }
+}

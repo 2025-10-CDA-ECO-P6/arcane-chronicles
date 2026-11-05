@@ -1,0 +1,58 @@
+@use '../functions' as *;
+
+$font-family-title: var(--font-cinzel), serif;
+$font-family-body: var(--font-inter), sans-serif;
+$font-family-crimson: var(--font-crimson-text), serif;
+
+$font-weight-regular: 400;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+$font-size-2xs: 0.8rem;
+$font-size-xs: 1rem;
+$font-size-sm: 1.2rem;
+$font-size-md: 1.6rem;
+$font-size-lg: 2rem;
+$font-size-xl: 2.4rem;
+$font-size-2xl: 3.2rem;
+$font-size-3xl: 4.8rem;
+
+$line-height-tight: 1.15;
+$line-height-normal: 1.4;
+$line-height-relaxed: 1.7;
+
+$letter-spacing-caps: 0.1rem;
+
+$h1-size-mobile: $font-size-2xl;
+$h1-size-desktop: $font-size-3xl;
+
+$h2-size-mobile: $font-size-xl;
+$h2-size-desktop: $font-size-2xl;
+
+$h3-size-mobile: $font-size-lg;
+$h3-size-desktop: $font-size-xl;
+
+$h4-size-mobile: $font-size-md;
+$h4-size-desktop: $font-size-lg;
+
+$text-body-size-mobile: $font-size-md;
+$text-body-size-desktop: $font-size-lg;
+
+$text-button-size-mobile: $font-size-sm;
+$text-button-size-desktop: $font-size-md;
+
+$text-small-size-mobile: $font-size-xs;
+$text-small-size-desktop: $font-size-sm;
+
+$text-caption-size-mobile: $font-size-2xs;
+$text-caption-size-desktop: $font-size-xs;
+
+$h1-size: fluid($h1-size-mobile, $h1-size-desktop);
+$h2-size: fluid($h2-size-mobile, $h2-size-desktop);
+$h3-size: fluid($h3-size-mobile, $h3-size-desktop);
+$h4-size: fluid($h4-size-mobile, $h4-size-desktop);
+
+$text-body-size: fluid($text-body-size-mobile, $text-body-size-desktop);
+$text-button-size: fluid($text-button-size-mobile, $text-button-size-desktop);
+$text-small-size: fluid($text-small-size-mobile, $text-small-size-desktop);
+$text-caption-size: fluid($text-caption-size-mobile, $text-caption-size-desktop);

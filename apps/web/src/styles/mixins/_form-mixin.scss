@@ -1,0 +1,145 @@
+@use '../variables' as *;
+@use 'effects-mixin' as *;
+@use 'icons-mixin' as *;
+
+@mixin _field-line {
+  inline-size: 100%;
+  border: 0;
+  border-block-end: 1px solid var(--border-color);
+  border-radius: 0;
+  color: var(--text-color-secondary);
+  font-family: $font-family-body;
+  font-size: $text-body-size;
+  line-height: $line-height-normal;
+  transition: border-color 0.2s;
+
+  &::placeholder {
+    color: var(--secondary-color-light);
+  }
+
+  &:focus-visible {
+    border-block-end-color: var(--secondary-color);
+    outline: none;
+  }
+
+  &[aria-invalid='true'] {
+    border-block-end-color: var(--hostile-color);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+@mixin form-field {
+  display: flex;
+  flex-direction: column;
+  gap: $space-xs;
+}
+
+@mixin form-row($min-size: 20rem, $gap: $space-lg) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, $min-size), 1fr));
+  gap: $gap;
+}
+
+@mixin form-label {
+  color: var(--text-color-secondary);
+  font-family: $font-family-title;
+  font-size: $text-body-size;
+}
+
+@mixin form-input {
+  padding-block: $space-sm;
+  background-color: transparent;
+
+  @include _field-line;
+}
+
+@mixin form-textarea {
+  display: block;
+  min-block-size: 12rem;
+  padding-block: $space-sm;
+  padding-inline: $space-sm;
+  background-color: var(--border-color);
+  resize: vertical;
+  scrollbar-color: var(--input-color) transparent;
+  scrollbar-width: thin;
+
+  @include _field-line;
+}
+
+@mixin form-select {
+  position: relative;
+  display: inline-flex;
+  border: 1px solid var(--border-color);
+  border-radius: $radius-xs;
+  background-color: var(--background-color-secondary);
+  color: var(--primary-color);
+  transition: box-shadow 0.2s;
+
+  @include add-icon(chevron-down, 1em, currentColor, after);
+
+  &::after {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-end: $space-md;
+    font-size: $text-body-size;
+    pointer-events: none;
+    translate: 0 -50%;
+  }
+
+  select {
+    inline-size: 100%;
+    padding-block: $space-sm;
+    padding-inline: $space-md calc(#{$space-md} * 2 + 1em);
+    border: 0;
+    background-color: transparent;
+    color: inherit;
+    font-family: $font-family-body;
+    font-size: $text-body-size;
+    line-height: $line-height-normal;
+    cursor: pointer;
+    appearance: none;
+
+    &:focus-visible {
+      outline: none;
+    }
+  }
+
+  option {
+    background-color: var(--background-color-secondary);
+    color: var(--text-color-primary);
+  }
+
+  @media (hover: hover) {
+    &:hover:not(:has(select:disabled)) {
+      @include glow(var(--primary-color), $glow-md);
+    }
+  }
+
+  &:focus-within {
+    @include glow(var(--primary-color), $glow-md);
+  }
+
+  &:has(select[aria-invalid='true']) {
+    border-color: var(--hostile-color);
+  }
+
+  &:has(select:disabled) {
+    opacity: 0.5;
+
+    select {
+      cursor: not-allowed;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}

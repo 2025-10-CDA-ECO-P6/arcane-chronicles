@@ -1,0 +1,53 @@
+@use 'sass:map';
+@use 'sass:meta';
+@use '../variables' as *;
+
+@mixin box-glow($color, $blur: null) {
+  @if meta.type-of($color) == 'color' {
+    $color: meta.inspect($color);
+  }
+
+  $glow: $color;
+  $border: $color;
+
+  @if map.has-key($box-glow-values, $color) {
+    $glow: map.get($box-glow-values, $color, glow);
+    $border: map.get($box-glow-values, $color, border);
+  }
+
+  --box-glow-color: #{$glow};
+  --box-border-color: #{$border};
+
+  @if $blur {
+    --box-glow-blur: #{$blur};
+  }
+}
+
+@mixin box-rounded {
+  border-radius: $radius-md;
+}
+
+@mixin box-no-glow {
+  box-shadow: none;
+}
+
+@mixin box($glow: neutral, $blur: $glow-md, $rounded: false) {
+  @if $glow {
+    @include box-glow($glow, $blur);
+  }
+
+  border: 1px solid var(--box-border-color, var(--border-color));
+  background-color: var(--background-color-secondary);
+
+  @if $rounded {
+    @include box-rounded;
+  } @else {
+    border-radius: 0;
+  }
+
+  @if $glow {
+    box-shadow: 0 0 var(--box-glow-blur) var(--box-glow-color);
+  } @else {
+    @include box-no-glow;
+  }
+}

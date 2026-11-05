@@ -1,0 +1,185 @@
+@use 'sass:map';
+@use 'sass:meta';
+@use '../variables' as *;
+@use 'effects-mixin' as *;
+@use 'icons-mixin' as *;
+
+@mixin _outlined-look {
+  background-color: var(--background-color);
+  box-shadow: none;
+  color: var(--btn-text);
+}
+
+@mixin _filled-look {
+  background-color: var(--btn-fill);
+  color: var(--btn-on-fill);
+
+  @include glow(var(--btn-glow), $glow-md);
+}
+
+@mixin button-color($color) {
+  @if meta.type-of($color) == 'color' {
+    $color: meta.inspect($color);
+  }
+
+  @if not map.has-key($button-color-values, $color) {
+    @error "button : couleur inconnue '#{$color}', valeurs possibles : #{$button-colors}.";
+  }
+
+  $values: map.get($button-color-values, $color);
+  --btn-border: #{map.get($values, border)};
+  --btn-fill: #{map.get($values, fill)};
+  --btn-glow: #{map.get($values, glow)};
+  --btn-text: #{map.get($values, text)};
+  --btn-on-fill: #{map.get($values, on-fill)};
+}
+
+@mixin button-size($size) {
+  @if not map.has-key($button-size-values, $size) {
+    @error "button : taille inconnue '#{$size}', valeurs possibles : #{$button-sizes}.";
+  }
+
+  $values: map.get($button-size-values, $size);
+  --btn-font-size: #{map.get($values, font-size)};
+  --btn-padding-block: #{map.get($values, padding-block)};
+  --btn-padding-inline: #{map.get($values, padding-inline)};
+  --btn-gap: #{map.get($values, gap)};
+}
+
+@mixin _button-layout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--btn-gap);
+  padding-block: var(--btn-padding-block);
+  padding-inline: var(--btn-padding-inline);
+  border: 1px solid var(--btn-border);
+  border-radius: $radius-sm;
+  font-size: var(--btn-font-size);
+  line-height: $line-height-tight;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    box-shadow 0.2s;
+}
+
+@mixin _button-icon-size($size: $button-icon-size) {
+  &::before,
+  &::after,
+  .icon {
+    font-size: $size;
+  }
+
+  .icon {
+    display: flex;
+  }
+}
+
+@mixin _inverted-look($filled) {
+  @if $filled {
+    @include _outlined-look;
+  } @else {
+    @include _filled-look;
+  }
+}
+
+@mixin _button-interactions($filled: false) {
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      @include _inverted-look($filled);
+    }
+  }
+
+  &:active:not(:disabled) {
+    @include _inverted-look($filled);
+  }
+}
+
+@mixin _button-states($filled: false) {
+  @include _button-interactions($filled);
+
+  &:focus-visible {
+    outline: 0.2rem solid var(--btn-text);
+    outline-offset: 0.2rem;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  &[aria-disabled='true'] {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+@mixin button-base {
+  @include button-color(primary);
+  @include button-size($button-default-size);
+  @include _button-layout;
+  @include _outlined-look;
+  @include _button-states;
+  @include _button-icon-size;
+}
+
+@mixin button-filled {
+  @include _filled-look;
+  @include _button-interactions($filled: true);
+}
+
+@mixin button-icon-only {
+  padding-inline: var(--btn-padding-block);
+  aspect-ratio: 1;
+}
+
+@mixin button-round {
+  border-radius: $radius-circle;
+}
+
+@mixin button(
+  $color,
+  $filled: false,
+  $icon: null,
+  $icon-position: before,
+  $icon-only: false,
+  $round: false,
+  $size: $button-default-size,
+  $icon-size: $button-icon-size
+) {
+  @include button-color($color);
+  @include button-size($size);
+  @include _button-layout;
+
+  @if $filled {
+    @include _filled-look;
+  } @else {
+    @include _outlined-look;
+  }
+
+  @if $icon-only {
+    @include button-icon-only;
+  }
+
+  @if $round {
+    @include button-round;
+  }
+
+  @include _button-states($filled);
+  @include _button-icon-size($icon-size);
+
+  @if $icon {
+    @include add-icon($icon, $icon-size, $position: $icon-position);
+  }
+}
+
+@mixin link-as-button($args...) {
+  text-decoration: none;
+
+  @include button($args...);
+}

@@ -1,0 +1,33 @@
+@use 'sass:list';
+@use 'sass:map';
+@use '../variables/icons' as *;
+
+@mixin icon-font {
+  font-family: var(--font-icons);
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  line-height: 1;
+  text-transform: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@mixin add-icon($name, $size: 1em, $color: currentColor, $position: before) {
+  @if not map.has-key($icons-names, $name) {
+    @error "Icône inconnue : '#{$name}'. Liste dans src/styles/icons/_names.scss.";
+  }
+
+  @if $position != before and $position != after {
+    @error "$position doit valoir before ou after, pas '#{$position}'.";
+  }
+
+  &::#{$position} {
+    content: list.slash(map.get($icons-names, $name), '');
+    display: inline-block;
+    color: $color;
+    font-size: $size;
+
+    @include icon-font;
+  }
+}

@@ -1,0 +1,45 @@
+# Contexte de build Docker : tout ce qui est listé ici n'est jamais envoyé
+# au moteur Docker, donc ne peut pas finir dans une image.
+
+# Dépendances : réinstallées dans l'image par `npm ci`
+**/node_modules
+
+# Résultats de build locaux : reconstruits dans l'image
+**/.next
+**/out
+**/dist
+**/*.tsbuildinfo
+
+# Secrets et configuration locale
+**/.env
+**/.env.*
+!**/.env.example
+
+# Versionnement, éditeurs, OS
+.git
+.gitignore
+.github
+.vscode
+.idea
+**/.DS_Store
+
+# Documentation et livrables du dossier CDA
+docs
+README.md
+
+# Sources de travail des images, jamais servies (voir ecoconception.md)
+apps/web/src/assets/images_originals_backup
+apps/web/src/assets/fonts/icons/*.icomoon.json
+
+# Tests et rapports
+coverage
+test-results
+playwright-report
+**/*.log
+
+# Fichiers Docker eux-mêmes
+**/Dockerfile
+.dockerignore
+docker-compose*.yml
+
+.devcontainer

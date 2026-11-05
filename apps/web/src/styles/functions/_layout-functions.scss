@@ -1,0 +1,15 @@
+@use 'sass:map';
+@use 'sass:meta';
+@use '../variables/breakpoints' as *;
+
+@function breakpoint($name) {
+  @if meta.type-of($name) == 'number' {
+    @return $name;
+  }
+
+  @if not map.has-key($breakpoints, $name) {
+    @error "breakpoint inconnu '#{$name}', valeurs possibles : #{map.keys($breakpoints)}.";
+  }
+
+  @return map.get($breakpoints, $name);
+}
