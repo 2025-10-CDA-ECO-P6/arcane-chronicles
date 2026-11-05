@@ -40,7 +40,7 @@ En local, la base est un conteneur Docker ; Neon ne sert qu'en production.
 ### Première installation (une seule fois)
 
 ```bash
-git clone <dépôt>                                # dépôt GitHub à confirmer
+git clone git@github.com:2025-10-CDA-ECO-P6/arcane-chronicles.git
 cd arcane-chronicles
 
 # Variables d'environnement

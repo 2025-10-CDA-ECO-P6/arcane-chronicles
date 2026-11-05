@@ -41,22 +41,28 @@ Une user story est terminée quand :
 
 | Élément | Règle |
 |---|---|
-| Dépôt | Un dépôt GitHub monorepo (dépôt **à créer**) ; `develop` est la branche par défaut |
+| Dépôt | Un dépôt GitHub public et monorepo : [`2025-10-CDA-ECO-P6/arcane-chronicles`](https://github.com/2025-10-CDA-ECO-P6/arcane-chronicles) ; `develop` est la branche par défaut |
 | `main` | Branche de production : reflète ce qui est déployé, on n'y commite jamais directement |
 | `develop` | Branche de développement : point de départ des tickets, reçoit les fonctionnalités terminées |
 | `feature/<clé Jira>` | Une branche par ticket, créée depuis `develop`, par exemple `feature/KAN-514` |
 | `release/<version>` | Une branche par version (`release/1.0.0`), créée depuis `develop` et testée : elle tient lieu d'environnement de recette, sans staging séparé |
 | `releasefix/<clé Jira>` | Correction d'un problème trouvé pendant la recette d'une release, fusionnée dans la release |
-| Fin de release | La release validée est fusionnée dans `main` (déploiement) **et** dans `develop`, pour que les deux restent à jour |
+| `hotfix/<clé Jira>` | Correction urgente d'un bug en production, créée depuis `main` et fusionnée dans `main` ; `main` est ensuite fusionnée dans `develop` et dans la release en recette s'il y en a une |
+| Fin de release | La release validée est fusionnée dans `main` (déploiement), puis `main` est fusionnée dans `develop` : `develop` récupère les corrections de la release et le commit de fusion, et les deux branches restent alignées |
+| Méthodes de fusion | `feature/…` → `develop`, `releasefix/…` → `release/…` et `hotfix/…` → `main` : **squash** (un commit par ticket). `release/…` → `main`, `main` → `develop` et `main` → `release/…` : **merge**, jamais squash, pour que les branches partagent les mêmes commits |
+| Protection | Un ruleset GitHub protège `main` et `develop` : suppression et force push interdits, pull request obligatoire |
 | Commits | En anglais, préfixés par la clé Jira : `KAN-514: sort turn order by initiative`. Les commits d'initialisation du projet, sans ticket, utilisent `init(<partie>): …` et `design-system: …` |
 | Pull requests | Titre au format `<branche source> into <branche cible>`, par exemple `feature/KAN-514 into develop` ; fusionnée quand la CI est verte |
 
 ```
-develop ──┬── feature/KAN-514 ──► PR « feature/KAN-514 into develop »
+develop ──┬── feature/KAN-514 ──(squash)──► develop
           │
-          └──► release/1.0.0 ──► releasefix/KAN-530 ──┐
-                                                       ├──► main (production)
-                                                       └──► develop
+          └──(création)──► release/1.0.0 ◄──(squash)── releasefix/KAN-530
+                                 │
+                                 └──(merge)──► main ──(merge)──► develop
+
+main ──► hotfix/KAN-540 ──(squash)──► main ──┬──(merge)──► develop
+                                             └──(merge)──► release en recette (s'il y en a une)
 ```
 
 ---

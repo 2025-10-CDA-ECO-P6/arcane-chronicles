@@ -218,7 +218,7 @@ Choix de modélisation marquants : une fiche unique pour héros, PNJ et monstres
 
 | Outil | Version | Usage |
 |---|---|---|
-| **Git** + **GitHub** | — | Versionnement du code (dépôt à confirmer) |
+| **Git** + **GitHub** | — | Versionnement du code, pull requests et CI : dépôt public [`2025-10-CDA-ECO-P6/arcane-chronicles`](https://github.com/2025-10-CDA-ECO-P6/arcane-chronicles) |
 | **Docker** + **Docker Compose** | — | Une image par application (`web`, `api`) construite sur `node:24` en plusieurs étapes ; `docker-compose.yml` pour la base locale (PostgreSQL 17), la vérification des images de production et les tests |
 | **Dev Container** (VS Code) | — | Environnement de développement commun dans un conteneur (`.devcontainer/`) : même version de Node, d'npm et des outils pour tous, base PostgreSQL dédiée, extensions de l'éditeur installées automatiquement |
 | **ESLint** / **Prettier** | 10.14 / 3.9 | Qualité et formatage du code |
