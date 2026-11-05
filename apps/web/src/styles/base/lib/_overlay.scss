@@ -1,0 +1,16 @@
+@use '../../variables' as *;
+@use '../../mixins' as *;
+
+.overlay {
+  @include overlay-base;
+}
+
+@each $name, $gradient in $overlay-gradients {
+  .overlay--#{$name} {
+    @include overlay-gradient($gradient);
+  }
+}
+
+.overlay__content {
+  @include overlay-content;
+}

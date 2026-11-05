@@ -1,0 +1,62 @@
+@use 'sass:list';
+@use 'sass:map';
+@use 'sass:math';
+@use 'global-functions' as *;
+
+$_opposite: (
+  top: bottom,
+  right: left,
+  bottom: top,
+  left: right,
+);
+
+@function fade(
+  $side,
+  $length,
+  $color: var(--background-color-secondary),
+  $mid-alpha: null,
+  $mid-at: 50%
+) {
+  @if not map.has-key($_opposite, $side) {
+    @error "fade : $side doit valoir top, right, bottom ou left, pas '#{$side}'.";
+  }
+
+  $direction: map.get($_opposite, $side);
+
+  @if $mid-alpha == null {
+    @return linear-gradient(to #{$direction}, #{$color} 0%, transparent #{$length});
+  }
+
+  $mid: math.div($length * $mid-at, 100%);
+
+  @return linear-gradient(
+    to #{$direction},
+    #{$color} 0%,
+    #{with-alpha($color, $mid-alpha)} #{$mid},
+    transparent #{$length}
+  );
+}
+
+@function fade-edges(
+  $color: var(--background-color-secondary),
+  $top: null,
+  $right: null,
+  $bottom: null,
+  $left: null
+) {
+  $layers: ();
+  $sides: (
+    top: $top,
+    right: $right,
+    bottom: $bottom,
+    left: $left,
+  );
+
+  @each $side, $length in $sides {
+    @if $length != null {
+      $layers: list.append($layers, fade($side, $length, $color), comma);
+    }
+  }
+
+  @return $layers;
+}

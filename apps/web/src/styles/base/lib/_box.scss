@@ -1,0 +1,20 @@
+@use '../../variables' as *;
+@use '../../mixins' as *;
+
+.box {
+  @include box;
+}
+
+.box--rounded {
+  @include box-rounded;
+}
+
+@each $color in $box-glow-colors {
+  .box--glow-#{$color} {
+    @include box-glow($color);
+  }
+}
+
+.box--no-glow {
+  @include box-no-glow;
+}

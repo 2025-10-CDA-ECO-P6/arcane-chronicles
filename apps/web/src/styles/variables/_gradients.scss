@@ -1,0 +1,47 @@
+@use '../functions' as *;
+
+$gradient-campaign-card: fade(bottom, 100%, $mid-alpha: 0.2, $mid-at: 60%);
+
+$gradient-thumbnail: fade-edges(
+  $top: 30%,
+  $bottom: 30%,
+  $left: 10%,
+  $right: 10%,
+);
+
+$gradient-scene-image: fade-edges(
+  $top: 15%,
+  $bottom: 15%,
+);
+
+$gradient-illustration: fade-edges(
+  $top: 5%,
+  $right: 5%,
+  $bottom: 5%,
+  $left: 5%,
+);
+
+$gradient-page-banner: linear-gradient(
+  to bottom,
+  var(--background-color) 0%,
+  #{with-alpha(var(--background-color), 0.3)} 25%,
+  #{with-alpha(var(--background-color), 0.1)} 90%,
+  var(--background-color) 100%
+);
+
+$gradient-hero: fade(bottom, 30%, var(--background-color), $mid-alpha: 0.2);
+
+$gradient-scene-banner: fade(bottom, 50%, $mid-alpha: 0.5, $mid-at: 60%);
+
+$gradient-banner-right: fade(right, 10%, var(--background-color), $mid-alpha: 0.2);
+
+$overlay-gradients: (
+  'campaign-card': $gradient-campaign-card,
+  'thumbnail': $gradient-thumbnail,
+  'scene-image': $gradient-scene-image,
+  'illustration': $gradient-illustration,
+  'page-banner': $gradient-page-banner,
+  'hero': $gradient-hero,
+  'scene-banner': $gradient-scene-banner,
+  'banner-right': $gradient-banner-right,
+);

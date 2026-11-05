@@ -1,0 +1,29 @@
+@mixin _overlay-layer($background) {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: $background;
+    pointer-events: none;
+  }
+}
+
+@mixin image-overlay($gradients...) {
+  @include _overlay-layer($gradients);
+}
+
+@mixin overlay-base {
+  @include _overlay-layer(var(--overlay-gradient));
+}
+
+@mixin overlay-gradient($gradients...) {
+  --overlay-gradient: #{$gradients};
+}
+
+@mixin overlay-content {
+  position: relative;
+  z-index: 1;
+}
