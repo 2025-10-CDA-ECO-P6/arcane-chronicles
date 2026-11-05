@@ -1,0 +1,35 @@
+@use 'sass:math';
+@use 'sass:meta';
+@use '../variables/breakpoints' as *;
+@use '../variables/shadows' as *;
+
+$_root-font-size: 10px;
+
+@function with-alpha($color, $alpha) {
+  @if meta.type-of($alpha) != 'number' or $alpha < 0 or $alpha > 1 {
+    @error "with-alpha : $alpha doit être un nombre entre 0 et 1, pas '#{$alpha}'.";
+  }
+
+  @return color-mix(in srgb, #{$color} #{$alpha * 100%}, transparent);
+}
+
+@function _round($value) {
+  @return math.div(math.round($value * 1000), 1000);
+}
+
+@function fluid($min, $max, $min-viewport: $screen-s, $max-viewport: $screen-xl) {
+  @if math.unit($min) != 'rem' or math.unit($max) != 'rem' {
+    @error "fluid : $min et $max doivent être en rem, pas '#{$min}' et '#{$max}'.";
+  }
+
+  $min-px: math.div($min, 1rem) * $_root-font-size;
+  $max-px: math.div($max, 1rem) * $_root-font-size;
+  $slope: math.div($max-px - $min-px, $max-viewport - $min-viewport);
+  $intercept: math.div($min-px - $slope * $min-viewport, $_root-font-size) * 1rem;
+
+  @return clamp(#{$min}, #{_round($intercept)} + #{_round($slope * 100vw)}, #{$max});
+}
+
+@function glow($color: var(--primary-color), $blur: $glow-md, $x: 0, $y: 0) {
+  @return $x $y $blur $color;
+}
