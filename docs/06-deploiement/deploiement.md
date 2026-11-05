@@ -170,7 +170,7 @@ Les secrets de production sont saisis dans les tableaux de bord Vercel et Render
 
 ## 4. Intégration et déploiement continus
 
-L'intégration continue est un workflow GitHub Actions, `.github/workflows/ci.yml`. Il se lance à chaque pull request vers `develop`, `main` ou une branche `release/…`, et à chaque push sur `develop`, `main` et les branches `release/…` (non protégées, elles peuvent recevoir un push direct pendant la recette). Trois tâches tournent en parallèle ; un nouveau push sur la même branche annule le passage en cours.
+L'intégration continue est un workflow GitHub Actions, `.github/workflows/ci.yml`. Il se lance à chaque pull request vers `develop`, `main` ou une branche `release/…`, et à chaque push sur `develop`, `main` et les branches `release/…`, c'est-à-dire après chaque fusion. Trois tâches tournent en parallèle ; un nouveau push sur la même branche annule le passage en cours.
 
 ```mermaid
 flowchart LR
@@ -192,7 +192,7 @@ flowchart LR
 
 En CI, le script `db:up` ne lance pas `docker compose` (variable `CI`) : la base est le service PostgreSQL de GitHub.
 
-Le ruleset GitHub de `main` et `develop` exige que ces trois tâches réussissent (« Require status checks to pass ») : une pull request ne peut être fusionnée que si la CI est verte.
+Le ruleset GitHub de `main`, `develop` et `release/**` exige que ces trois tâches réussissent (« Require status checks to pass ») : une pull request ne peut être fusionnée que si la CI est verte.
 
 Le déploiement continu (Vercel pour le front, Render pour l'API, Neon pour la base) est branché sur `main` : chaque release fusionnée dans `main` est déployée automatiquement (voir §5).
 
