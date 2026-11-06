@@ -241,7 +241,7 @@ L'API fait confiance au premier proxy (`trust proxy`) : derrière Render, elle l
 3. **Vercel** : *Add New → Project*, choisir le dépôt, dossier racine `apps/web`, variable `NEXT_PUBLIC_API_URL=https://api.arcane-chronicles.fr`, branche de production `main`.
 4. **OVHcloud** (zone DNS) : les enregistrements `A` du domaine (qui pointent vers la page de parking d'OVH) remplacés par l'adresse IP indiquée par Vercel, car un domaine nu ne peut pas avoir de `CNAME` ; un `CNAME` `www` vers l'adresse donnée par Vercel ; un `CNAME` `api` vers l'adresse `….onrender.com` du service. Les enregistrements `MX` (e-mail) ne changent pas. Vercel et Render délivrent ensuite les certificats HTTPS.
 5. **Données** : une seule fois, lancer `npm run seed` puis `npm run seed:demo` depuis le Dev Container avec `DATABASE_URL` pointant vers l'URL directe de Neon.
-6. **UptimeRobot** : moniteur HTTP sur `https://api.arcane-chronicles.fr/api/health` toutes les 5 minutes (voir §6).
+6. **UptimeRobot** : moniteur HTTP sur `https://api.arcane-chronicles.fr/api/health` toutes les 10 minutes (voir §6).
 
 ### Procédure
 
@@ -260,5 +260,5 @@ L'API fait confiance au premier proxy (`trust proxy`) : derrière Render, elle l
 ## 6. Surveillance
 
 - Logs JSON pino consultables dans Render.
-- Ping UptimeRobot sur `/api/health` toutes les 5 minutes : Render met le service gratuit en veille après 15 minutes sans requête (réveil d'environ une minute). Un seul service tourne en continu, soit environ 730 heures par mois, sous les 750 heures gratuites. Le moniteur alerte aussi par e-mail si l'API tombe.
+- Ping UptimeRobot sur `/api/health` toutes les 10 minutes : Render met le service gratuit en veille après 15 minutes sans requête (réveil d'environ une minute). 10 minutes laisse une marge de 5 minutes face aux retards éventuels du ping, avec deux fois moins de requêtes qu'à 5 minutes (environ 4 300 par mois) ; 15 minutes laisserait l'API s'endormir. La route `/api/health` ne lit pas la base : Neon reste en veille entre deux vraies utilisations. Un seul service tourne en continu, soit environ 730 heures par mois, sous les 750 heures gratuites. Le moniteur alerte aussi par e-mail si l'API tombe.
 - Suivi des quotas gratuits de Neon et Cloudinary.
