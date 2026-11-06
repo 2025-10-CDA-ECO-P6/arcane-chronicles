@@ -250,6 +250,17 @@ L'API fait confiance au premier proxy (`trust proxy`) : derrière Render, elle l
 3. Au démarrage, l'API applique les migrations (`prisma migrate deploy`, par l'URL directe).
 4. Vérifier la page d'accueil, la connexion et une partie de test ; garder une capture dans [`preuves/`](../preuves/).
 
+### Preuves de la première mise en production (06/11/2026)
+
+| Capture | Ce qu'elle montre |
+|---|---|
+| [Render, déploiement en ligne](../preuves/captures/deploiement/2026-11-06-render-deploiement-live.png) | Déploiement automatique du commit de `main`, statut **Live**, logs de démarrage |
+| [Vercel, déploiement prêt](../preuves/captures/deploiement/2026-11-06-vercel-deploiement-ready.png) | Déploiement de production depuis `main`, statut **Ready**, domaine `arcane-chronicles.fr` |
+| [Vercel, domaines](../preuves/captures/deploiement/2026-11-06-vercel-domaines-valides.png) | `arcane-chronicles.fr` en production, `www.` et `arcane-chronicles.vercel.app` redirigés (308) |
+| [Front en production](../preuves/captures/deploiement/2026-11-06-front-production-https.png) | `https://arcane-chronicles.fr` servi en HTTPS |
+| [API en production](../preuves/captures/deploiement/2026-11-06-api-health-production-https.png) | `https://api.arcane-chronicles.fr/api/health` répond `{"status":"ok"}` |
+| [UptimeRobot](../preuves/captures/deploiement/2026-11-06-uptimerobot-moniteur-up.png) | Moniteur **Up**, vérification toutes les 10 minutes, 100 % de disponibilité |
+
 ### Retour arrière
 
 - Vercel et Render permettent de remettre en ligne le déploiement précédent depuis leur tableau de bord.
