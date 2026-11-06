@@ -210,7 +210,7 @@ Choix de modélisation marquants : une fiche unique pour héros, PNJ et monstres
 | Service | Usage | Offre | Point de vigilance |
 |---|---|---|---|
 | **Vercel** | Hébergement du frontend, déploiement à chaque push | Hobby (gratuite) | — |
-| **Render** | Hébergement du backend dans un conteneur Docker, process persistant pour Socket.io | Gratuite | Mise en veille après 15 min d'inactivité, réveil en une minute environ : un ping UptimeRobot toutes les 5 minutes la garde éveillée (dans la limite des 750 heures gratuites par mois) |
+| **Render** | Hébergement du backend dans un conteneur Docker, process persistant pour Socket.io | Gratuite | Mise en veille après 15 min d'inactivité, réveil en une minute environ : un ping UptimeRobot toutes les 10 minutes la garde éveillée (dans la limite des 750 heures gratuites par mois) |
 | **Neon** | Base PostgreSQL | Gratuite | Quotas de stockage et de calcul suffisants pour le projet |
 | **Cloudinary** | Stockage et diffusion des images (cartes, illustrations de personnages, objets, races, classes, historiques) | Gratuite, à crédits mensuels | Redimensionnement et formats optimisés à la volée, utiles pour les vignettes mobiles |
 
