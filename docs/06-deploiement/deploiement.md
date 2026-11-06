@@ -189,7 +189,7 @@ Les secrets de production sont saisis dans les tableaux de bord Vercel et Render
 
 ## 4. Intégration et déploiement continus
 
-L'intégration continue est un workflow GitHub Actions, `.github/workflows/ci.yml`. Il se lance à chaque pull request vers `develop`, `main` ou une branche `release/…`, et à chaque push sur `develop`, `main` et les branches `release/…`, c'est-à-dire après chaque fusion. Trois tâches tournent en parallèle ; un nouveau push sur la même branche annule le passage en cours.
+L'intégration continue est un workflow GitHub Actions, `.github/workflows/ci.yml`. Il se lance à chaque pull request vers `develop`, `main` ou une branche `release/…`, et à chaque push sur `develop`, `main` et les branches `release/…`, c'est-à-dire après chaque fusion. Trois tâches tournent en parallèle ; un nouveau push sur la même branche annule le passage en cours. Chaque tâche tourne sur `ubuntu-24.04`, une version fixée plutôt que `ubuntu-latest`, pour que la CI ne change pas de système sans qu'on le décide (le passage à une version plus récente se fait dans un commit dédié, avant le retrait de l'image par GitHub), et s'arrête au bout de 15 minutes (`timeout-minutes`) si elle reste bloquée.
 
 ```mermaid
 flowchart LR
