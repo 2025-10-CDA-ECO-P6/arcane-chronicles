@@ -177,7 +177,7 @@ Fichiers `.env` non versionnés ; un `.env.example` versionné liste les clés s
 | `DIRECT_URL` | api | URL Neon **directe** en production, utilisée par Prisma pour les migrations ; vide en local (Prisma prend alors `DATABASE_URL`) |
 | `JWT_SECRET` | api | Chaîne aléatoire longue, différente par environnement |
 | `JWT_EXPIRES_IN` | api | Durée de validité du jeton, `7d` en production |
-| `CORS_ORIGIN` | api | Origine(s) exacte(s) du frontend, séparées par des virgules (`https://app.arcane-chronicles.fr` en production) |
+| `CORS_ORIGIN` | api | Origine(s) exacte(s) du frontend, séparées par des virgules (`https://arcane-chronicles.fr` en production) |
 | `COOKIE_DOMAIN` | api | Domaine commun au front et à l'API (`arcane-chronicles.fr` en production) |
 | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | api | Accès Cloudinary, côté serveur uniquement |
 | `LOG_LEVEL` | api | `info` en production, `debug` en local |
@@ -219,11 +219,11 @@ Le déploiement continu (Vercel pour le front, Render pour l'API, Neon pour la b
 
 ## 5. Mise en production
 
-Tout est hébergé sur des offres gratuites, sous le domaine **`arcane-chronicles.fr`** (acheté chez OVHcloud) : le front et l'API partagent le même domaine, le cookie de session reste donc un cookie du même site.
+Tout est hébergé sur des offres gratuites, sous le domaine **`arcane-chronicles.fr`** (acheté chez OVHcloud) : le front est servi sur le domaine lui-même et l'API sur le sous-domaine `api.` ; ils partagent le même domaine, le cookie de session reste donc un cookie du même site.
 
 | Adresse | Service | Configuration |
 |---|---|---|
-| `app.arcane-chronicles.fr` | **Vercel** | Projet relié au dépôt GitHub, dossier racine `apps/web`, réglages dans `apps/web/vercel.json`, variable `NEXT_PUBLIC_API_URL` |
+| `arcane-chronicles.fr` (et `www.`, redirigé vers le domaine) | **Vercel** | Projet relié au dépôt GitHub, dossier racine `apps/web`, réglages dans `apps/web/vercel.json`, variable `NEXT_PUBLIC_API_URL` |
 | `api.arcane-chronicles.fr` | **Render** | Service web Docker (offre gratuite, Francfort) décrit dans `render.yaml` à la racine (Blueprint) |
 | — | **Neon** | Projet PostgreSQL 17 en Europe (Francfort) : URL poolée pour l'application, URL directe pour les migrations |
 | — | **Cloudinary** | Compte et dossier `arcane-chronicles/production` |
@@ -239,7 +239,7 @@ L'API fait confiance au premier proxy (`trust proxy`) : derrière Render, elle l
 1. **Neon** : créer le projet `arcane-chronicles` (PostgreSQL 17, région Francfort), relever l'URL poolée et l'URL directe.
 2. **Render** : *New → Blueprint*, choisir le dépôt ; saisir `DATABASE_URL`, `DIRECT_URL` et les clés Cloudinary.
 3. **Vercel** : *Add New → Project*, choisir le dépôt, dossier racine `apps/web`, variable `NEXT_PUBLIC_API_URL=https://api.arcane-chronicles.fr`, branche de production `main`.
-4. **OVHcloud** (zone DNS) : un enregistrement `CNAME` `app` vers l'adresse donnée par Vercel, un `CNAME` `api` vers l'adresse `….onrender.com` du service ; Vercel et Render délivrent ensuite les certificats HTTPS.
+4. **OVHcloud** (zone DNS) : les enregistrements `A` du domaine (qui pointent vers la page de parking d'OVH) remplacés par l'adresse IP indiquée par Vercel, car un domaine nu ne peut pas avoir de `CNAME` ; un `CNAME` `www` vers l'adresse donnée par Vercel ; un `CNAME` `api` vers l'adresse `….onrender.com` du service. Les enregistrements `MX` (e-mail) ne changent pas. Vercel et Render délivrent ensuite les certificats HTTPS.
 5. **Données** : une seule fois, lancer `npm run seed` puis `npm run seed:demo` depuis le Dev Container avec `DATABASE_URL` pointant vers l'URL directe de Neon.
 6. **UptimeRobot** : moniteur HTTP sur `https://api.arcane-chronicles.fr/api/health` toutes les 5 minutes (voir §6).
 
