@@ -77,14 +77,14 @@ Numérotation [SemVer](https://semver.org/lang/fr/) (`majeure.mineure.correctif`
 | `2.0.0` | Version V2 de Jira (contenus premium, assistant IA) |
 | Dernier chiffre (`0.3.1`) | Correctifs sans nouvelle fonctionnalité (`releasefix`, `hotfix`) |
 
-**Premières releases.** Les quatre premières releases ont été préparées sur des branches nommées avant cette convention. Elles sont conservées (le ruleset interdit la suppression des branches `release/**`) et les tags donnent leur numéro définitif :
+**Premières releases.** Les quatre premières releases ont été préparées avant cette convention, sur des branches nommées `release/v1.x`. Les branches ont ensuite été renommées et taguées avec leur numéro définitif. Les messages de fusion déjà présents sur `main` (« Merge pull request #… from …/release/v1.1.0 »), les pull requests et les tableaux de bord de Render et Vercel gardent les anciens noms, car on ne modifie pas un historique publié : ce tableau fait la correspondance.
 
-| Ancienne branche | Tag | Contenu |
+| Ancien nom (historique) | Branche et tag | Contenu |
 |---|---|---|
-| `release/v1.0.0` | `v0.1.0` | Initialisation du projet et design system |
-| `release/v1.1.0` | `v0.2.0` | Intégration et déploiement continus |
-| `release/v1.1.1` | `v0.2.1` | Front servi sur le domaine `arcane-chronicles.fr` |
-| `release/v1.1.3` | `v0.2.2` | Node 24 fixé pour Vercel, ping de l'API toutes les 10 minutes |
+| `release/v1.0.0` | `release/v0.1.0`, `v0.1.0` | Initialisation du projet et design system |
+| `release/v1.1.0` | `release/v0.2.0`, `v0.2.0` | Intégration et déploiement continus |
+| `release/v1.1.1` | `release/v0.2.1`, `v0.2.1` | Front servi sur le domaine `arcane-chronicles.fr` |
+| `release/v1.1.3` | `release/v0.2.2`, `v0.2.2` | Node 24 fixé pour Vercel, ping de l'API toutes les 10 minutes |
 
 ---
 
