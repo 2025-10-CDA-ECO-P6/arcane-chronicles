@@ -250,6 +250,19 @@ L'API fait confiance au premier proxy (`trust proxy`) : derrière Render, elle l
 3. Au démarrage, l'API applique les migrations (`prisma migrate deploy`, par l'URL directe).
 4. Vérifier la page d'accueil, la connexion et une partie de test ; garder une capture dans [`preuves/`](../preuves/).
 
+### Preuves de la première mise en production (06/11/2026)
+
+| Capture | Ce qu'elle montre |
+|---|---|
+| [CI en cours](../preuves/captures/deploiement/2026-11-06-ci-pull-request-en-cours.webp) | Pull request vers `develop` : les trois tâches de CI, obligatoires (« Required »), démarrent ; Vercel ignore la branche (`ignoreCommand`) |
+| [CI verte](../preuves/captures/deploiement/2026-11-06-ci-pull-request-verte.webp) | Les trois tâches réussissent, la fusion est autorisée |
+| [Render, déploiement en ligne](../preuves/captures/deploiement/2026-11-06-render-deploiement-live.webp) | Déploiement automatique du commit de `main`, statut **Live**, logs de démarrage |
+| [Vercel, déploiement prêt](../preuves/captures/deploiement/2026-11-06-vercel-deploiement-ready.webp) | Déploiement de production depuis `main`, statut **Ready**, domaine `arcane-chronicles.fr` |
+| [Vercel, domaines](../preuves/captures/deploiement/2026-11-06-vercel-domaines-valides.webp) | `arcane-chronicles.fr` en production, `www.` et `arcane-chronicles.vercel.app` redirigés (308) |
+| [Front en production](../preuves/captures/deploiement/2026-11-06-front-production-https.webp) | `https://arcane-chronicles.fr` servi en HTTPS |
+| [API en production](../preuves/captures/deploiement/2026-11-06-api-health-production-https.webp) | `https://api.arcane-chronicles.fr/api/health` répond `{"status":"ok"}` |
+| [UptimeRobot](../preuves/captures/deploiement/2026-11-06-uptimerobot-moniteur-up.webp) | Moniteur **Up**, vérification toutes les 10 minutes, 100 % de disponibilité |
+
 ### Retour arrière
 
 - Vercel et Render permettent de remettre en ligne le déploiement précédent depuis leur tableau de bord.
