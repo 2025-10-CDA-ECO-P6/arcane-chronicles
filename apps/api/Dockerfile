@@ -1,4 +1,9 @@
-FROM node:24-slim AS build
+FROM node:24-slim AS base
+RUN apt-get update -y \
+ && apt-get install -y --no-install-recommends openssl \
+ && rm -rf /var/lib/apt/lists/*
+
+FROM base AS build
 WORKDIR /app
 COPY package.json package-lock.json tsconfig.base.json ./
 COPY apps/api/package.json apps/api/
@@ -11,7 +16,7 @@ RUN npm run build -w packages/shared \
  && npm run build -w apps/api \
  && npm prune --omit=dev
 
-FROM node:24-slim
+FROM base
 ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=build /app/node_modules ./node_modules

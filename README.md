@@ -40,7 +40,7 @@ En local, la base est un conteneur Docker ; Neon ne sert qu'en production.
 ### Première installation (une seule fois)
 
 ```bash
-git clone <dépôt>                                # dépôt GitHub à confirmer
+git clone git@github.com:2025-10-CDA-ECO-P6/arcane-chronicles.git
 cd arcane-chronicles
 
 # Variables d'environnement
@@ -101,6 +101,7 @@ Compile le paquet partagé `packages/shared`, puis lance l'API et le front. La b
 | `npm run build`                | Compile `shared`, l'API et le front                                                                                                                                                                                                         |
 | `npm run lint`                 | Vérifie le code avec ESLint                                                                                                                                                                                                                 |
 | `npm run format`               | Formate le code avec Prettier                                                                                                                                                                                                               |
+| `npm run format:check`         | Vérifie le formatage sans modifier les fichiers (utilisé par la CI)                                                                                                                                                                         |
 | `npm run typecheck`            | Compile `shared` puis vérifie les types TypeScript des trois projets                                                                                                                                                                        |
 | `npm run test`                 | Tests unitaires et d'intégration (Vitest) : les fichiers `*.test.ts` placés à côté du code testé                                                                                                                                            |
 | `npm run test:e2e`             | Tests end-to-end (Playwright) dans `e2e/`, en MJ desktop et en joueur mobile (375 px) ; lance l'application si elle ne tourne pas                                                                                                           |

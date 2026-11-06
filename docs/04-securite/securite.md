@@ -40,11 +40,11 @@
 |---|---|
 | A01 Broken Access Control | Droits vérifiés côté serveur pour chaque requête et chaque événement (R1, R2) |
 | A02 Security Misconfiguration | helmet, CORS en liste blanche, variables d'environnement par environnement, conteneurs sans utilisateur root |
-| A03 Software Supply Chain Failures | Versions fixées, `package-lock.json` versionné, `npm audit`, Dependabot, images Docker officielles `node:24` et `postgres:17` |
+| A03 Software Supply Chain Failures | Versions fixées, `package-lock.json` versionné, `npm audit`, Dependabot, images Docker officielles `node:24-slim` et `postgres:17` |
 | A04 Cryptographic Failures | Argon2id pour les mots de passe, empreinte du jeton joueur seule en base, HTTPS partout, JWT signé avec un secret fort |
 | A05 Injection | Prisma (requêtes paramétrées), Zod, React (échappement à l'affichage) |
 | A06 Insecure Design | Serveur d'autorité, révélation contrôlée pensée dès la conception (RG2), pas de compte joueur (moins de données) |
-| A07 Authentication Failures | Rate limiting, cookie `httpOnly` `Secure` `SameSite`, expiration du JWT, déconnexion qui supprime le cookie |
+| A07 Authentication Failures | Rate limiting (adresse IP réelle du client lue derrière le proxy de Render grâce à `trust proxy`), cookie `httpOnly` `Secure` `SameSite`, expiration du JWT, déconnexion qui supprime le cookie |
 | A08 Software or Data Integrity Failures | Pipeline CI qui construit les images depuis le dépôt ; migrations Prisma versionnées |
 | A09 Security Logging and Alerting Failures | Journalisation pino des connexions, refus d'accès et erreurs, sans mot de passe ni jeton (option `redact`) |
 | A10 Mishandling of Exceptional Conditions | Gestion centralisée des erreurs d'Express 5 (fonctions `async`), refus par défaut si un contrôle échoue |

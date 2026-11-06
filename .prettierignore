@@ -10,3 +10,4 @@ apps/web/src/styles/variables/_icons.scss
 
 # Fichiers fournis par des outils externes (IcoMoon…)
 apps/web/src/assets
+.claude
