@@ -37,12 +37,30 @@ En production, l'image `api` est déployée sur Render. Le frontend est déploy�
 
 Les deux Dockerfiles utilisent la racine du dépôt comme contexte (pour inclure `packages/shared`) et deux étapes : une étape `build` avec toutes les dépendances, une étape finale qui ne garde que le code compilé et les dépendances de production, lancée avec l'utilisateur `node` (non root).
 
+**Image de départ : `node:24-slim` plutôt que `node:24-alpine`.** Alpine est plus légère, mais elle repose sur la bibliothèque C musl, alors que Debian (`slim`), le Dev Container, la CI GitHub et l'image `postgres:17` utilisent glibc :
+
+| Point | Conséquence avec Alpine |
+|---|---|
+| Modules natifs | `argon2` (hachage des mots de passe) est fourni compilé pour glibc ; sous musl il faut une version dédiée ou une compilation avec Python, make et gcc dans l'image |
+| Prisma | Moteurs musl à déclarer (`binaryTargets`) en plus d'OpenSSL : source classique d'écarts entre local et production |
+| Lockfile | Le `package-lock.json` contient des dépendances optionnelles propres à chaque libc (champs `libc`) |
+| Cohérence | Même base glibc en local, en CI et en production : on teste ce qui est déployé |
+
+`slim` garde la compatibilité de Debian sans les outils de compilation de l'image `node:24` complète (environ 200 Mo contre plus d'1 Go). La sécurité repose sur une image minimale, des reconstructions régulières pour intégrer les correctifs, l'utilisateur non root et l'absence de secret dans l'image. Point à approfondir pour le dossier projet (comparaison chiffrée des tailles et des vulnérabilités connues).
+
 Un fichier `.dockerignore` à la racine exclut du contexte de build les `node_modules`, les résultats de build locaux (`.next`, `dist`), les fichiers `.env`, `.git`, la documentation et les originaux des images : aucun secret ne peut ainsi se retrouver dans une image. `prisma generate` reçoit une `DATABASE_URL` factice, limitée à cette commande (il ne se connecte pas à la base) ; la vraie URL est fournie au conteneur à son démarrage.
 
 **`apps/api/Dockerfile`**
 
+L'image de l'API part d'une étape `base` commune qui installe OpenSSL : Prisma choisit son moteur selon la version d'OpenSSL présente, elle doit donc être la même au build et à l'exécution, et la connexion à Neon passe en SSL. Le CLI `prisma` est une dépendance de production, car le conteneur applique les migrations à son démarrage.
+
 ```dockerfile
-FROM node:24-slim AS build
+FROM node:24-slim AS base
+RUN apt-get update -y \
+ && apt-get install -y --no-install-recommends openssl \
+ && rm -rf /var/lib/apt/lists/*
+
+FROM base AS build
 WORKDIR /app
 COPY package.json package-lock.json tsconfig.base.json ./
 COPY apps/api/package.json apps/api/
@@ -55,7 +73,7 @@ RUN npm run build -w packages/shared \
  && npm run build -w apps/api \
  && npm prune --omit=dev
 
-FROM node:24-slim
+FROM base
 ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=build /app/node_modules ./node_modules
@@ -154,23 +172,24 @@ Fichiers `.env` non versionnés ; un `.env.example` versionné liste les clés s
 | Variable | Application | Exemple / rôle |
 |---|---|---|
 | `NODE_ENV` | api | `production` |
-| `PORT` | api | `4000` |
-| `DATABASE_URL` | api | URL Neon **poolée** en production, conteneur `db` en local |
+| `PORT` | api | `4000` en local ; fourni par Render en production |
+| `DATABASE_URL` | api | URL Neon **poolée** en production (utilisée par l'application), conteneur `db` en local |
+| `DIRECT_URL` | api | URL Neon **directe** en production, utilisée par Prisma pour les migrations ; vide en local (Prisma prend alors `DATABASE_URL`) |
 | `JWT_SECRET` | api | Chaîne aléatoire longue, différente par environnement |
-| `JWT_EXPIRES_IN` | api | Durée de validité du jeton (valeur **à définir**) |
-| `CORS_ORIGIN` | api | Origine exacte du frontend |
-| `COOKIE_DOMAIN` | api | Domaine commun au front et à l'API |
+| `JWT_EXPIRES_IN` | api | Durée de validité du jeton, `7d` en production |
+| `CORS_ORIGIN` | api | Origine(s) exacte(s) du frontend, séparées par des virgules (`https://app.arcane-chronicles.fr` en production) |
+| `COOKIE_DOMAIN` | api | Domaine commun au front et à l'API (`arcane-chronicles.fr` en production) |
 | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | api | Accès Cloudinary, côté serveur uniquement |
 | `LOG_LEVEL` | api | `info` en production, `debug` en local |
-| `NEXT_PUBLIC_API_URL` | web | URL de l'API (REST et Socket.io), fixée au build |
+| `NEXT_PUBLIC_API_URL` | web | URL de l'API (REST et Socket.io), fixée au build (`https://api.arcane-chronicles.fr` en production) |
 
-Les secrets de production sont saisis dans les tableaux de bord Vercel et Render, et dans les secrets GitHub pour la CI.
+Les secrets de production sont saisis dans les tableaux de bord Vercel et Render ; la CI n'utilise que des valeurs factices propres à son passage.
 
 ---
 
 ## 4. Intégration et déploiement continus
 
-L'intégration continue est un workflow GitHub Actions, `.github/workflows/ci.yml`. Il se lance à chaque pull request vers `develop`, `main` ou une branche `release/…`, et à chaque push sur `develop`, `main` et les branches `release/…`, c'est-à-dire après chaque fusion. Trois tâches tournent en parallèle ; un nouveau push sur la même branche annule le passage en cours.
+L'intégration continue est un workflow GitHub Actions, `.github/workflows/ci.yml`. Il se lance à chaque pull request vers `develop`, `main` ou une branche `release/…`, et à chaque push sur `develop`, `main` et les branches `release/…`, c'est-à-dire après chaque fusion. Trois tâches tournent en parallèle ; un nouveau push sur la même branche annule le passage en cours. Chaque tâche tourne sur `ubuntu-24.04`, une version fixée plutôt que `ubuntu-latest`, pour que la CI ne change pas de système sans qu'on le décide (le passage à une version plus récente se fait dans un commit dédié, avant le retrait de l'image par GitHub), et s'arrête au bout de 15 minutes (`timeout-minutes`) si elle reste bloquée.
 
 ```mermaid
 flowchart LR
@@ -200,19 +219,35 @@ Le déploiement continu (Vercel pour le front, Render pour l'API, Neon pour la b
 
 ## 5. Mise en production
 
-| Service | Configuration |
-|---|---|
-| **Vercel** | Projet relié au dépôt GitHub, dossier racine `apps/web`, variable `NEXT_PUBLIC_API_URL`, déploiement à chaque push sur `main` et prévisualisation pour chaque PR |
-| **Render** | Service web de type Docker, Dockerfile `apps/api/Dockerfile`, contexte racine du dépôt, variables d'environnement de l'API, déploiement à chaque push sur `main` |
-| **Neon** | Projet PostgreSQL 17, URL de connexion poolée pour l'API |
-| **Cloudinary** | Compte et dossier `arcane-chronicles/production` |
-| **Domaine** | Frontend et API sous un même domaine (`app.` et `api.`, nom **à définir**), pour que le cookie de session reste un cookie du même site |
+Tout est hébergé sur des offres gratuites, sous le domaine **`arcane-chronicles.fr`** (acheté chez OVHcloud) : le front et l'API partagent le même domaine, le cookie de session reste donc un cookie du même site.
+
+| Adresse | Service | Configuration |
+|---|---|---|
+| `app.arcane-chronicles.fr` | **Vercel** | Projet relié au dépôt GitHub, dossier racine `apps/web`, réglages dans `apps/web/vercel.json`, variable `NEXT_PUBLIC_API_URL` |
+| `api.arcane-chronicles.fr` | **Render** | Service web Docker (offre gratuite, Francfort) décrit dans `render.yaml` à la racine (Blueprint) |
+| — | **Neon** | Projet PostgreSQL 17 en Europe (Francfort) : URL poolée pour l'application, URL directe pour les migrations |
+| — | **Cloudinary** | Compte et dossier `arcane-chronicles/production` |
+
+**`render.yaml`** : image construite depuis `apps/api/Dockerfile` avec la racine du dépôt comme contexte, contrôle de santé sur `/api/health`, domaine personnalisé, variables non secrètes écrites dans le fichier, `JWT_SECRET` généré par Render, autres secrets (`sync: false`) saisis dans le tableau de bord. `autoDeployTrigger: checksPass` : Render ne déploie un commit de `main` qu'une fois la CI GitHub verte.
+
+**`apps/web/vercel.json`** : installation et build lancés à la racine du monorepo (`npm ci`, build de `packages/shared` puis de `apps/web`) ; `ignoreCommand` annule tout build qui ne vient pas de `main`, car un aperçu de branche appellerait l'API de production, qui le refuserait (CORS).
+
+L'API fait confiance au premier proxy (`trust proxy`) : derrière Render, elle lit ainsi la vraie adresse IP du client (limitation de débit, logs) et sait que la connexion est en HTTPS (cookie `Secure`).
+
+### Première mise en place
+
+1. **Neon** : créer le projet `arcane-chronicles` (PostgreSQL 17, région Francfort), relever l'URL poolée et l'URL directe.
+2. **Render** : *New → Blueprint*, choisir le dépôt ; saisir `DATABASE_URL`, `DIRECT_URL` et les clés Cloudinary.
+3. **Vercel** : *Add New → Project*, choisir le dépôt, dossier racine `apps/web`, variable `NEXT_PUBLIC_API_URL=https://api.arcane-chronicles.fr`, branche de production `main`.
+4. **OVHcloud** (zone DNS) : un enregistrement `CNAME` `app` vers l'adresse donnée par Vercel, un `CNAME` `api` vers l'adresse `….onrender.com` du service ; Vercel et Render délivrent ensuite les certificats HTTPS.
+5. **Données** : une seule fois, lancer `npm run seed` puis `npm run seed:demo` depuis le Dev Container avec `DATABASE_URL` pointant vers l'URL directe de Neon.
+6. **UptimeRobot** : moniteur HTTP sur `https://api.arcane-chronicles.fr/api/health` toutes les 5 minutes (voir §6).
 
 ### Procédure
 
-1. Fusionner la PR dans `main` (CI verte).
+1. Fusionner la release dans `main` (CI verte).
 2. Vercel et Render construisent et déploient automatiquement.
-3. Au démarrage, l'API applique les migrations (`prisma migrate deploy`).
+3. Au démarrage, l'API applique les migrations (`prisma migrate deploy`, par l'URL directe).
 4. Vérifier la page d'accueil, la connexion et une partie de test ; garder une capture dans [`preuves/`](../preuves/).
 
 ### Retour arrière
@@ -225,5 +260,5 @@ Le déploiement continu (Vercel pour le front, Render pour l'API, Neon pour la b
 ## 6. Surveillance
 
 - Logs JSON pino consultables dans Render.
-- Ping régulier (UptimeRobot) avant les démonstrations, car Render met le service gratuit en veille après 15 minutes d'inactivité.
+- Ping UptimeRobot sur `/api/health` toutes les 5 minutes : Render met le service gratuit en veille après 15 minutes sans requête (réveil d'environ une minute). Un seul service tourne en continu, soit environ 730 heures par mois, sous les 750 heures gratuites. Le moniteur alerte aussi par e-mail si l'API tombe.
 - Suivi des quotas gratuits de Neon et Cloudinary.

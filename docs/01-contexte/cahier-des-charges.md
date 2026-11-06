@@ -199,7 +199,7 @@ arcane-chronicles/
 | Élément | Choix | Justification |
 |---|---|---|
 | **SGBD** | PostgreSQL 17 | Le modèle est fortement relationnel (campagne → chapitres → scènes → créatures, quêtes, objets) avec des contraintes d'intégrité (clés étrangères, CHECK, index unique partiel) et des énumérations natives. Neon prend en charge les versions 14 à 18 ; la 17 est une version majeure éprouvée |
-| **Hébergement** | Neon (offre gratuite) | PostgreSQL managé, sans date d'expiration, mise en veille automatique et réveil quasi instantané ; on utilise l'URL de connexion poolée |
+| **Hébergement** | Neon (offre gratuite) | PostgreSQL managé, sans date d'expiration, mise en veille automatique et réveil quasi instantané ; URL poolée pour l'application, URL directe pour les migrations |
 | **Modèle** | 38 tables, 14 énumérations | Conçu selon la méthode Merise : MCD, MLD et MPD global et par fonctionnalité dans [`03-conception/mcd/`](../03-conception/mcd/) ; code source DBML `05-database-model-v2.dbml` |
 | **Migrations et seeds** | Prisma Migrate | Migration initiale `20261105000000_init` (tables et contraintes CHECK / index partiel écrites à la main) ; seed des données de référence D&D (`npm run seed`) et seed de démonstration avec la campagne « L’archipel du néant » (`npm run seed:demo`) |
 
@@ -210,7 +210,7 @@ Choix de modélisation marquants : une fiche unique pour héros, PNJ et monstres
 | Service | Usage | Offre | Point de vigilance |
 |---|---|---|---|
 | **Vercel** | Hébergement du frontend, déploiement à chaque push | Hobby (gratuite) | — |
-| **Render** | Hébergement du backend dans un conteneur Docker, process persistant pour Socket.io | Gratuite | Mise en veille après 15 min d'inactivité, réveil en une minute environ : un ping régulier (UptimeRobot) avant les démonstrations |
+| **Render** | Hébergement du backend dans un conteneur Docker, process persistant pour Socket.io | Gratuite | Mise en veille après 15 min d'inactivité, réveil en une minute environ : un ping UptimeRobot toutes les 5 minutes la garde éveillée (dans la limite des 750 heures gratuites par mois) |
 | **Neon** | Base PostgreSQL | Gratuite | Quotas de stockage et de calcul suffisants pour le projet |
 | **Cloudinary** | Stockage et diffusion des images (cartes, illustrations de personnages, objets, races, classes, historiques) | Gratuite, à crédits mensuels | Redimensionnement et formats optimisés à la volée, utiles pour les vignettes mobiles |
 
@@ -219,7 +219,7 @@ Choix de modélisation marquants : une fiche unique pour héros, PNJ et monstres
 | Outil | Version | Usage |
 |---|---|---|
 | **Git** + **GitHub** | — | Versionnement du code, pull requests et CI : dépôt public [`2025-10-CDA-ECO-P6/arcane-chronicles`](https://github.com/2025-10-CDA-ECO-P6/arcane-chronicles) |
-| **Docker** + **Docker Compose** | — | Une image par application (`web`, `api`) construite sur `node:24` en plusieurs étapes ; `docker-compose.yml` pour la base locale (PostgreSQL 17), la vérification des images de production et les tests |
+| **Docker** + **Docker Compose** | — | Une image par application (`web`, `api`) construite sur `node:24-slim` en plusieurs étapes ; `docker-compose.yml` pour la base locale (PostgreSQL 17), la vérification des images de production et les tests |
 | **Dev Container** (VS Code) | — | Environnement de développement commun dans un conteneur (`.devcontainer/`) : même version de Node, d'npm et des outils pour tous, base PostgreSQL dédiée, extensions de l'éditeur installées automatiquement |
 | **ESLint** / **Prettier** | 10.14 / 3.9 | Qualité et formatage du code |
 | **Vitest** | 5.1 | Tests unitaires : règles calculées (CA, niveau, ordre de tour) et services métier |
