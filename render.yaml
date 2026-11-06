@@ -17,7 +17,7 @@ services:
       - key: LOG_LEVEL
         value: info
       - key: CORS_ORIGIN
-        value: https://app.arcane-chronicles.fr
+        value: https://arcane-chronicles.fr
       - key: COOKIE_DOMAIN
         value: arcane-chronicles.fr
       - key: JWT_EXPIRES_IN
