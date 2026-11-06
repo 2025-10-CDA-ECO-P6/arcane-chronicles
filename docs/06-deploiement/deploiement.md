@@ -254,6 +254,8 @@ L'API fait confiance au premier proxy (`trust proxy`) : derrière Render, elle l
 
 | Capture | Ce qu'elle montre |
 |---|---|
+| [CI en cours](../preuves/captures/deploiement/2026-11-06-ci-pull-request-en-cours.png) | Pull request vers `develop` : les trois tâches de CI, obligatoires (« Required »), démarrent ; Vercel ignore la branche (`ignoreCommand`) |
+| [CI verte](../preuves/captures/deploiement/2026-11-06-ci-pull-request-verte.png) | Les trois tâches réussissent, la fusion est autorisée |
 | [Render, déploiement en ligne](../preuves/captures/deploiement/2026-11-06-render-deploiement-live.png) | Déploiement automatique du commit de `main`, statut **Live**, logs de démarrage |
 | [Vercel, déploiement prêt](../preuves/captures/deploiement/2026-11-06-vercel-deploiement-ready.png) | Déploiement de production depuis `main`, statut **Ready**, domaine `arcane-chronicles.fr` |
 | [Vercel, domaines](../preuves/captures/deploiement/2026-11-06-vercel-domaines-valides.png) | `arcane-chronicles.fr` en production, `www.` et `arcane-chronicles.vercel.app` redirigés (308) |
