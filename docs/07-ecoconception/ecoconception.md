@@ -40,7 +40,7 @@ L'objectif est de limiter les ressources consommées (données transférées, ca
 | **Images** | WebP en deux tailles (`-desktop` et `-mobile`), chargement différé (`loading="lazy"`) ; images uploadées redimensionnées par Cloudinary au format demandé |
 | **Thème sombre** | Fond `#080808` : moins d'énergie consommée sur les écrans OLED des téléphones |
 | **Pas de traceurs** | Aucun outil d'analyse ni script publicitaire tiers |
-| **Hébergement** | Neon met la base en veille quand elle ne sert pas ; l'API Render est maintenue éveillée par un ping toutes les 5 minutes, un compromis assumé entre disponibilité pour les démonstrations et sobriété (une seule petite instance gratuite) |
+| **Hébergement** | Neon met la base en veille quand elle ne sert pas ; l'API Render est maintenue éveillée par un ping toutes les 10 minutes, un compromis assumé entre disponibilité pour les démonstrations et sobriété : intervalle le plus long qui garde une marge avant la mise en veille (15 minutes), soit deux fois moins de requêtes qu'un ping toutes les 5 minutes ; la route pingée ne lit pas la base, qui reste en veille ; une seule petite instance gratuite |
 | **Docker** | Images en plusieurs étapes, sans dépendances de développement : images plus légères à construire, stocker et déployer |
 
 ---
