@@ -18,6 +18,7 @@ export default defineConfig({
   test: {
     include: ['{apps,packages}/*/src/**/*.test.{ts,tsx}'],
     environment: 'node',
+    env: { LOG_LEVEL: 'silent' },
     passWithNoTests: true,
   },
 });
