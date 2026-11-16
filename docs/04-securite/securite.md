@@ -55,7 +55,12 @@
 
 ### 4.1 Authentification
 
-- **MJ** : mot de passe haché avec Argon2id ; à la connexion, JWT dans un cookie `httpOnly`, `Secure`, `SameSite` ; le même cookie authentifie la connexion Socket.io.
+- **MJ** : mot de passe haché avec Argon2id (19 Mio de mémoire, 2 itérations) ; à la connexion, JWT dans un cookie ; le même cookie authentifie la connexion Socket.io.
+- **Cookie de session** : `httpOnly` (illisible par le JavaScript de la page), `Secure` en production (HTTPS seulement), `SameSite=Lax` (non envoyé par les requêtes venant d'autres sites, mais conservé quand on arrive sur le site depuis un lien externe), domaine `arcane-chronicles.fr` pour être partagé entre le front et `api.`.
+- **Expiration** : le JWT porte sa date d'expiration (`JWT_EXPIRES_IN`, 7 jours en production), vérifiée par le serveur à chaque requête ; le cookie expire à la même date. Un jeton copié hors du navigateur n'est donc plus accepté après cette date.
+- **Connexion** : message identique pour un e-mail inconnu et un mauvais mot de passe ; 5 échecs au plus par adresse IP sur 15 minutes (les connexions réussies ne comptent pas), puis 429.
+- **Déconnexion** : toujours possible, même avec une session expirée ; le cookie est supprimé avec les mêmes options que celles de sa création.
+- **Journaux** : les en-têtes `Cookie` et `Set-Cookie` sont masqués dans les logs pino, pour qu'aucun jeton n'apparaisse dans les journaux de Render.
 - **Joueur** : jeton aléatoire propre à la partie, remis à l'entrée ; seule son empreinte est stockée (`participants.token_hash`).
 
 ### 4.2 Autorisations
