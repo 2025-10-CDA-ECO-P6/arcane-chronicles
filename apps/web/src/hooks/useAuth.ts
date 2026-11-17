@@ -56,6 +56,7 @@ export function useAuth() {
   const { handleUser } = useArcane();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
+  const [hasInvalidCredentials, setHasInvalidCredentials] = useState(false);
   const [lockedUntil, setLockedUntil] = useState<number>();
 
   useEffect(() => {
@@ -73,7 +74,10 @@ export function useAuth() {
     return () => clearTimeout(timer);
   }, [lockedUntil]);
 
-  const clearError = () => setError(undefined);
+  const clearError = () => {
+    setError(undefined);
+    setHasInvalidCredentials(false);
+  };
 
   const login = async (credentials: LoginInput, redirectTo?: string) => {
     if (isLoading || lockedUntil) {
@@ -81,7 +85,7 @@ export function useAuth() {
     }
 
     setIsLoading(true);
-    setError(undefined);
+    clearError();
 
     try {
       const user = await apiFetch.post<AuthUser>('/auth/login', credentials);
@@ -97,6 +101,7 @@ export function useAuth() {
         storeLockedUntil(until);
       } else {
         setError(getLoginErrorMessage(loginError));
+        setHasInvalidCredentials(loginError instanceof ApiError && loginError.status === 401);
       }
       setIsLoading(false);
       return null;
@@ -119,6 +124,7 @@ export function useAuth() {
     isLoading,
     error,
     clearError,
+    hasInvalidCredentials,
     isLocked: lockedUntil !== undefined,
     lockedMinutes: lockedUntil ? Math.ceil((lockedUntil - Date.now()) / 60000) : 0,
   };

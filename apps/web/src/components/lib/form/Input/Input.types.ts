@@ -10,5 +10,6 @@ export interface InputProps extends Omit<
   srOnly?: boolean;
   inputType?: InputType;
   error?: string;
+  invalid?: boolean;
   handleChange?: ChangeEventHandler<HTMLInputElement>;
 }

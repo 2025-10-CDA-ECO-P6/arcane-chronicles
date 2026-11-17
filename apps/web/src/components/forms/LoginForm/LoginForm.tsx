@@ -16,7 +16,7 @@ const FIELD_MESSAGES = {
 };
 
 export function LoginForm({ redirectTo }: LoginFormProps) {
-  const { login, error, clearError, isLocked, lockedMinutes } = useAuth();
+  const { login, error, clearError, hasInvalidCredentials, isLocked, lockedMinutes } = useAuth();
   const [values, setValues] = useState<LoginInput>({ email: '', password: '' });
   const [errors, setErrors] = useState<LoginFormErrors>({});
 
@@ -24,6 +24,9 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
     const { name, value } = event.target;
     setValues((current) => ({ ...current, [name]: value }));
     setErrors((current) => ({ ...current, [name]: undefined }));
+    if (error) {
+      clearError();
+    }
   };
 
   const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
@@ -59,6 +62,7 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
         value={values.email}
         handleChange={handleChange}
         error={errors.email}
+        invalid={hasInvalidCredentials}
         disabled={isLocked}
       />
       <Input
@@ -70,6 +74,7 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
         value={values.password}
         handleChange={handleChange}
         error={errors.password}
+        invalid={hasInvalidCredentials}
         disabled={isLocked}
       />
       {isLocked && (
@@ -84,7 +89,7 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
       )}
       <Button
         buttonType="submit"
-        color="primary"
+        color={isLocked ? 'hostile' : 'primary'}
         filled
         buttonText="Se connecter"
         size="md"

@@ -77,6 +77,7 @@ describe('useAuth', () => {
     await act(() => result.current.login(credentials));
 
     expect(result.current.error).toBe(message);
+    expect(result.current.hasInvalidCredentials).toBe(status === 401);
     expect(result.current.isLoading).toBe(false);
     expect(handleUser).not.toHaveBeenCalled();
     expect(push).not.toHaveBeenCalled();
@@ -90,6 +91,7 @@ describe('useAuth', () => {
     act(() => result.current.clearError());
 
     expect(result.current.error).toBeUndefined();
+    expect(result.current.hasInvalidCredentials).toBe(false);
   });
 
   it('logs out and goes to the login page even when the API call fails', async () => {

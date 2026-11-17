@@ -7,6 +7,7 @@ export function Input({
   srOnly = false,
   inputType = 'text',
   error,
+  invalid = false,
   handleChange,
   id,
   className,
@@ -27,7 +28,7 @@ export function Input({
         className={className ? `form-input ${className}` : 'form-input'}
         type={inputType}
         onChange={handleChange}
-        aria-invalid={error ? true : undefined}
+        aria-invalid={error || invalid ? true : undefined}
         aria-describedby={error ? errorId : undefined}
       />
       {error && (

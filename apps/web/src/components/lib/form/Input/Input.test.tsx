@@ -37,4 +37,12 @@ describe('Input', () => {
 
     expect(handleChange).toHaveBeenCalledTimes(3);
   });
+
+  it('can be marked invalid without its own message', () => {
+    render(<Input label="Email" invalid />);
+
+    const field = screen.getByLabelText('Email');
+    expect(field).toHaveAttribute('aria-invalid', 'true');
+    expect(field).not.toHaveAttribute('aria-describedby');
+  });
 });

@@ -11,13 +11,14 @@ vi.mock('@/hooks/useAuth', () => ({ useAuth: vi.fn() }));
 const login = vi.fn();
 const clearError = vi.fn();
 
-const mockAuth = (error?: string, lockedMinutes = 0) => {
+const mockAuth = (error?: string, lockedMinutes = 0, hasInvalidCredentials = false) => {
   vi.mocked(useAuth).mockReturnValue({
     login,
     logout: vi.fn(),
     isLoading: false,
     error,
     clearError,
+    hasInvalidCredentials,
     isLocked: lockedMinutes > 0,
     lockedMinutes,
   });
@@ -83,5 +84,29 @@ describe('LoginForm', () => {
     expect(screen.getByLabelText('Email')).toBeDisabled();
     expect(screen.getByLabelText('Mot de passe')).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Se connecter' })).toBeDisabled();
+  });
+
+  it('marks both fields as invalid when the credentials are wrong', () => {
+    mockAuth('Email ou mot de passe incorrect', 0, true);
+    render(<LoginForm />);
+
+    expect(screen.getByLabelText('Email')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByLabelText('Mot de passe')).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  it('clears the login error as soon as the user edits a field', async () => {
+    mockAuth('Email ou mot de passe incorrect', 0, true);
+    render(<LoginForm />);
+
+    await userEvent.type(screen.getByLabelText('Email'), 'a');
+
+    expect(clearError).toHaveBeenCalled();
+  });
+
+  it('turns the button red while locked', () => {
+    mockAuth(undefined, 12);
+    render(<LoginForm />);
+
+    expect(screen.getByRole('button', { name: 'Se connecter' })).toHaveClass('btn--hostile');
   });
 });
