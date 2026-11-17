@@ -10,6 +10,12 @@ const ArcaneContext = createContext<ArcaneContextValue | null>(null);
 
 export function ArcaneProvider({ children, initialUser }: ArcaneProviderProps) {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(initialUser);
+  const [serverUser, setServerUser] = useState<AuthUser | null>(initialUser);
+
+  if (initialUser !== serverUser) {
+    setServerUser(initialUser);
+    setCurrentUser(initialUser);
+  }
 
   const handleUser = useCallback((user: AuthUser | null) => {
     setCurrentUser(user);
