@@ -98,15 +98,26 @@ describe('useAuth', () => {
     expect(result.current.hasInvalidCredentials).toBe(false);
   });
 
-  it('logs out and goes to the login page even when the API call fails', async () => {
-    vi.mocked(apiFetch.post).mockRejectedValue(new Error('network'));
+  it('logs out and goes to the login page', async () => {
+    vi.mocked(apiFetch.post).mockResolvedValue(undefined);
     const { result } = renderHook(() => useAuth());
 
-    await act(() => result.current.logout().catch(() => undefined));
+    await act(() => result.current.logout());
 
     expect(apiFetch.post).toHaveBeenCalledWith('/auth/logout');
     expect(handleUser).toHaveBeenCalledWith(null);
     expect(push).toHaveBeenCalledWith('/login');
+  });
+
+  it('stays logged in and shows an error when the logout call fails', async () => {
+    vi.mocked(apiFetch.post).mockRejectedValue(new Error('network'));
+    const { result } = renderHook(() => useAuth());
+
+    await act(() => result.current.logout());
+
+    expect(result.current.error).toBe('La déconnexion a échoué, réessayez plus tard');
+    expect(handleUser).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
   });
 
   describe('after too many attempts', () => {

@@ -120,13 +120,19 @@ export function useAuth() {
   };
 
   const logout = async () => {
+    setError(undefined);
+
     try {
       await apiFetch.post('/auth/logout');
-    } finally {
-      handleUser(null);
-      router.push('/login');
-      router.refresh();
+    } catch {
+      setError('La déconnexion a échoué, réessayez plus tard');
+      return false;
     }
+
+    handleUser(null);
+    router.push('/login');
+    router.refresh();
+    return true;
   };
 
   return {
