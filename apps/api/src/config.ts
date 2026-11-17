@@ -6,6 +6,7 @@ import { pinoHttp } from 'pino-http';
 
 import { logger } from './lib/logger.js';
 import { errorHandler } from './middlewares/errorHandler.js';
+import { notFound } from './middlewares/notFound.js';
 import apiRouter from './routers/router.js';
 
 const app = express();
@@ -24,6 +25,7 @@ app.use(cookieParser());
 app.use(pinoHttp({ logger }));
 
 app.use('/api', apiRouter);
+app.use(notFound);
 
 app.use(errorHandler);
 

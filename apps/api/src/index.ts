@@ -11,5 +11,5 @@ const httpServer = createServer(app);
 initSockets(httpServer);
 
 httpServer.listen(port, () => {
-  logger.info(`API à l'écoute sur le port ${port}`);
+  logger.info(`API listening on port ${port}`);
 });

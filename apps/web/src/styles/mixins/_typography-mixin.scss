@@ -1,0 +1,22 @@
+@use 'sass:map';
+@use '../variables' as *;
+
+$heading-sizes: (
+  h1: $h1-size,
+  h2: $h2-size,
+  h3: $h3-size,
+  h4: $h4-size,
+  h5: $text-body-size,
+  h6: $text-body-size,
+);
+
+@mixin text-heading-transform($level) {
+  @if not map.has-key($heading-sizes, $level) {
+    @error "text-heading-transform: $level must be h1, h2, h3, h4, h5 or h6, not '#{$level}'.";
+  }
+
+  font-family: $font-family-title;
+  font-size: map.get($heading-sizes, $level);
+  font-weight: $font-weight-regular;
+  line-height: $line-height-tight;
+}

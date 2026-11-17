@@ -1,0 +1,70 @@
+@use '@/styles/variables' as *;
+@use '@/styles/functions' as *;
+
+.banner {
+  position: relative;
+  display: grid;
+  place-items: center;
+  inline-size: 100%;
+  block-size: 70vh;
+
+  &::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: 0 0 -0.2rem;
+    background-image: fade(bottom, $color: var(--background-color), $stops: (1 0%, 0.6 15%, 0 40%));
+    pointer-events: none;
+  }
+
+  &__video {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+  }
+
+  &__logo {
+    max-inline-size: 30rem;
+    block-size: auto;
+    animation:
+      logo-appear 8s ease-out both,
+      logo-pulse 3s ease-in-out 8s infinite alternate;
+  }
+}
+
+@keyframes logo-appear {
+  from {
+    opacity: 0;
+    filter: drop-shadow(0 0 0 with-alpha(var(--secondary-color), 0));
+    transform: scale(0.4);
+  }
+
+  to {
+    opacity: 1;
+    filter: drop-shadow(0 0 2rem with-alpha(var(--secondary-color), 0.7));
+    transform: scale(1);
+  }
+}
+
+@keyframes logo-pulse {
+  from {
+    opacity: 1;
+    filter: drop-shadow(0 0 2rem with-alpha(var(--secondary-color), 0.7));
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0.7;
+    filter: drop-shadow(0 0 0 with-alpha(var(--secondary-color), 0.2));
+    transform: scale(0.95);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .banner__logo {
+    animation: none;
+  }
+}

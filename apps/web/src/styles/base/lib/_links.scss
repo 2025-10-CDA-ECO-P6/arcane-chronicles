@@ -1,0 +1,21 @@
+@use '../../variables' as *;
+@use '../../mixins' as *;
+
+.link {
+  @include link;
+}
+
+@each $color in $link-colors {
+  .link--#{$color} {
+    @include link-color($color);
+  }
+}
+
+.link--no-underline {
+  @include link-no-underline;
+}
+
+.link--active,
+.link[aria-current='page'] {
+  @include link-active;
+}

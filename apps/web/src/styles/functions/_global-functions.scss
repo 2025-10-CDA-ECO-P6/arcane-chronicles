@@ -7,7 +7,7 @@ $_root-font-size: 10px;
 
 @function with-alpha($color, $alpha) {
   @if meta.type-of($alpha) != 'number' or $alpha < 0 or $alpha > 1 {
-    @error "with-alpha : $alpha doit être un nombre entre 0 et 1, pas '#{$alpha}'.";
+    @error "with-alpha: $alpha must be a number between 0 and 1, not '#{$alpha}'.";
   }
 
   @return color-mix(in srgb, #{$color} #{$alpha * 100%}, transparent);
@@ -19,7 +19,7 @@ $_root-font-size: 10px;
 
 @function fluid($min, $max, $min-viewport: $screen-s, $max-viewport: $screen-xl) {
   @if math.unit($min) != 'rem' or math.unit($max) != 'rem' {
-    @error "fluid : $min et $max doivent être en rem, pas '#{$min}' et '#{$max}'.";
+    @error "fluid: $min and $max must be in rem, not '#{$min}' and '#{$max}'.";
   }
 
   $min-px: math.div($min, 1rem) * $_root-font-size;
