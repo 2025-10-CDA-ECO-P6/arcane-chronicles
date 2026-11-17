@@ -8,7 +8,7 @@
   }
 
   @if not map.has-key($breakpoints, $name) {
-    @error "breakpoint inconnu '#{$name}', valeurs possibles : #{map.keys($breakpoints)}.";
+    @error "breakpoint: unknown breakpoint '#{$name}', possible values: #{map.keys($breakpoints)}.";
   }
 
   @return map.get($breakpoints, $name);

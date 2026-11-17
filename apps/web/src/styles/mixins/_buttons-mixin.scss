@@ -23,7 +23,7 @@
   }
 
   @if not map.has-key($button-color-values, $color) {
-    @error "button : couleur inconnue '#{$color}', valeurs possibles : #{$button-colors}.";
+    @error "button: unknown color '#{$color}', possible values: #{$button-colors}.";
   }
 
   $values: map.get($button-color-values, $color);
@@ -36,7 +36,7 @@
 
 @mixin button-size($size) {
   @if not map.has-key($button-size-values, $size) {
-    @error "button : taille inconnue '#{$size}', valeurs possibles : #{$button-sizes}.";
+    @error "button: unknown size '#{$size}', possible values: #{$button-sizes}.";
   }
 
   $values: map.get($button-size-values, $size);
