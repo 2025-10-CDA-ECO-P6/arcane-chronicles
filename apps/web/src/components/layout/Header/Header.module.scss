@@ -24,6 +24,7 @@
 
     &__title {
       color: var(--primary-color);
+      font-size: $h3-size;
       @include glow($on: text);
     }
   }
