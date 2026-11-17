@@ -30,7 +30,7 @@ Vérifier en priorité ce qui casserait la fonctionnalité principale : les **dr
 | Commandes | `npm test` (Vitest) et `npm run test:e2e` (Playwright, qui lance l'application si elle ne tourne pas) |
 | Configuration Playwright | Deux profils sur Chromium : `mj-desktop` et `joueur-mobile` (375 px). Firefox et WebKit (NF-03) seront ajoutés avec les premiers parcours complets |
 | Premiers tests | `GET /api/health` (intégration), utilitaire d'appel à l'API `apiFetch` (unitaire), affichage de la page d'accueil (end-to-end, deux profils) |
-| Authentification | Routes `/api/auth` (connexion, `/me`, déconnexion, limite de tentatives) et 404 JSON, testées avec Supertest. Le modèle `UserModel` est remplacé par un faux (`vi.mock`), car `npm test` tourne en CI sans base de données ; les tests avec la vraie base viendront quand la CI lancera les tests d'intégration dans le job qui a PostgreSQL |
+| Authentification | Routes `/api/auth` (inscription, connexion, `/me`, déconnexion, limites de tentatives) et 404 JSON, testées avec Supertest. Le modèle `UserModel` est remplacé par un faux (`vi.mock`), car `npm test` tourne en CI sans base de données ; les tests avec la vraie base viendront quand la CI lancera les tests d'intégration dans le job qui a PostgreSQL. Schéma d'inscription de `shared` (règles du mot de passe, un message par règle) testé à part |
 | Front (connexion) | Composants `Button`, `Input`, `Dot`, `NavLink`, `MainNav`, `BackgroundVideo`, `LoginForm`, contexte `ArcaneProvider` ; hook `useAuth` (redirection après connexion, refus des adresses de retour externes, messages d'erreur, déconnexion) ; `proxy` (redirections sans appel à l'API) ; `getCurrentUser` et `requireCurrentUser` côté serveur (session acceptée, absente, refusée, API injoignable) ; route `/session-expired` (suppression du cookie). Le routeur de Next, les cookies et `apiFetch` sont remplacés par des faux (`vi.mock`) |
 | CI | GitHub Actions (`.github/workflows/ci.yml`) à chaque pull request : tests unitaires et d'intégration, puis migrations, seeds et tests end-to-end sur une base PostgreSQL 17 neuve (voir [déploiement §4](../06-deploiement/deploiement.md)) |
 | Recette manuelle | — | Scénario de recette du MVP, accessibilité, navigateurs | En fin d'itération |
@@ -67,7 +67,7 @@ Vérifier en priorité ce qui casserait la fonctionnalité principale : les **dr
 
 | ID | Cas | Résultat attendu |
 |---|---|---|
-| TI-01 | Inscription avec un e-mail déjà utilisé | 409 |
+| TI-01 | Inscription avec un e-mail déjà utilisé | 409, sans hachage ni création ; aussi quand la base refuse le doublon (inscriptions simultanées) |
 | TI-02 | Connexion valide | 200 et cookie `httpOnly` posé |
 | TI-03 | Connexion avec un mauvais mot de passe | 401, même message que pour un e-mail inconnu |
 | TI-04 | Trop de tentatives de connexion | 429 |
@@ -80,6 +80,8 @@ Vérifier en priorité ce qui casserait la fonctionnalité principale : les **dr
 | TI-11 | Upload d'un fichier qui n'est pas une image, ou trop lourd | 400 |
 | TI-12 | Duplication d'une campagne publique | Copie appartenant au MJ, liée à l'original |
 | TI-13 | Suppression du compte MJ | Compte, campagnes et parties supprimés |
+| TI-14 | Inscription valide | 201, cookie posé, mot de passe enregistré haché, seuls les champs attendus enregistrés |
+| TI-15 | Trop de tentatives d'inscription (réussies, refusées ou invalides) | 429 |
 
 ### 4.3 Temps réel
 
