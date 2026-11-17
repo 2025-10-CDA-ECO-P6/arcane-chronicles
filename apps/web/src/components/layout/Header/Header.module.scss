@@ -1,0 +1,80 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1000;
+  background-color: var(--background-color);
+  padding: 1rem;
+  @include glow();
+
+  &__content {
+    display: flex;
+    align-items: center;
+    gap: $space-md;
+
+    &__menu:global(.btn) {
+      --btn-border: transparent;
+      --btn-font-size: #{$h3-size};
+    }
+
+    &__title {
+      color: var(--primary-color);
+      @include glow($on: text);
+    }
+  }
+  &__nav_wrapper {
+    display: flex;
+    gap: $space-lg;
+
+    &__nav {
+      display: flex;
+      align-items: center;
+      gap: $space-md;
+    }
+
+    &__logo {
+      inline-size: 4rem;
+      block-size: auto;
+    }
+  }
+}
+
+@include until(m) {
+  .header {
+    &__content {
+      gap: $space-sm;
+
+      &__menu:global(.btn) {
+        --btn-font-size: #{$text-body-size};
+      }
+
+      &__title {
+        font-size: $h4-size;
+      }
+    }
+
+    &__nav_wrapper {
+      gap: $space-sm;
+
+      &__nav {
+        gap: $space-sm;
+        font-size: $text-small-size;
+      }
+
+      &__logo {
+        inline-size: 3rem;
+      }
+    }
+  }
+}
+
+@include until(sm) {
+  .header {
+    display: none;
+  }
+}
