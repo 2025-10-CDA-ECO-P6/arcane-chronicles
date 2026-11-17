@@ -42,8 +42,6 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
     }
 
     setErrors({});
-    console.log('success');
-
     await login(result.data, redirectTo);
   };
 

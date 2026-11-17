@@ -9,7 +9,7 @@ import type { AuthUser } from '@/types/auth';
 const DEFAULT_REDIRECT = '/dashboard';
 
 const getSafeRedirect = (redirectTo?: string) =>
-  redirectTo?.startsWith('/') && !redirectTo.startsWith('//') ? redirectTo : DEFAULT_REDIRECT;
+  redirectTo?.startsWith('/') && !/^\/[/\\]/.test(redirectTo) ? redirectTo : DEFAULT_REDIRECT;
 
 const getLoginErrorMessage = (error: unknown) => {
   if (error instanceof ApiError && error.status === 401) {
