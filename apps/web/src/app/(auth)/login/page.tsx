@@ -19,7 +19,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           title="Se connecter"
           redirectText="Vous n'avez pas encore de compte ?"
           redirectLabel="Inscription"
-          redirectHref="/inscription"
+          redirectHref="/register"
         />
         <LoginForm redirectTo={typeof redirect === 'string' ? redirect : undefined} />
       </section>

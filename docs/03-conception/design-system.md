@@ -35,7 +35,7 @@ Cinzel et Inter sont des **polices variables** (`apps/web/src/assets/fonts/Cinze
 
 Toutes les tailles (textes, espacements, dimensions) sont exprimées en **`rem`**, avec **1rem = 10px** : une valeur de Figma se convertit en divisant par 10 (`24px` → `2.4rem`, `16px` → `1.6rem`).
 
-Cette base est posée par `html { font-size: 62.5%; }` dans `apps/web/src/styles/globals.scss` (62,5 % des 16px par défaut du navigateur). Un pourcentage plutôt que `10px` en dur respecte la taille de texte choisie par l'utilisateur dans son navigateur : s'il l'agrandit, toute l'interface suit. Le texte courant (`body`) va de 16px sur mobile à 20px sur desktop (`$text-body-size`, voir « Tailles fluides »).
+Cette base est posée par `html { font-size: 62.5%; }` dans `apps/web/src/styles/globals.scss` (62,5 % des 16px par défaut du navigateur). Un pourcentage plutôt que `10px` en dur respecte la taille de texte choisie par l'utilisateur dans son navigateur : s'il l'agrandit, toute l'interface suit. Le texte courant (`body`) va de 12px sur mobile à 16px sur desktop (`$text-body-size`, voir « Tailles fluides »).
 
 ## Breakpoints
 
@@ -172,6 +172,9 @@ Coins partiels : `border-radius: $radius-xl $radius-xl 0 0;`.
 | `$line-height-normal` | `1.4` | Texte de l'interface (appliqué à `body`) |
 | `$line-height-relaxed` | `1.7` | Paragraphes longs (narration, biographie) |
 | `$letter-spacing-caps` | `0.1rem` | Libellés en majuscules (QUÊTE PRINCIPALE…) |
+| `$font-weight-regular` | `300` | Graisse du texte courant (appliquée à `body`) et des titres |
+| `$font-weight-semibold` | `600` | Mise en avant |
+| `$font-weight-bold` | `700` | `b`, `strong` |
 
 ### Tailles fluides
 
@@ -192,7 +195,7 @@ Chaque taille a une variable `-mobile` et une `-desktop` ; la variable sans suff
 
 | Variable fluide | Mobile | Desktop | Balises (`base/_typography.scss`, `body` dans `globals.scss`) | Dans les composants |
 |---|---|---|---|---|
-| `$text-body-size` | `$font-size-md` (16px) | `$font-size-lg` (20px) | `body`, hérité par `p`, `li`, `dd`, `blockquote`, `td`, `span`, `a`… ; `label`, `legend`, `input`, `textarea`, `select`, `button` | Narration, descriptions, libellés de formulaire |
+| `$text-body-size` | `$font-size-sm` (12px) | `$font-size-md` (16px) | `body`, hérité par `p`, `li`, `dd`, `blockquote`, `td`, `span`, `a`… ; `label`, `legend`, `input`, `textarea`, `select`, `button` | Narration, descriptions, libellés de formulaire |
 | `$text-button-size` | `$font-size-sm` (12px) | `$font-size-md` (16px) | — | Texte des boutons `md` |
 | `$text-small-size` | `$font-size-xs` (10px) | `$font-size-sm` (12px) | — | Textes de cartes, inventaire, objectifs, caractéristiques (FOR, DEX…) |
 | `$text-caption-size` | `$font-size-2xs` (8px) | `$font-size-xs` (10px) | `small`, `figcaption`, `caption` | Mentions, compteurs, statuts (« 32/38 PV », « Actif »), surtitres, valeurs des badges (PV, CA, niveau) |
@@ -210,7 +213,7 @@ Le reset (`base/_reset.scss`) :
 Choix pour les balises globales :
 
 - `span` et `li` n'ont pas de taille propre : `span` sert partout (dans les boutons, les titres, les icônes `.icon`, `.sr-only`) et serait réduit jusque dans un `h1` ; une liste peut se trouver dans un menu comme dans une narration. Ils héritent de la taille du texte autour.
-- `input`, `textarea`, `select` et `button` reçoivent `font: inherit` et `color: inherit` : par défaut, les navigateurs leur donnent la police du système (environ 13px) et leur propre couleur au lieu de celles de la page. Ils prennent ainsi `$text-body-size`, donc 16px minimum sur mobile.
+- `input`, `textarea`, `select` et `button` reçoivent `font: inherit` et `color: inherit` : par défaut, les navigateurs leur donnent la police du système (environ 13px) et leur propre couleur au lieu de celles de la page. Ils prennent ainsi `$text-body-size`, soit 12px sur mobile : sous 16px, Safari sur iPhone zoome sur la page au toucher d'un champ (point à corriger, voir « Champs de formulaire »).
 - `b` et `strong` sont en `$font-weight-bold`.
 
 La fonction `fluid($min, $max)` (`apps/web/src/styles/functions/_global-functions.scss`) calcule le `clamp()` : taille `$min` jusqu'à `$screen-s` (375px), `$max` à partir de `$screen-xl` (1440px), croissance linéaire entre les deux. Elle accepte deux autres bornes d'écran en 3e et 4e paramètres, et peut servir à toute valeur fluide (espacement, marge…), en rem.
@@ -475,7 +478,7 @@ L'apparition du halo est animée (0,2 s), sauf si l'utilisateur a demandé de r�
 
 ```tsx
 <p>
-  Vous n'avez pas encore de compte ? <Link href="/inscription" className="link">Inscription</Link>
+  Vous n'avez pas encore de compte ? <Link href="/register" className="link">Inscription</Link>
 </p>
 
 <Link href="/catalogue" className="link link--gold">Voir le catalogue</Link>
@@ -514,7 +517,7 @@ Les champs prennent toute la largeur de leur conteneur : c'est le composant ou l
 | Erreur (`aria-invalid="true"`) | ligne `--hostile-color` |
 | Désactivé (`disabled`) | semi-transparent |
 
-Le texte saisi est en `$text-body-size`, jamais sous 16px : en dessous, Safari sur iPhone zoome sur la page quand on touche le champ.
+Le texte saisi est en `$text-body-size`. **Point ouvert** : il fait 12px sur mobile depuis le passage du texte courant en `$font-size-sm` ; sous 16px, Safari sur iPhone zoome sur la page quand on touche le champ. Il faudra donner aux champs une taille d'au moins 16px sur mobile.
 
 L'état d'erreur passe par l'attribut `aria-invalid` et non par une classe : il sert aussi aux lecteurs d'écran, qui annoncent le champ comme invalide. Le message d'erreur (`.form-error`) est relié au champ par `aria-describedby` : il est lu juste après le label quand on arrive sur le champ.
 
@@ -622,7 +625,7 @@ Une boîte (carte, panneau, encart) a par défaut : fond `--background-color-sec
 
 | Modificateur | Classe | Paramètre du mixin |
 |---|---|---|
-| Angles arrondis (5px, `$radius-md`) | `.box--rounded` | `$rounded: true` |
+| Angles arrondis (10px, `$radius-xl`) | `.box--rounded` | `$rounded: true` |
 | Couleur du halo et de la bordure : `primary`, `secondary`, `hostile`, `gold` (bordure et halo de cette couleur), `neutral` (par défaut : bordure `--border-color`, halo `--input-color`) | `.box--glow-{couleur}` | `$glow: gold` |
 | Couleur libre (bordure et halo) | — | `$glow: var(--third-color)` |
 | Flou du halo | — | `$blur: $glow-lg` |

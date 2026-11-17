@@ -6,7 +6,7 @@ import { useArcane } from '@/context/ArcaneContext';
 import { ApiError, apiFetch } from '@/lib/api';
 import type { AuthUser } from '@/types/auth';
 
-const DEFAULT_REDIRECT = '/tableau-de-bord';
+const DEFAULT_REDIRECT = '/dashboard';
 
 const getSafeRedirect = (redirectTo?: string) =>
   redirectTo?.startsWith('/') && !redirectTo.startsWith('//') ? redirectTo : DEFAULT_REDIRECT;

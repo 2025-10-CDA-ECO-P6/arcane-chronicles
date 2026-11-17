@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
-const GM_ROUTES = ['/tableau-de-bord'];
-const GUEST_ONLY_ROUTES = ['/login', '/inscription'];
-const DEFAULT_GM_ROUTE = '/tableau-de-bord';
+const GM_ROUTES = ['/dashboard'];
+const GUEST_ONLY_ROUTES = ['/login', '/register'];
+const DEFAULT_GM_ROUTE = '/dashboard';
 
 const matchesRoute = (path: string, routes: string[]) =>
   routes.some((route) => path === route || path.startsWith(`${route}/`));
