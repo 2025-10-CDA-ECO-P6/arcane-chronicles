@@ -20,8 +20,8 @@ describe('POST /api/auth/login rate limit', () => {
     const response = await attempt();
 
     expect(response.status).toBe(429);
-    expect(response.body).toEqual({
-      message: 'Too many login attempts, please try again in 15 minutes',
-    });
+    expect(response.body.message).toBe('Too many login attempts, please try again later');
+    expect(response.body.retryAfter).toBeGreaterThan(14 * 60);
+    expect(response.body.retryAfter).toBeLessThanOrEqual(15 * 60);
   });
 });
