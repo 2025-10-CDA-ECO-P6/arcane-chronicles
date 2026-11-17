@@ -23,9 +23,9 @@
     }
 
     &__title {
-      color: var(--primary-color);
-      font-size: $h3-size;
+      @include text-heading-transform(h3);
       @include glow($on: text);
+      color: var(--primary-color);
     }
   }
   &__nav_wrapper {

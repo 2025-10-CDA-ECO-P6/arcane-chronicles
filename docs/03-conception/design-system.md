@@ -11,8 +11,8 @@ Les fichiers sont rangés **par type** : les variables d'un côté, les fonction
 | `globals.scss` | Point d'entrée, importé par `app/layout.tsx` : charge les couleurs et toutes les classes globales une fois, et pose `*`, `html` et `body` |
 | `variables/` | **Uniquement des variables** : couleurs (variables CSS), breakpoints, espacements, arrondis, typographie, ombres, noms des icônes, réglages des boutons, des boîtes, du conteneur, dégradés des images |
 | `functions/` | **Uniquement des fonctions** : `_global-functions.scss` (`with-alpha()`, `fluid()`, `glow()`), `_layout-functions.scss` (`breakpoint()`), `_overlay-functions.scss` (`fade()`, `fade-edges()`) |
-| `mixins/` | **Uniquement des mixins** : `_global-mixin.scss` (`visually-hidden`, `truncate`) puis un fichier par élément (`_icons-mixin.scss`, `_effects-mixin.scss`, `_buttons-mixin.scss`, `_links-mixin.scss`, `_form-mixin.scss`, `_box-mixin.scss`, `_layout-mixin.scss`, `_overlay-mixin.scss`) |
-| `base/` | **Classes et styles globaux** : `_reset.scss`, `_typography.scss` (balises), `_layout.scss` (`.container`), `_utilities.scss` (`.sr-only`, `.truncate`) |
+| `mixins/` | **Uniquement des mixins** : `_global-mixin.scss` (`visually-hidden`, `truncate`) puis un fichier par élément (`_icons-mixin.scss`, `_effects-mixin.scss`, `_buttons-mixin.scss`, `_links-mixin.scss`, `_form-mixin.scss`, `_box-mixin.scss`, `_layout-mixin.scss`, `_overlay-mixin.scss`, `_typography-mixin.scss`) |
+| `base/` | **Classes et styles globaux** : `_reset.scss`, `_typography.scss` (balises, `.text-as--h1` à `h6`), `_layout.scss` (`.container`), `_utilities.scss` (`.sr-only`, `.truncate`) |
 | `base/lib/` | Classes des éléments d'interface : `_icons.scss`, `_buttons.scss`, `_links.scss`, `_form.scss`, `_box.scss`, `_overlay.scss` (et les éléments à venir) |
 
 Chaque dossier `variables/`, `functions/` et `mixins/` a un `_index.scss` qui regroupe ses fichiers. Les fichiers de `variables/`, `functions/` et `mixins/` ne génèrent aucun CSS : seuls `variables/_colors.scss` et les fichiers de `base/` en produisent, chargés une fois par `globals.scss`.
@@ -190,6 +190,13 @@ Chaque taille a une variable `-mobile` et une `-desktop` ; la variable sans suff
 | `$h4-size` | `$font-size-md` (16px) | `$font-size-lg` (20px) | `h4` |
 
 `h5` et `h6`, absents des maquettes, prennent la taille du texte courant avec la police des titres.
+
+**Style de titre sans balise de titre** : un texte qui doit ressembler à un titre sans en être un dans la structure de la page (nom du site dans le header, slogan d'une bannière) reste un `<p>` et prend le style d'un niveau de titre. Les lecteurs d'écran naviguent par titres : un `h2` placé avant le `h1` de la page, ou répété sur toutes les pages, brouille ce plan.
+
+- Classe globale : `.text-as--h1` à `.text-as--h6` (`base/_typography.scss`), par exemple `<p class="text-as--h2">`.
+- Mixin, dans un `.module.scss` : `@include text-heading-transform(h3);` (`mixins/_typography-mixin.scss`). Il applique la police, la taille, la graisse et l'interlignage du niveau demandé.
+
+Les balises `h1` à `h6` utilisent ce même mixin : un titre et un texte au style de titre ont toujours le même rendu.
 
 **Textes** : quatre tailles, partagées par les balises et les composants.
 

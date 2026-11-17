@@ -17,7 +17,7 @@ export function AuthBanner({ className }: AuthBannerProps) {
     <section className={className ? `${styles.banner} ${className}` : styles.banner}>
       <Image className={styles.banner__logo} src={logo} alt="Arcane Chronicles" priority />
       <div className={styles.banner__content}>
-        <h3 className={styles.banner__content__title}>Préparez vos campagnes en un seul lieu</h3>
+        <p className={styles.banner__content__title}>Préparez vos campagnes en un seul lieu</p>
         <ul className={styles.banner__content__list}>
           {FEATURES.map((feature) => (
             <li key={feature} className={styles.banner__content__list__item}>

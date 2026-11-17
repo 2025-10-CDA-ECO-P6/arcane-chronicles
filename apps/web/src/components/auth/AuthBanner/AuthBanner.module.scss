@@ -28,6 +28,7 @@
     gap: $space-sm;
 
     &__title {
+      @include text-heading-transform(h3);
       text-wrap: balance;
     }
 

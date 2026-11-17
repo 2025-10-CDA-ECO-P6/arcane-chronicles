@@ -17,7 +17,7 @@ export function Header() {
           iconOnly
           className={styles.header__content__menu}
         />
-        <h2 className={styles.header__content__title}>arcane chronicles</h2>
+        <p className={styles.header__content__title}>arcane chronicles</p>
       </div>
       <div className={styles.header__nav_wrapper}>
         <nav className={styles.header__nav_wrapper__nav}>
