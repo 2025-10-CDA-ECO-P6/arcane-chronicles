@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { cache } from 'react';
 
 import { apiFetch } from '@/lib/api';
@@ -20,3 +21,13 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
     return null;
   }
 });
+
+export const requireCurrentUser = async (pagePath: string): Promise<AuthUser> => {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    redirect(`/login?redirect=${encodeURIComponent(pagePath)}`);
+  }
+
+  return user;
+};

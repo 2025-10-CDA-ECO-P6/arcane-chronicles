@@ -1,18 +1,13 @@
 import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
 
-import { getCurrentUser } from '@/lib/auth';
+import { requireCurrentUser } from '@/lib/auth';
 
 export const metadata: Metadata = {
   title: 'Tableau de bord | Arcane Chronicles',
 };
 
 export default async function DashboardPage() {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    redirect('/login?redirect=/dashboard');
-  }
+  const user = await requireCurrentUser('/dashboard');
 
   return (
     <section>
