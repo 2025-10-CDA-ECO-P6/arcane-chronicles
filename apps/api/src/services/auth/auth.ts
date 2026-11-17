@@ -23,5 +23,21 @@ export const hashPassword = async (
   }
 };
 
-export const verifyPassword = async (hash: string, password: string): Promise<boolean> =>
-  argon2.verify(hash, password);
+let dummyHash: Promise<string> | undefined;
+
+const getDummyHash = () => {
+  dummyHash ??= argon2.hash('arcane-chronicles-dummy-password', hashingOptions);
+  return dummyHash;
+};
+
+export const verifyPassword = async (
+  hash: string | undefined,
+  password: string,
+): Promise<boolean> => {
+  if (!hash) {
+    await argon2.verify(await getDummyHash(), password);
+    return false;
+  }
+
+  return argon2.verify(hash, password);
+};

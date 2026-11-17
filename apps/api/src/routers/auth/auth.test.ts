@@ -76,6 +76,16 @@ describe('POST /api/auth/login', () => {
     expect(response.body).toEqual({ message: 'Invalid email or password' });
   });
 
+  it('still verifies a password on an unknown email so the response time does not reveal it', async () => {
+    vi.mocked(UserModel.getByEmail).mockResolvedValue(null);
+    const verify = vi.spyOn(argon2, 'verify');
+
+    await request(app).post('/api/auth/login').send({ email: 'unknown@example.com', password });
+
+    expect(verify).toHaveBeenCalledOnce();
+    verify.mockRestore();
+  });
+
   it('responds 422 with the refused fields on an invalid body', async () => {
     const response = await request(app).post('/api/auth/login').send({ email: 'not-an-email' });
 

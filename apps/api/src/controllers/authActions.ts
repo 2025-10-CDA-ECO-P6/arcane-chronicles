@@ -14,7 +14,7 @@ export const login = async (
 ) => {
   try {
     const user = await UserModel.getByEmail(req.body.email);
-    const verified = user ? await verifyPassword(user.passwordHash, req.body.password) : false;
+    const verified = await verifyPassword(user?.passwordHash, req.body.password);
 
     if (user && verified) {
       const authUser: AuthPayload = {
