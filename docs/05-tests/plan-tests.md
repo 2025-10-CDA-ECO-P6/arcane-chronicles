@@ -16,6 +16,7 @@ Vérifier en priorité ce qui casserait la fonctionnalité principale : les **dr
 | Niveau | Outil | Périmètre | Quand |
 |---|---|---|---|
 | Unitaire | Vitest 5.1 | Fonctions pures et services, sans base ni réseau | À chaque push (CI) |
+| Composants front | Vitest + React Testing Library 16.3 + user-event 14.6, jsdom 31 | Composants et hooks React, rendus et utilisés comme par un utilisateur (lecture par rôle et par label) | À chaque push (CI) |
 | Intégration API | Vitest + Supertest 7.3, base PostgreSQL de test (conteneur Docker) | Routes Express avec la vraie base | À chaque push (CI) |
 | Temps réel | Vitest + socket.io-client | Événements Socket.io, diffusion par room | À chaque push (CI) |
 | End-to-end | Playwright 1.64 (un contexte MJ desktop, deux contextes joueurs mobiles 375 px) | Parcours complet dans de vrais navigateurs | Avant chaque déploiement en production |
@@ -24,11 +25,13 @@ Vérifier en priorité ce qui casserait la fonctionnalité principale : les **dr
 
 | Élément | État |
 |---|---|
-| Emplacement | Tests unitaires et d'intégration dans des fichiers `*.test.ts` à côté du code testé (`apps/*/src`, `packages/shared/src`) ; tests end-to-end dans `e2e/` |
+| Emplacement | Tests unitaires et d'intégration dans des fichiers `*.test.ts` à côté du code testé (`apps/*/src`, `packages/shared/src`) ; tests de composants et de hooks React dans des fichiers `*.test.tsx` ; tests end-to-end dans `e2e/` |
+| Configuration Vitest | Deux projets dans `vitest.config.ts` : `node` (tous les `*.test.ts` : API, `shared`, logique du front sans DOM) et `web` (les `*.test.tsx` du front, dans jsdom, avec le plugin React et `apps/web/vitest.setup.ts`, qui charge les vérifications de `jest-dom` et nettoie le DOM après chaque test) |
 | Commandes | `npm test` (Vitest) et `npm run test:e2e` (Playwright, qui lance l'application si elle ne tourne pas) |
 | Configuration Playwright | Deux profils sur Chromium : `mj-desktop` et `joueur-mobile` (375 px). Firefox et WebKit (NF-03) seront ajoutés avec les premiers parcours complets |
 | Premiers tests | `GET /api/health` (intégration), utilitaire d'appel à l'API `apiFetch` (unitaire), affichage de la page d'accueil (end-to-end, deux profils) |
 | Authentification | Routes `/api/auth` (connexion, `/me`, déconnexion, limite de tentatives) et 404 JSON, testées avec Supertest. Le modèle `UserModel` est remplacé par un faux (`vi.mock`), car `npm test` tourne en CI sans base de données ; les tests avec la vraie base viendront quand la CI lancera les tests d'intégration dans le job qui a PostgreSQL |
+| Front (connexion) | Composants `Button`, `Input`, `Dot`, `NavLink`, `LoginForm` ; hook `useAuth` (redirection après connexion, refus des adresses de retour externes, messages d'erreur, déconnexion) ; `proxy` (redirections et absence de boucle sur un jeton rejeté) ; `getCurrentUser` côté serveur. Le routeur de Next, les cookies et `apiFetch` sont remplacés par des faux (`vi.mock`) |
 | CI | GitHub Actions (`.github/workflows/ci.yml`) à chaque pull request : tests unitaires et d'intégration, puis migrations, seeds et tests end-to-end sur une base PostgreSQL 17 neuve (voir [déploiement §4](../06-deploiement/deploiement.md)) |
 | Recette manuelle | — | Scénario de recette du MVP, accessibilité, navigateurs | En fin d'itération |
 
