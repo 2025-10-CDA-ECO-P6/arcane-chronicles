@@ -1,0 +1,15 @@
+@use 'sass:map';
+
+$link-color-values: (
+  'primary': var(--primary-color),
+  'secondary': var(--secondary-color),
+  'third': var(--third-color),
+  'gold': var(--gold-color),
+  'hostile': var(--hostile-color),
+  'text': var(--text-color-primary),
+  'text-secondary': var(--text-color-secondary),
+);
+
+$link-colors: map.keys($link-color-values);
+$link-default-color: 'secondary';
+$link-active-color: 'primary';

@@ -1,0 +1,53 @@
+@use 'sass:map';
+@use '../variables' as *;
+@use 'effects-mixin' as *;
+
+@mixin link-color($color) {
+  @if not map.has-key($link-color-values, $color) {
+    @error "link: unknown color '#{$color}', possible values: #{$link-colors}.";
+  }
+
+  --link-color: #{map.get($link-color-values, $color)};
+}
+
+@mixin _link-glow {
+  @include glow(var(--link-color), $glow-sm, $on: text);
+}
+
+@mixin link-active {
+  @include link-color($link-active-color);
+  @include _link-glow;
+}
+
+@mixin link-no-underline {
+  text-decoration: none;
+}
+
+@mixin link($color: $link-default-color, $underline: true) {
+  @include link-color($color);
+  color: var(--link-color);
+  transition: text-shadow 0.3s ease-in-out;
+
+  @if $underline {
+    text-decoration: underline;
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      @include _link-glow;
+    }
+  }
+
+  &:active {
+    @include _link-glow;
+  }
+
+  &:focus-visible {
+    outline: 0.2rem solid var(--link-color);
+    outline-offset: 0.2rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
