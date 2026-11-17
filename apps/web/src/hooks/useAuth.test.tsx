@@ -54,17 +54,21 @@ describe('useAuth', () => {
     expect(push).toHaveBeenCalledWith('/campaigns/42?tab=quests');
   });
 
-  it.each(['https://evil.example', '//evil.example', '/\\evil.example', 'javascript:alert(1)'])(
-    'refuses the unsafe redirect target %s',
-    async (target) => {
-      vi.mocked(apiFetch.post).mockResolvedValue(user);
-      const { result } = renderHook(() => useAuth());
+  it.each([
+    'https://evil.example',
+    '//evil.example',
+    '/\\evil.example',
+    '/\t/evil.example',
+    '/\n/evil.example',
+    'javascript:alert(1)',
+  ])('refuses the unsafe redirect target %s', async (target) => {
+    vi.mocked(apiFetch.post).mockResolvedValue(user);
+    const { result } = renderHook(() => useAuth());
 
-      await act(() => result.current.login(credentials, target));
+    await act(() => result.current.login(credentials, target));
 
-      expect(push).toHaveBeenCalledWith('/dashboard');
-    },
-  );
+    expect(push).toHaveBeenCalledWith('/dashboard');
+  });
 
   it.each([
     [401, 'Email ou mot de passe incorrect'],

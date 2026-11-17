@@ -9,8 +9,19 @@ import type { AuthUser } from '@/types/auth';
 const DEFAULT_REDIRECT = '/dashboard';
 const LOCK_STORAGE_KEY = 'arcane-chronicles:login-locked-until';
 
-const getSafeRedirect = (redirectTo?: string) =>
-  redirectTo?.startsWith('/') && !/^\/[/\\]/.test(redirectTo) ? redirectTo : DEFAULT_REDIRECT;
+const getSafeRedirect = (redirectTo?: string) => {
+  if (!redirectTo?.startsWith('/')) {
+    return DEFAULT_REDIRECT;
+  }
+
+  try {
+    const { origin } = window.location;
+    const url = new URL(redirectTo, origin);
+    return url.origin === origin ? `${url.pathname}${url.search}${url.hash}` : DEFAULT_REDIRECT;
+  } catch {
+    return DEFAULT_REDIRECT;
+  }
+};
 
 const getLoginErrorMessage = (error: unknown) => {
   if (error instanceof ApiError && error.status === 401) {
