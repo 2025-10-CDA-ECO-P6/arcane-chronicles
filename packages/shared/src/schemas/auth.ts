@@ -5,8 +5,14 @@ export const DISPLAY_NAME_MAX_LENGTH = 50;
 export const PASSWORD_MIN_LENGTH = 12;
 export const PASSWORD_MAX_LENGTH = 128;
 
+export const emailSchema = z
+  .string({ error: 'Invalid email address' })
+  .trim()
+  .toLowerCase()
+  .pipe(z.email({ error: 'Invalid email address' }));
+
 export const loginSchema = z.object({
-  email: z.email({ error: 'Invalid email address' }),
+  email: emailSchema,
   password: z.string({ error: 'Password is required' }).min(1, { error: 'Password is required' }),
 });
 
@@ -35,7 +41,7 @@ export const registerSchema = z.object({
     .max(DISPLAY_NAME_MAX_LENGTH, {
       error: `Display name must contain at most ${DISPLAY_NAME_MAX_LENGTH} characters`,
     }),
-  email: z.email({ error: 'Invalid email address' }),
+  email: emailSchema,
   password: passwordSchema,
 });
 

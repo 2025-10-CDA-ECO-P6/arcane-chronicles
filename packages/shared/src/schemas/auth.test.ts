@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { passwordSchema, registerSchema } from './auth';
+import { emailSchema, passwordSchema, registerSchema } from './auth';
 
 const validRegistration = {
   displayName: 'Maître Ying',
@@ -12,6 +12,16 @@ const passwordMessages = (password: string) => {
   const result = passwordSchema.safeParse(password);
   return result.success ? [] : result.error.issues.map((issue) => issue.message);
 };
+
+describe('emailSchema', () => {
+  it('stores the email in lowercase without surrounding spaces', () => {
+    expect(emailSchema.parse('  Maitre.Ying@Gmail.COM ')).toBe('maitre.ying@gmail.com');
+  });
+
+  it('still rejects an invalid email', () => {
+    expect(emailSchema.safeParse('Ying').success).toBe(false);
+  });
+});
 
 describe('passwordSchema', () => {
   it('accepts a password that follows every rule', () => {

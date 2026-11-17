@@ -75,6 +75,20 @@ describe('POST /api/auth/register', () => {
     });
   });
 
+  it('saves the email in lowercase', async () => {
+    vi.mocked(UserModel.getByEmail).mockResolvedValue(null);
+    vi.mocked(UserModel.create).mockResolvedValue(publicUser);
+
+    await request(app)
+      .post('/api/auth/register')
+      .send({ ...registration, email: 'MJ@Example.com' });
+
+    expect(UserModel.getByEmail).toHaveBeenCalledWith('mj@example.com');
+    expect(UserModel.create).toHaveBeenCalledWith(
+      expect.objectContaining({ email: 'mj@example.com' }),
+    );
+  });
+
   it('responds 409 without hashing or creating anything when the email already has an account', async () => {
     vi.mocked(UserModel.getByEmail).mockResolvedValue(dbUser);
     const hash = vi.spyOn(argon2, 'hash');
@@ -135,6 +149,17 @@ describe('POST /api/auth/login', () => {
     expect(cookie).toMatch(/HttpOnly/);
     expect(cookie).toMatch(/SameSite=Lax/);
     expect(cookie).toMatch(/Expires=/);
+  });
+
+  it('finds the account whatever the case of the email', async () => {
+    vi.mocked(UserModel.getByEmail).mockResolvedValue(dbUser);
+
+    const response = await request(app)
+      .post('/api/auth/login')
+      .send({ email: ' MJ@Example.com ', password });
+
+    expect(response.status).toBe(200);
+    expect(UserModel.getByEmail).toHaveBeenCalledWith('mj@example.com');
   });
 
   it('responds 401 with a generic message on a wrong password', async () => {
