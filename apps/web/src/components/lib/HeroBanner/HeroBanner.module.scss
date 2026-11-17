@@ -53,11 +53,13 @@
   from {
     opacity: 1;
     filter: drop-shadow(0 0 2rem with-alpha(var(--secondary-color), 0.7));
+    transform: scale(1);
   }
 
   to {
     opacity: 0.7;
     filter: drop-shadow(0 0 0 with-alpha(var(--secondary-color), 0.2));
+    transform: scale(0.95);
   }
 }
 

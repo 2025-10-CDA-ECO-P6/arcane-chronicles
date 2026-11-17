@@ -1,5 +1,3 @@
-'use client';
-
 import Image from 'next/image';
 
 import logo from '@/assets/images/logo-desktop.webp';
@@ -22,7 +20,9 @@ export function HeroBanner() {
           media="(min-width: 768px) and (prefers-reduced-motion: no-preference)"
         />
       </video>
-      <Image src={logo} alt="Hero Image" className={styles.banner__logo} />
+      <h1>
+        <Image src={logo} alt="Arcane Chronicles" className={styles.banner__logo} />
+      </h1>
     </div>
   );
 }
