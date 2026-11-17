@@ -30,7 +30,7 @@ describe('useAuth', () => {
     vi.mocked(useRouter).mockReturnValue({ push, refresh } as unknown as ReturnType<
       typeof useRouter
     >);
-    vi.mocked(useArcane).mockReturnValue({ currentUser: null, isLogged: false, handleUser });
+    vi.mocked(useArcane).mockReturnValue({ currentUser: null, isAuthenticated: false, handleUser });
   });
 
   it('stores the user and goes to the dashboard after a successful login', async () => {

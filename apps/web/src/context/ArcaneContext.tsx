@@ -18,7 +18,7 @@ export function ArcaneProvider({ children, initialUser }: ArcaneProviderProps) {
   const value = useMemo(
     () => ({
       currentUser,
-      isLogged: currentUser !== null,
+      isAuthenticated: currentUser !== null,
       handleUser,
     }),
     [currentUser, handleUser],

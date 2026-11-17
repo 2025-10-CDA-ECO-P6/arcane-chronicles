@@ -9,6 +9,6 @@ export interface ArcaneProviderProps {
 
 export interface ArcaneContextValue {
   currentUser: AuthUser | null;
-  isLogged: boolean;
+  isAuthenticated: boolean;
   handleUser: (user: AuthUser | null) => void;
 }

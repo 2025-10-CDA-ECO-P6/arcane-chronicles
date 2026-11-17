@@ -35,9 +35,9 @@ const isSessionAccepted = async (token: string) => {
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const token = request.cookies.get('token')?.value;
-  const isLogged = hasValidToken(token);
+  const isAuthenticated = hasValidToken(token);
 
-  if (matchesRoute(pathname, GM_ROUTES) && !isLogged) {
+  if (matchesRoute(pathname, GM_ROUTES) && !isAuthenticated) {
     const loginUrl = new URL('/login', request.nextUrl);
     loginUrl.searchParams.set('redirect', `${pathname}${search}`);
     return NextResponse.redirect(loginUrl);
@@ -46,7 +46,7 @@ export async function proxy(request: NextRequest) {
   if (
     matchesRoute(pathname, GUEST_ONLY_ROUTES) &&
     token &&
-    isLogged &&
+    isAuthenticated &&
     (await isSessionAccepted(token))
   ) {
     return NextResponse.redirect(new URL(DEFAULT_GM_ROUTE, request.nextUrl));
