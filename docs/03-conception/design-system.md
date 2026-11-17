@@ -138,9 +138,9 @@ La fonction `with-alpha($color, $alpha)` (`apps/web/src/styles/functions/_global
 |---|---|---|
 | `$radius-xs` | `0.3rem` (3px) | Cases à cocher, sélecteur d'attitude |
 | `$radius-sm` | `0.4rem` (4px) | Barres de progression |
-| `$radius-md` | `0.5rem` (5px) | Valeur par défaut : boutons, cartes, coffres |
+| `$radius-md` | `0.5rem` (5px) | Boutons, cartes, coffres |
 | `$radius-lg` | `0.8rem` (8px) | Menu de navigation |
-| `$radius-xl` | `1rem` (10px) | Blocs, panneaux, statuts |
+| `$radius-xl` | `1rem` (10px) | Blocs, panneaux, statuts ; boîtes arrondies (`.box--rounded`, mixin `box-rounded`, carte de connexion) |
 | `$radius-2xl` | `1.6rem` (16px) | Barre de recherche |
 | `$radius-3xl` | `2rem` (20px) | Onglets (Description, Coffres…), vignettes de personnage |
 | `$radius-pill` | `100rem` | Pastilles allongées (« À attribuer », « État ») |
@@ -207,7 +207,9 @@ Les balises `h1` à `h6` utilisent ce même mixin : un titre et un texte au styl
 | `$text-small-size` | `$font-size-xs` (10px) | `$font-size-sm` (12px) | — | Textes de cartes, inventaire, objectifs, caractéristiques (FOR, DEX…) |
 | `$text-caption-size` | `$font-size-2xs` (8px) | `$font-size-xs` (10px) | `small`, `figcaption`, `caption` | Mentions, compteurs, statuts (« 32/38 PV », « Actif »), surtitres, valeurs des badges (PV, CA, niveau) |
 
-Règle générale : le desktop reprend la taille des maquettes, le mobile est un cran en dessous. Exception pour le texte courant, où le mobile est au plancher (16px) et c'est le desktop qui monte d'un cran : c'est la taille minimale pour lire un paragraphe sur téléphone, et celle des champs de formulaire, sous laquelle Safari sur iPhone zoome automatiquement au moment de la saisie.
+Règle générale : le desktop reprend la taille des maquettes, le mobile est un cran en dessous, texte courant compris (12px sur mobile, 16px sur desktop).
+
+Point ouvert : les champs de formulaire héritent de ce texte courant, donc 12px sur mobile. Sous 16px, Safari sur iPhone zoome automatiquement sur le champ au moment de la saisie. La taille des champs sur mobile reste à trancher.
 
 Les styles des balises sont dans `apps/web/src/styles/base/` : `_typography.scss` pour les tailles et polices (titres, libellés, champs…), `_reset.scss` pour neutraliser les styles par défaut du navigateur. `globals.scss` ne garde que `*`, `html` et `body`, et charge les autres fichiers.
 
