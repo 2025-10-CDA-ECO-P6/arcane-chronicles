@@ -38,7 +38,7 @@ L'objectif est de limiter les ressources consommées (données transférées, ca
 | **Polices** | Fichiers locaux (aucune requête vers un service tiers), une police variable par famille au lieu d'un fichier par graisse |
 | **Icônes** | Une seule police d'icônes de 33 Ko (WOFF) pour 84 icônes, au lieu de dizaines d'images ou d'une bibliothèque d'icônes complète |
 | **Images** | WebP en deux tailles (`-desktop` et `-mobile`), chargement différé (`loading="lazy"`) ; images uploadées redimensionnées par Cloudinary au format demandé |
-| **Vidéo de fond** | Une seule vidéo courte et compressée (2,3 Mo), muette, en boucle, réservée aux pages de connexion et d'inscription ; jamais téléchargée sur mobile ni quand l'utilisateur demande moins d'animations, où une image fixe de 17 Ko la remplace |
+| **Vidéo de fond** | Une seule vidéo courte et compressée (2,3 Mo), muette, en boucle, dans un composant unique (`BackgroundVideo`) utilisé par les pages de connexion et d'inscription et par la bannière de l'accueil ; jamais téléchargée sur mobile ni quand l'utilisateur demande moins d'animations, où une image fixe de 17 Ko la remplace |
 | **Session** | Le `proxy` de Next ne fait aucun appel réseau : il lit seulement la date d'expiration du jeton. Pour un utilisateur connecté, un seul appel `GET /api/auth/me` par page, partagé entre le layout et la page (`cache` de React), et aucun pour un visiteur sans cookie. Contrepartie assumée : les pages sont rendues à chaque requête (lecture du cookie), pour afficher une session toujours à jour |
 | **Thème sombre** | Fond `#080808` : moins d'énergie consommée sur les écrans OLED des téléphones |
 | **Pas de traceurs** | Aucun outil d'analyse ni script publicitaire tiers |
