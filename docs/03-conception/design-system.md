@@ -11,9 +11,9 @@ Les fichiers sont rangés **par type** : les variables d'un côté, les fonction
 | `globals.scss` | Point d'entrée, importé par `app/layout.tsx` : charge les couleurs et toutes les classes globales une fois, et pose `*`, `html` et `body` |
 | `variables/` | **Uniquement des variables** : couleurs (variables CSS), breakpoints, espacements, arrondis, typographie, ombres, noms des icônes, réglages des boutons, des boîtes, du conteneur, dégradés des images |
 | `functions/` | **Uniquement des fonctions** : `_global-functions.scss` (`with-alpha()`, `fluid()`, `glow()`), `_layout-functions.scss` (`breakpoint()`), `_overlay-functions.scss` (`fade()`, `fade-edges()`) |
-| `mixins/` | **Uniquement des mixins** : `_global-mixin.scss` (`visually-hidden`) puis un fichier par élément (`_icons-mixin.scss`, `_effects-mixin.scss`, `_buttons-mixin.scss`, `_form-mixin.scss`, `_box-mixin.scss`, `_layout-mixin.scss`, `_overlay-mixin.scss`) |
-| `base/` | **Classes et styles globaux** : `_reset.scss`, `_typography.scss` (balises), `_layout.scss` (`.container`), `_utilities.scss` (`.sr-only`) |
-| `base/lib/` | Classes des éléments d'interface : `_icons.scss`, `_buttons.scss`, `_form.scss`, `_box.scss`, `_overlay.scss` (et les éléments à venir) |
+| `mixins/` | **Uniquement des mixins** : `_global-mixin.scss` (`visually-hidden`, `truncate`) puis un fichier par élément (`_icons-mixin.scss`, `_effects-mixin.scss`, `_buttons-mixin.scss`, `_links-mixin.scss`, `_form-mixin.scss`, `_box-mixin.scss`, `_layout-mixin.scss`, `_overlay-mixin.scss`) |
+| `base/` | **Classes et styles globaux** : `_reset.scss`, `_typography.scss` (balises), `_layout.scss` (`.container`), `_utilities.scss` (`.sr-only`, `.truncate`) |
+| `base/lib/` | Classes des éléments d'interface : `_icons.scss`, `_buttons.scss`, `_links.scss`, `_form.scss`, `_box.scss`, `_overlay.scss` (et les éléments à venir) |
 
 Chaque dossier `variables/`, `functions/` et `mixins/` a un `_index.scss` qui regroupe ses fichiers. Les fichiers de `variables/`, `functions/` et `mixins/` ne génèrent aucun CSS : seuls `variables/_colors.scss` et les fichiers de `base/` en produisent, chargés une fois par `globals.scss`.
 
@@ -44,12 +44,13 @@ Variables Sass dans `apps/web/src/styles/variables/_breakpoints.scss`.
 | Variable | Valeur | Cible |
 |---|---|---|
 | `$screen-s` | `375px` | Mobile (interface joueur, 350 à 375px) |
+| `$screen-sm` | `500px` | Limite entre téléphone et tablette : `until(sm)` vise tous les téléphones en portrait (jusqu'à 430px environ), y compris le 375px de la maquette, que `until(s)` exclut |
 | `$screen-m` | `768px` | Tablette en portrait (iPad), valeur `md` de Bootstrap et Tailwind |
 | `$screen-lg` | `1024px` | Tablette en paysage, petit portable |
 | `$screen-xl` | `1440px` | Ordinateur portable et écran courant (interface MJ) |
 | `$screen-xxl` | `1920px` | Écran Full HD |
 
-Les media queries s'écrivent avec les mixins de `apps/web/src/styles/mixins/_layout-mixin.scss` (transmis par `mixins/_index.scss`), avec le nom du breakpoint (`s`, `m`, `lg`, `xl`, `xxl`) ou une valeur en px pour un cas particulier :
+Les media queries s'écrivent avec les mixins de `apps/web/src/styles/mixins/_layout-mixin.scss` (transmis par `mixins/_index.scss`), avec le nom du breakpoint (`s`, `sm`, `m`, `lg`, `xl`, `xxl`) ou une valeur en px pour un cas particulier :
 
 | Mixin | Media query générée | Usage |
 |---|---|---|
@@ -436,14 +437,62 @@ Un lien (`<a>`, `<Link>` de Next.js) peut avoir l'apparence d'un bouton, avec ex
 
 ---
 
+## Liens
+
+Fichiers des liens dans `apps/web/src/styles/` :
+
+| Fichier | Contenu |
+|---|---|
+| `variables/_links.scss` | Table des couleurs (`$link-color-values` : nom → variable CSS), couleur par défaut (`$link-default-color`) et couleur du lien actif (`$link-active-color`) |
+| `mixins/_links-mixin.scss` | Mixins `link($color, $underline)`, `link-color($color)`, `link-active` et `link-no-underline` |
+| `base/lib/_links.scss` | Classes `.link`, `.link--{couleur}`, `.link--no-underline` et `.link--active`, chargées une fois par `globals.scss` |
+
+Le reset (`base/_reset.scss`) retire tout style aux balises `<a>` : couleur héritée du texte, pas de soulignement. Un lien n'a donc aucune apparence par défaut, ce qui évite qu'un lien en forme de bouton, une carte cliquable ou un élément du menu hérite d'un style de lien texte. Un lien dans un texte prend explicitement la classe `.link` :
+
+| État | Rendu |
+|---|---|
+| Normal | texte de la couleur du lien (`--secondary-color` par défaut), souligné |
+| Survol (souris uniquement, `@media (hover: hover)`) et appui | halo de la même couleur autour des lettres (`$glow-sm`) |
+| Focus clavier (`:focus-visible`) | contour de la même couleur, 2px, décalé de 2px |
+
+La couleur passe par une variable CSS interne, `--link-color`, utilisée à la fois par le texte, le halo et le contour : une seule valeur à changer pour tout recolorer. Couleurs possibles : `primary`, `secondary` (par défaut), `third`, `gold`, `hostile`, `text` (`--text-color-primary`) et `text-secondary` (`--text-color-secondary`) ; une couleur inconnue fait échouer la compilation. Ajouter une couleur = une entrée dans `$link-color-values`, avec la variable CSS correspondante.
+
+| Modificateur | Effet |
+|---|---|
+| `.link--no-underline` | Retire le soulignement (liens de navigation) ; mixin : `@include link($underline: false)` ou `@include link-no-underline` |
+| `.link--active` | Lien actif : couleur `--primary-color` et halo permanent ; mixin : `@include link-active` |
+
+Le style actif s'applique aussi automatiquement à un lien qui porte `aria-current="page"`. C'est ce que fait le composant React `NavLink` (`components/lib/NavLink/`) : il compare l'adresse de la page à son `href` (avec `usePathname()`) et pose `aria-current="page"` sur le lien de la page en cours, ce qui l'annonce aussi comme « page actuelle » aux lecteurs d'écran. Il ajoute `link link--no-underline` ; `className` permet d'y ajouter une couleur. Pour `/`, le lien n'est actif que sur l'accueil exact ; pour les autres, il l'est aussi sur les sous-pages (`/campagnes/42` active `/campagnes`), sauf avec `exact`.
+
+```tsx
+<nav>
+  <NavLink href="/" className="link--text-secondary">Accueil</NavLink>
+  <NavLink href="/catalogue" className="link--text-secondary">Catalogue</NavLink>
+</nav>
+```
+
+L'apparition du halo est animée (0,2 s), sauf si l'utilisateur a demandé de réduire les animations dans son système (`prefers-reduced-motion`).
+
+```tsx
+<p>
+  Vous n'avez pas encore de compte ? <Link href="/inscription" className="link">Inscription</Link>
+</p>
+
+<Link href="/catalogue" className="link link--gold">Voir le catalogue</Link>
+```
+
+Dans un `.module.scss` : `@include link;` (couleur par défaut) ou `@include link(gold);`. Pour changer seulement la couleur d'un élément qui a déjà le style de lien : `@include link-color(primary);`.
+
+---
+
 ## Champs de formulaire
 
 Fichiers des champs dans `apps/web/src/styles/` :
 
 | Fichier | Contenu |
 |---|---|
-| `mixins/_form-mixin.scss` | Mixins `form-field`, `form-row`, `form-label`, `form-select`, `form-input`, `form-textarea` |
-| `base/lib/_form.scss` | Classes `.form-field`, `.form-row`, `.form-label`, `.form-select`, `.form-input`, `.form-textarea`, chargées une fois par `globals.scss` |
+| `mixins/_form-mixin.scss` | Mixins `form-field`, `form-row`, `form-label`, `form-error`, `form-select`, `form-input`, `form-textarea` |
+| `base/lib/_form.scss` | Classes `.form-field`, `.form-row`, `.form-label`, `.form-error`, `.form-select`, `.form-input`, `.form-textarea`, chargées une fois par `globals.scss` |
 
 | Élément | Classe | Style |
 |---|---|---|
@@ -451,6 +500,7 @@ Fichiers des champs dans `apps/web/src/styles/` :
 | Ligne de champs | `.form-row` | plusieurs `.form-field` côte à côte, à largeur égale ; passent l'un sous l'autre quand un champ descendrait sous 200px (`$min-size`), sans media query |
 | Label | `.form-label` | Cinzel, `$text-body-size`, `--text-color-secondary` |
 | Champ texte | `.form-input` | texte saisi en Inter, pas d’encadré, une ligne en bas `--border-color`, fond transparent, texte `--text-color-secondary` en `$text-body-size` |
+| Message d'erreur | `.form-error` | texte `--hostile-color` en Inter, `$text-small-size`, sous le champ |
 | Zone de texte | `.form-textarea` | même ligne en bas, fond `--border-color`, hauteur minimale 120px, agrandissable en hauteur, barre de défilement fine grise (`--input-color`) |
 
 Les champs prennent toute la largeur de leur conteneur : c'est le composant ou la mise en page qui fixe la largeur.
@@ -466,7 +516,32 @@ Les champs prennent toute la largeur de leur conteneur : c'est le composant ou l
 
 Le texte saisi est en `$text-body-size`, jamais sous 16px : en dessous, Safari sur iPhone zoome sur la page quand on touche le champ.
 
-L'état d'erreur passe par l'attribut `aria-invalid` et non par une classe : il sert aussi aux lecteurs d'écran, qui annoncent le champ comme invalide.
+L'état d'erreur passe par l'attribut `aria-invalid` et non par une classe : il sert aussi aux lecteurs d'écran, qui annoncent le champ comme invalide. Le message d'erreur (`.form-error`) est relié au champ par `aria-describedby` : il est lu juste après le label quand on arrive sur le champ.
+
+### Composant React `Input`
+
+`apps/web/src/components/lib/form/Input/` assemble le conteneur, le label, le champ et le message d'erreur. Il accepte les attributs d'un `<input>` (`name`, `value`, `required`, `autoComplete`…) en plus de ses props ; `onChange` est remplacé par `handleChange` :
+
+| Prop | Rôle |
+|---|---|
+| `label` (obligatoire) | Texte du label, relié au champ par un identifiant généré (`useId`) si aucun `id` n'est fourni |
+| `srOnly` | Label masqué à l'écran mais lu par les lecteurs d'écran |
+| `inputType` | `text` (par défaut), `email`, `password`, `search`, `tel`, `url`, `number` |
+| `error` | Message affiché sous le champ ; passe aussi le champ en `aria-invalid` |
+| `handleChange` | Fonction appelée à chaque saisie, pour un champ contrôlé (`value` gardée dans un état React) |
+
+```tsx
+<Input
+  label="Email"
+  inputType="email"
+  name="email"
+  autoComplete="email"
+  required
+  value={values.email}
+  handleChange={handleChange}
+  error={errors.email}
+/>
+```
 
 ```tsx
 <div className="form-field">
@@ -690,6 +765,15 @@ fade(bottom, 100%, $mid-alpha: 0.2, $mid-at: 60%) // arrêt intermédiaire à 60
 fade(right, 10%, var(--background-color))         // autre couleur de fond
 ```
 
+**Plusieurs arrêts, comme dans Figma** : `$stops` reçoit une liste de paires `opacité position`, une par arrêt du dégradé Figma (l'opacité de la couleur entre 0 et 1, puis sa distance au bord `$side`). `$length` est alors inutile : la position du dernier arrêt fait office de longueur.
+
+```scss
+fade(right, $stops: (1 0%, 0.8 15%, 0.3 30%, 0 40%))
+fade(top, $color: var(--gold-color), $stops: (1 0%, 0.5 20%, 0 50%))
+```
+
+Une opacité de `1` donne la couleur pleine, `0` la transparence, et les valeurs intermédiaires passent par `with-alpha()`. Dans Figma, les positions se lisent le long du trait du dégradé : il faut les compter depuis le bord où la couleur est pleine.
+
 `fade-edges($color, $top, $right, $bottom, $left)` combine plusieurs fondus, un par bord renseigné (effet vignette) :
 
 ```scss
@@ -699,6 +783,22 @@ fade(right, 10%, var(--background-color))         // autre couleur de fond
 ```
 
 Un dégradé sur mesure peut aussi remplacer celui d'une classe : `@include overlay-gradient(fade(top, 40%));` sur un élément qui a déjà `.overlay`.
+
+---
+
+## Texte tronqué
+
+Un texte trop long pour sa place (titre de campagne dans une carte, nom de personnage dans une liste) est coupé et terminé par « … ».
+
+| | Une ligne (par défaut) | Plusieurs lignes |
+|---|---|---|
+| Mixin | `@include truncate;` | `@include truncate(3);` |
+| Classe globale | `.truncate` | — (mixin seulement) |
+| Technique | `white-space: nowrap` + `text-overflow: ellipsis` | `line-clamp` (avec `display: -webkit-box`, encore nécessaire pour Chrome et Safari) |
+
+Le second paramètre fixe une largeur maximale : `@include truncate(2, 30rem);`. Sans lui, c'est la largeur du conteneur qui décide. Dans les deux cas, l'élément doit avoir une largeur limitée (bloc, ou élément flex avec `min-inline-size: 0`), sinon le texte s'étale et n'est jamais coupé. `$lines` doit être un entier d'au moins 1, sinon la compilation échoue.
+
+Le texte complet reste dans le HTML : il est lu en entier par les lecteurs d'écran. Si l'information coupée est importante, on peut l'afficher au survol avec l'attribut `title`.
 
 ---
 

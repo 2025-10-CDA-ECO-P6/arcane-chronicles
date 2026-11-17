@@ -38,6 +38,7 @@ L'objectif est de limiter les ressources consommées (données transférées, ca
 | **Polices** | Fichiers locaux (aucune requête vers un service tiers), une police variable par famille au lieu d'un fichier par graisse |
 | **Icônes** | Une seule police d'icônes de 33 Ko (WOFF) pour 84 icônes, au lieu de dizaines d'images ou d'une bibliothèque d'icônes complète |
 | **Images** | WebP en deux tailles (`-desktop` et `-mobile`), chargement différé (`loading="lazy"`) ; images uploadées redimensionnées par Cloudinary au format demandé |
+| **Vidéo de fond** | Une seule vidéo courte et compressée (2,3 Mo), muette, en boucle, réservée aux pages de connexion et d'inscription ; jamais téléchargée sur mobile ni quand l'utilisateur demande moins d'animations, où une image fixe de 17 Ko la remplace |
 | **Thème sombre** | Fond `#080808` : moins d'énergie consommée sur les écrans OLED des téléphones |
 | **Pas de traceurs** | Aucun outil d'analyse ni script publicitaire tiers |
 | **Hébergement** | Neon met la base en veille quand elle ne sert pas ; l'API Render est maintenue éveillée par un ping toutes les 10 minutes, un compromis assumé entre disponibilité pour les démonstrations et sobriété : intervalle le plus long qui garde une marge avant la mise en veille (15 minutes), soit deux fois moins de requêtes qu'un ping toutes les 5 minutes ; la route pingée ne lit pas la base, qui reste en veille ; une seule petite instance gratuite |
@@ -49,8 +50,8 @@ L'objectif est de limiter les ressources consommées (données transférées, ca
 
 | Fichier | Poids actuel | Recommandation |
 |---|--:|---|
-| `apps/web/src/assets/videos/fire.mp4` | 58 Mo | Ne pas l'utiliser dans l'application ; garder la boucle courte |
-| `apps/web/src/assets/videos/fire_loop_14s.mp4` | 4,3 Mo | Compresser et réduire la résolution ; vidéo muette, sans lecture automatique sur mobile, désactivée avec `prefers-reduced-motion`, image fixe (`poster`) en attendant. Usage exact **à confirmer** |
+| `apps/web/src/assets/videos/fire.mp4` | 58 Mo | **Fait** : retiré des assets, seule la boucle courte est gardée |
+| `apps/web/src/assets/videos/fire_loop_14s.mp4` | 4,3 Mo | **Fait** : fichier source de travail, jamais servi. La version servie, `apps/web/public/videos/fire.mp4`, est en 720p H.264 sans piste audio (2,3 Mo, −48 %), avec une image fixe `fire-poster.webp` (17 Ko). Elle sert de fond aux pages de connexion et d'inscription et n'est téléchargée que sur un écran d'au moins 768 px sans `prefers-reduced-motion` (attribut `media` de `<source>`) ; sinon seule l'image fixe s'affiche |
 | `apps/web/src/assets/fonts/Inter-Variable.ttf` | 854 Ko | Convertir en WOFF2 et ne garder que les caractères latins (environ 10 fois plus léger) |
 | `apps/web/src/assets/fonts/Cinzel-Variable.ttf` | 123 Ko | Convertir en WOFF2 |
 | `apps/web/src/assets/fonts/icons/Arcane-chronicle.woff` | 33 Ko | Générer aussi un WOFF2 ; retirer de la police les icônes non utilisées |

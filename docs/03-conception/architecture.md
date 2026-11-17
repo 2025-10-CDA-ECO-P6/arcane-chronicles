@@ -51,10 +51,12 @@ arcane-chronicles/
 ├── apps/
 │   ├── web/                  # Next.js
 │   │   ├── Dockerfile
+│   │   ├── public/           # fichiers servis tels quels (vidéo de fond et son image fixe)
 │   │   └── src/
 │   │       ├── app/          # routes (App Router)
 │   │       ├── assets/       # polices, police d'icônes, images, vidéos
 │   │       ├── components/   # composants repris de la page « composants » de Figma
+│   │       ├── hooks/        # logique réutilisable (useAuth : connexion, déconnexion)
 │   │       ├── lib/          # client API (apiFetch), client Socket.io, polices
 │   │       └── styles/       # design system : variables, mixins, classes globales
 │   └── api/                  # Express + Socket.io
