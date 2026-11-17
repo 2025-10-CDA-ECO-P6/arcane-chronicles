@@ -9,8 +9,9 @@
   gap: $space-lg;
   padding: $space-xl $space-lg;
   background-image:
-    fade(right, $color: var(--background-color-secondary), $stops: (1 5%, 0.2 40%, 0 50%)),
+    fade(right, $color: var(--background-color-secondary), $stops: (0.95 5%, 0.2 40%, 0 50%)),
     fade(bottom, $color: var(--background-color-secondary), $stops: (1 10%, 0.2 50%, 0 70%)),
+    linear-gradient(with-alpha(var(--background-color-secondary), 0.1)),
     url('../../../assets/images/background-title-desktop.webp');
   background-position: center;
   background-size: cover;
