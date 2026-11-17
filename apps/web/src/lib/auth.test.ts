@@ -69,10 +69,26 @@ describe('requireCurrentUser', () => {
     expect(redirect).not.toHaveBeenCalled();
   });
 
-  it('redirects to the login page with the requested page when there is no session', async () => {
+  it('redirects to the login page with the requested page when there is no session cookie', async () => {
     mockCookie();
 
     await expect(requireCurrentUser('/campaigns/42?tab=quests')).rejects.toThrow('NEXT_REDIRECT');
     expect(redirect).toHaveBeenCalledWith('/login?redirect=%2Fcampaigns%2F42%3Ftab%3Dquests');
+  });
+
+  it('sends a rejected session to the route that clears the cookie', async () => {
+    mockCookie('revoked');
+    vi.mocked(apiFetch.get).mockRejectedValue(new ApiError(401, null, '/auth/me'));
+
+    await expect(requireCurrentUser('/dashboard')).rejects.toThrow('NEXT_REDIRECT');
+    expect(redirect).toHaveBeenCalledWith('/session-expired?redirect=%2Fdashboard');
+  });
+
+  it('fails instead of logging out when the API cannot be reached', async () => {
+    mockCookie('valid');
+    vi.mocked(apiFetch.get).mockRejectedValue(new Error('network'));
+
+    await expect(requireCurrentUser('/dashboard')).rejects.toThrow('API is unavailable');
+    expect(redirect).not.toHaveBeenCalled();
   });
 });

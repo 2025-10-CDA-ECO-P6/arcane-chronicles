@@ -20,19 +20,7 @@ const hasValidToken = (token?: string) => {
   }
 };
 
-const isSessionAccepted = async (token: string) => {
-  try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? ''}/api/auth/me`, {
-      headers: { Cookie: `token=${token}` },
-      cache: 'no-store',
-    });
-    return response.ok;
-  } catch {
-    return false;
-  }
-};
-
-export async function proxy(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const token = request.cookies.get('token')?.value;
   const isAuthenticated = hasValidToken(token);
@@ -43,12 +31,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  if (
-    matchesRoute(pathname, GUEST_ONLY_ROUTES) &&
-    token &&
-    isAuthenticated &&
-    (await isSessionAccepted(token))
-  ) {
+  if (matchesRoute(pathname, GUEST_ONLY_ROUTES) && isAuthenticated) {
     return NextResponse.redirect(new URL(DEFAULT_GM_ROUTE, request.nextUrl));
   }
 

@@ -22,10 +22,11 @@ describe('proxy', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('sends a guest from a GM page to the login page with the page to come back to', async () => {
-    const response = await proxy(request('/dashboard?tab=1'));
+  it('sends a guest from a GM page to the login page with the page to come back to', () => {
+    const response = proxy(request('/dashboard?tab=1'));
 
     expect(response.status).toBe(307);
     const location = new URL(response.headers.get('location') ?? '');
@@ -33,45 +34,38 @@ describe('proxy', () => {
     expect(location.searchParams.get('redirect')).toBe('/dashboard?tab=1');
   });
 
-  it('treats an expired token as a guest', async () => {
-    const response = await proxy(request('/dashboard', token(-60)));
+  it('treats an expired token as a guest', () => {
+    const response = proxy(request('/dashboard', token(-60)));
 
     expect(new URL(response.headers.get('location') ?? '').pathname).toBe('/login');
   });
 
-  it('lets a GM with an unexpired token reach a GM page', async () => {
-    const response = await proxy(request('/dashboard', token(3600)));
+  it('treats a malformed token as a guest', () => {
+    const response = proxy(request('/dashboard', 'not-a-jwt'));
 
-    expect(response.headers.get('location')).toBeNull();
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(new URL(response.headers.get('location') ?? '').pathname).toBe('/login');
   });
 
-  it('sends a logged-in GM from the login page to the dashboard once the API accepts the session', async () => {
-    fetchMock.mockResolvedValue(new Response(null, { status: 200 }));
+  it('lets a GM with an unexpired token reach a GM page', () => {
+    const response = proxy(request('/dashboard', token(3600)));
 
-    const response = await proxy(request('/login', token(3600)));
+    expect(response.headers.get('location')).toBeNull();
+  });
+
+  it('sends a GM with an unexpired token from the login page to the dashboard without calling the API', () => {
+    const response = proxy(request('/login', token(3600)));
 
     expect(new URL(response.headers.get('location') ?? '').pathname).toBe('/dashboard');
   });
 
-  it('keeps the login page when the API rejects the token, so there is no redirect loop', async () => {
-    fetchMock.mockResolvedValue(new Response(null, { status: 401 }));
-
-    const response = await proxy(request('/login', token(3600)));
+  it('keeps a guest on the register page', () => {
+    const response = proxy(request('/register'));
 
     expect(response.headers.get('location')).toBeNull();
   });
 
-  it('keeps the login page when the API cannot be reached', async () => {
-    fetchMock.mockRejectedValue(new Error('down'));
-
-    const response = await proxy(request('/register', token(3600)));
-
-    expect(response.headers.get('location')).toBeNull();
-  });
-
-  it('ignores public pages', async () => {
-    const response = await proxy(request('/'));
+  it('ignores public pages', () => {
+    const response = proxy(request('/'));
 
     expect(response.headers.get('location')).toBeNull();
   });
