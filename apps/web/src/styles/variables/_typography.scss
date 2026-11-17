@@ -4,7 +4,7 @@ $font-family-title: var(--font-cinzel), serif;
 $font-family-body: var(--font-inter), sans-serif;
 $font-family-crimson: var(--font-crimson-text), serif;
 
-$font-weight-regular: 400;
+$font-weight-regular: 300;
 $font-weight-semibold: 600;
 $font-weight-bold: 700;
 
@@ -23,8 +23,8 @@ $line-height-relaxed: 1.7;
 
 $letter-spacing-caps: 0.1rem;
 
-$h1-size-mobile: $font-size-2xl;
-$h1-size-desktop: $font-size-3xl;
+$h1-size-mobile: $font-size-xl;
+$h1-size-desktop: $font-size-2xl;
 
 $h2-size-mobile: $font-size-xl;
 $h2-size-desktop: $font-size-2xl;
@@ -35,8 +35,8 @@ $h3-size-desktop: $font-size-xl;
 $h4-size-mobile: $font-size-md;
 $h4-size-desktop: $font-size-lg;
 
-$text-body-size-mobile: $font-size-md;
-$text-body-size-desktop: $font-size-lg;
+$text-body-size-mobile: $font-size-sm;
+$text-body-size-desktop: $font-size-md;
 
 $text-button-size-mobile: $font-size-sm;
 $text-button-size-desktop: $font-size-md;
