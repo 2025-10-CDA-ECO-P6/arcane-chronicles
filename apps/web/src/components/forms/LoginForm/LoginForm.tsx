@@ -16,7 +16,7 @@ const FIELD_MESSAGES = {
 };
 
 export function LoginForm({ redirectTo }: LoginFormProps) {
-  const { login, error, clearError } = useAuth();
+  const { login, error, clearError, isLocked, lockedMinutes } = useAuth();
   const [values, setValues] = useState<LoginInput>({ email: '', password: '' });
   const [errors, setErrors] = useState<LoginFormErrors>({});
 
@@ -28,6 +28,9 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
 
   const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (isLocked) {
+      return;
+    }
 
     const result = loginSchema.safeParse(values);
 
@@ -56,6 +59,7 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
         value={values.email}
         handleChange={handleChange}
         error={errors.email}
+        disabled={isLocked}
       />
       <Input
         label="Mot de passe"
@@ -66,13 +70,26 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
         value={values.password}
         handleChange={handleChange}
         error={errors.password}
+        disabled={isLocked}
       />
+      {isLocked && (
+        <p className="form-error" role="status">
+          Trop de tentatives de connexion. Vous pourrez réessayer dans {lockedMinutes} min.
+        </p>
+      )}
       {error && (
         <p className="form-error" role="alert">
           {error}
         </p>
       )}
-      <Button buttonType="submit" color="primary" filled buttonText="Se connecter" size="md" />
+      <Button
+        buttonType="submit"
+        color="primary"
+        filled
+        buttonText="Se connecter"
+        size="md"
+        disabled={isLocked}
+      />
     </form>
   );
 }

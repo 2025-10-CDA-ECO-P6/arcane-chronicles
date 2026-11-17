@@ -11,13 +11,15 @@ vi.mock('@/hooks/useAuth', () => ({ useAuth: vi.fn() }));
 const login = vi.fn();
 const clearError = vi.fn();
 
-const mockAuth = (error?: string) => {
+const mockAuth = (error?: string, lockedMinutes = 0) => {
   vi.mocked(useAuth).mockReturnValue({
     login,
     logout: vi.fn(),
     isLoading: false,
     error,
     clearError,
+    isLocked: lockedMinutes > 0,
+    lockedMinutes,
   });
 };
 
@@ -69,5 +71,17 @@ describe('LoginForm', () => {
     render(<LoginForm />);
 
     expect(screen.getByRole('alert')).toHaveTextContent('Email ou mot de passe incorrect');
+  });
+
+  it('locks the fields and the button and tells how long to wait after too many attempts', async () => {
+    mockAuth(undefined, 12);
+    render(<LoginForm />);
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Trop de tentatives de connexion. Vous pourrez réessayer dans 12 min.',
+    );
+    expect(screen.getByLabelText('Email')).toBeDisabled();
+    expect(screen.getByLabelText('Mot de passe')).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Se connecter' })).toBeDisabled();
   });
 });

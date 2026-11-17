@@ -16,5 +16,6 @@ export interface ButtonProps {
   buttonType?: ButtonType;
   buttonText: string;
   className?: string;
+  disabled?: boolean;
   handleClick?: MouseEventHandler<HTMLButtonElement>;
 }

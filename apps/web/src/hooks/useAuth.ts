@@ -1,12 +1,13 @@
 import type { LoginInput } from '@arcane-chronicles/shared';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useArcane } from '@/context/ArcaneContext';
 import { ApiError, apiFetch } from '@/lib/api';
 import type { AuthUser } from '@/types/auth';
 
 const DEFAULT_REDIRECT = '/dashboard';
+const LOCK_STORAGE_KEY = 'arcane-chronicles:login-locked-until';
 
 const getSafeRedirect = (redirectTo?: string) =>
   redirectTo?.startsWith('/') && !/^\/[/\\]/.test(redirectTo) ? redirectTo : DEFAULT_REDIRECT;
@@ -16,9 +17,38 @@ const getLoginErrorMessage = (error: unknown) => {
     return 'Email ou mot de passe incorrect';
   }
   if (error instanceof ApiError && error.status === 429) {
-    return 'Trop de tentatives de connexion, réessayez dans 15 minutes';
+    return 'Trop de tentatives de connexion, réessayez plus tard';
   }
   return 'Une erreur est survenue, réessayez plus tard';
+};
+
+const getRetryAfterSeconds = (error: unknown) => {
+  if (!(error instanceof ApiError) || error.status !== 429) {
+    return undefined;
+  }
+  const retryAfter = (error.data as { retryAfter?: unknown } | null)?.retryAfter;
+  return typeof retryAfter === 'number' && retryAfter > 0 ? retryAfter : undefined;
+};
+
+const readLockedUntil = () => {
+  try {
+    const value = Number(localStorage.getItem(LOCK_STORAGE_KEY));
+    return value > Date.now() ? value : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+const storeLockedUntil = (value?: number) => {
+  try {
+    if (value) {
+      localStorage.setItem(LOCK_STORAGE_KEY, String(value));
+    } else {
+      localStorage.removeItem(LOCK_STORAGE_KEY);
+    }
+  } catch {
+    return;
+  }
 };
 
 export function useAuth() {
@@ -26,11 +56,27 @@ export function useAuth() {
   const { handleUser } = useArcane();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
+  const [lockedUntil, setLockedUntil] = useState<number>();
+
+  useEffect(() => {
+    setLockedUntil(readLockedUntil());
+  }, []);
+
+  useEffect(() => {
+    if (!lockedUntil) {
+      return undefined;
+    }
+    const timer = setTimeout(() => {
+      setLockedUntil(undefined);
+      storeLockedUntil(undefined);
+    }, lockedUntil - Date.now());
+    return () => clearTimeout(timer);
+  }, [lockedUntil]);
 
   const clearError = () => setError(undefined);
 
   const login = async (credentials: LoginInput, redirectTo?: string) => {
-    if (isLoading) {
+    if (isLoading || lockedUntil) {
       return null;
     }
 
@@ -44,7 +90,14 @@ export function useAuth() {
       router.refresh();
       return user;
     } catch (loginError) {
-      setError(getLoginErrorMessage(loginError));
+      const retryAfter = getRetryAfterSeconds(loginError);
+      if (retryAfter) {
+        const until = Date.now() + retryAfter * 1000;
+        setLockedUntil(until);
+        storeLockedUntil(until);
+      } else {
+        setError(getLoginErrorMessage(loginError));
+      }
       setIsLoading(false);
       return null;
     }
@@ -60,5 +113,13 @@ export function useAuth() {
     }
   };
 
-  return { login, logout, isLoading, error, clearError };
+  return {
+    login,
+    logout,
+    isLoading,
+    error,
+    clearError,
+    isLocked: lockedUntil !== undefined,
+    lockedMinutes: lockedUntil ? Math.ceil((lockedUntil - Date.now()) / 60000) : 0,
+  };
 }

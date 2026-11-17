@@ -10,6 +10,7 @@ export function Button({
   buttonType = 'button',
   buttonText,
   className,
+  disabled,
   handleClick,
 }: ButtonProps) {
   const classes = [
@@ -26,7 +27,7 @@ export function Button({
     .join(' ');
 
   return (
-    <button type={buttonType} className={classes} onClick={handleClick}>
+    <button type={buttonType} className={classes} disabled={disabled} onClick={handleClick}>
       <span className={iconOnly ? 'sr-only' : undefined}>{buttonText}</span>
     </button>
   );

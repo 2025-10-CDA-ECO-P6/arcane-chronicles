@@ -51,4 +51,15 @@ describe('Button', () => {
 
     expect(handleClick).toHaveBeenCalledOnce();
   });
+
+  it('can be disabled', async () => {
+    const handleClick = vi.fn();
+    render(<Button color="primary" buttonText="Envoyer" disabled handleClick={handleClick} />);
+
+    const button = screen.getByRole('button', { name: 'Envoyer' });
+    await userEvent.click(button);
+
+    expect(button).toBeDisabled();
+    expect(handleClick).not.toHaveBeenCalled();
+  });
 });
