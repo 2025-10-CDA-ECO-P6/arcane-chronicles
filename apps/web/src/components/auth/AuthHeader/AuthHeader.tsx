@@ -12,7 +12,7 @@ export function AuthHeader({
 }: AuthHeaderProps) {
   return (
     <header className={className ? `${styles.header} ${className}` : styles.header}>
-      <h2 className={styles.header__title}>{title}</h2>
+      <h1 className={styles.header__title}>{title}</h1>
       <p className={styles.header__redirect}>
         {`${redirectText} `}
         <Link className="link link--secondary" href={redirectHref}>
