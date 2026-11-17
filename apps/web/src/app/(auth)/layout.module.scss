@@ -1,0 +1,38 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.layout {
+  display: grid;
+  flex: 1;
+  place-items: center;
+  position: relative;
+  isolation: isolate;
+  padding: $space-xl;
+}
+
+.background {
+  @include image-overlay($gradient-page-banner);
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+}
+
+.video {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+@include until(m) {
+  .layout {
+    padding: $space-md;
+  }
+}
+
+@include until(sm) {
+  .layout {
+    display: flex;
+    place-items: start;
+    padding: $space-sm;
+  }
+}

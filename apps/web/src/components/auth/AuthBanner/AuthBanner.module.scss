@@ -1,0 +1,103 @@
+@use '@/styles/variables' as *;
+@use '@/styles/functions' as *;
+@use '@/styles/mixins' as *;
+
+.banner {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: $space-lg;
+  padding: $space-xl $space-lg;
+  background-image:
+    fade(right, $color: var(--background-color-secondary), $stops: (1 5%, 0.2 40%, 0 50%)),
+    fade(bottom, $color: var(--background-color-secondary), $stops: (1 10%, 0.2 50%, 0 70%)),
+    url('../../../assets/images/background-title-desktop.webp');
+  background-position: center;
+  background-size: cover;
+
+  &__logo {
+    inline-size: 100%;
+    block-size: auto;
+    max-inline-size: 8rem;
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: $space-sm;
+
+    &__title {
+      text-wrap: balance;
+    }
+
+    &__list {
+      display: flex;
+      flex-direction: column;
+
+      &__item {
+        display: flex;
+        align-items: center;
+        gap: $space-sm;
+        color: var(--text-color-secondary);
+      }
+    }
+  }
+}
+
+@include until(m) {
+  .banner {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: $space-md;
+    padding: $space-md;
+    background-image:
+      fade(bottom, $color: var(--background-color-secondary), $stops: (1 15%, 0.5 40%, 0 75%)),
+      url('../../../assets/images/background-title-desktop.webp');
+
+    &__logo {
+      inline-size: 6rem;
+    }
+
+    &__content {
+      flex: 1;
+      gap: 0;
+      min-inline-size: 0;
+
+      &__title {
+        text-wrap: pretty;
+      }
+
+      &__list {
+        flex-direction: row;
+        gap: $space-sm;
+
+        &__item {
+          gap: $space-xs;
+          min-inline-size: 0;
+
+          &__text {
+            @include truncate(1, 22rem);
+          }
+
+          &:last-child {
+            display: none;
+          }
+        }
+      }
+    }
+  }
+}
+
+@include until(sm) {
+  .banner {
+    &__content {
+      &__title {
+        text-wrap: balance;
+      }
+      &__list {
+        display: none;
+      }
+    }
+  }
+}
