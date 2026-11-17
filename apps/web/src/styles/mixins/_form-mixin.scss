@@ -54,6 +54,12 @@
   font-size: $text-body-size;
 }
 
+@mixin form-error {
+  color: var(--hostile-color);
+  font-family: $font-family-body;
+  font-size: $text-small-size;
+}
+
 @mixin form-input {
   padding-block: $space-sm;
   background-color: transparent;

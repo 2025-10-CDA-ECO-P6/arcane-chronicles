@@ -8,13 +8,13 @@
 }
 
 @mixin until($name) {
-  @media (max-width: breakpoint($name) - 0.02px) {
+  @media (max-width: #{breakpoint($name) - 0.02px}) {
     @content;
   }
 }
 
 @mixin between($from, $until) {
-  @media (min-width: breakpoint($from)) and (max-width: breakpoint($until) - 0.02px) {
+  @media (min-width: breakpoint($from)) and (max-width: #{breakpoint($until) - 0.02px}) {
     @content;
   }
 }

@@ -3,3 +3,7 @@
 .sr-only {
   @include visually-hidden;
 }
+
+.truncate {
+  @include truncate;
+}
