@@ -2,8 +2,8 @@ import { loginSchema } from '@arcane-chronicles/shared';
 import express from 'express';
 
 import { login, logout, me } from '../../controllers/authActions.js';
-import { loginLimiter } from '../../middlewares/loginLimiter.js';
-import { validate } from '../../middlewares/validate.js';
+import { loginLimiter } from '../../middlewares/limiters/loginLimiter.js';
+import { validate } from '../../middlewares/validation/validate.js';
 import { checkCookie } from '../../services/security/cookies.js';
 
 const router = express.Router();
