@@ -18,9 +18,14 @@ export function MainNav({ className }: MainNavProps) {
           Tableau de bord
         </NavLink>
       ) : (
-        <NavLink className="link--text-secondary" href="/login">
-          Connexion
-        </NavLink>
+        <>
+          <NavLink className="link--text-secondary" href="/login">
+            Connexion
+          </NavLink>
+          <NavLink className="link--text-secondary" href="/register">
+            Inscription
+          </NavLink>
+        </>
       )}
     </nav>
   );
