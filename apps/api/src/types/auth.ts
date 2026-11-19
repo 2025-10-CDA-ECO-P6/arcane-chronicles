@@ -3,7 +3,3 @@ export interface AuthPayload {
   displayName: string;
   email: string;
 }
-
-export interface PasswordBody {
-  password: string;
-}

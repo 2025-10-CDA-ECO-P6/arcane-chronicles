@@ -19,6 +19,12 @@ const refresh = vi.fn();
 const handleUser = vi.fn();
 const user = { id: '1', displayName: 'Maître Ying', email: 'mj@example.com' };
 const credentials = { email: 'mj@example.com', password: 'secret' };
+const registerValues = {
+  displayName: 'Maître Ying',
+  email: 'mj@example.com',
+  password: 'Archipel-du-n3ant',
+  passwordConfirmation: 'Archipel-du-n3ant',
+};
 const LOCK_KEY = 'arcane-chronicles:login-locked-until';
 const tooManyAttempts = (retryAfter?: number) =>
   new ApiError(429, retryAfter ? { message: 'Too many', retryAfter } : null, '/auth/login');
@@ -85,6 +91,40 @@ describe('useAuth', () => {
     expect(result.current.isLoading).toBe(false);
     expect(handleUser).not.toHaveBeenCalled();
     expect(push).not.toHaveBeenCalled();
+  });
+
+  it('gives French field errors and does not call the API when the login form is invalid', async () => {
+    const { result } = renderHook(() => useAuth());
+
+    await act(() => result.current.login({ email: '', password: '' }));
+
+    expect(result.current.fieldErrors).toEqual({
+      email: 'Adresse e-mail invalide',
+      password: 'Mot de passe obligatoire',
+    });
+    expect(apiFetch.post).not.toHaveBeenCalled();
+  });
+
+  it('sends the cleaned email', async () => {
+    vi.mocked(apiFetch.post).mockResolvedValue(user);
+    const { result } = renderHook(() => useAuth());
+
+    await act(() => result.current.login({ email: '  MJ@Example.com ', password: 'secret' }));
+
+    expect(apiFetch.post).toHaveBeenCalledWith('/auth/login', credentials);
+  });
+
+  it('clears one field error and the API error when that field changes', async () => {
+    vi.mocked(apiFetch.post).mockRejectedValue(new ApiError(401, null, '/auth/login'));
+    const { result } = renderHook(() => useAuth());
+    await act(() => result.current.login({ email: '', password: '' }));
+    await act(() => result.current.login(credentials));
+
+    act(() => result.current.clearFieldError('email'));
+
+    expect(result.current.fieldErrors.email).toBeUndefined();
+    expect(result.current.error).toBeUndefined();
+    expect(result.current.hasInvalidCredentials).toBe(false);
   });
 
   it('clears the error on demand', async () => {
@@ -174,6 +214,97 @@ describe('useAuth', () => {
 
       expect(result.current.isLocked).toBe(false);
       expect(localStorage.getItem(LOCK_KEY)).toBeNull();
+    });
+  });
+
+  describe('register', () => {
+    const registration = {
+      displayName: 'Maître Ying',
+      email: 'mj@example.com',
+      password: 'Archipel-du-n3ant',
+    };
+
+    it('gives French field errors and does not call the API when the form is invalid', async () => {
+      const { result } = renderHook(() => useAuth());
+
+      await act(() =>
+        result.current.register({
+          displayName: 'Y',
+          email: 'ying',
+          password: 'court',
+          passwordConfirmation: 'autre',
+        }),
+      );
+
+      expect(result.current.fieldErrors).toEqual({
+        displayName: 'Le pseudonyme doit contenir entre 2 et 50 caractères',
+        email: 'Adresse e-mail invalide',
+        password: 'Le mot de passe ne respecte pas toutes les règles',
+        passwordConfirmation: 'Les mots de passe ne correspondent pas',
+      });
+      expect(apiFetch.post).not.toHaveBeenCalled();
+    });
+
+    it('refuses a confirmation that does not match a valid password', async () => {
+      const { result } = renderHook(() => useAuth());
+
+      await act(() =>
+        result.current.register({ ...registerValues, passwordConfirmation: 'Archipel-du-n3ont' }),
+      );
+
+      expect(result.current.fieldErrors).toEqual({
+        passwordConfirmation: 'Les mots de passe ne correspondent pas',
+      });
+      expect(apiFetch.post).not.toHaveBeenCalled();
+    });
+
+    it('clears the mismatch when the password changes', async () => {
+      const { result } = renderHook(() => useAuth());
+
+      await act(() =>
+        result.current.register({ ...registerValues, passwordConfirmation: 'Archipel-du-n3ont' }),
+      );
+      act(() => result.current.clearFieldError('password'));
+
+      expect(result.current.fieldErrors.passwordConfirmation).toBeUndefined();
+    });
+
+    it('keeps the same field errors when the changed field has none', async () => {
+      const { result } = renderHook(() => useAuth());
+
+      await act(() => result.current.register({ ...registerValues, displayName: 'Y' }));
+      const fieldErrors = result.current.fieldErrors;
+      act(() => result.current.clearFieldError('email'));
+
+      expect(result.current.fieldErrors).toBe(fieldErrors);
+    });
+
+    it('stores the new user and goes to the dashboard', async () => {
+      vi.mocked(apiFetch.post).mockResolvedValue(user);
+      const { result } = renderHook(() => useAuth());
+
+      await act(() => result.current.register(registerValues));
+
+      expect(apiFetch.post).toHaveBeenCalledWith('/auth/register', registration);
+      expect(result.current.fieldErrors).toEqual({});
+      expect(handleUser).toHaveBeenCalledWith(user);
+      expect(push).toHaveBeenCalledWith('/dashboard');
+      expect(refresh).toHaveBeenCalled();
+    });
+
+    it.each([
+      [409, 'Un compte existe déjà avec cet e-mail'],
+      [429, "Trop de tentatives d'inscription, réessayez plus tard"],
+      [500, 'Une erreur est survenue, réessayez plus tard'],
+    ])('shows a French message on a %i response', async (status, message) => {
+      vi.mocked(apiFetch.post).mockRejectedValue(new ApiError(status, null, '/auth/register'));
+      const { result } = renderHook(() => useAuth());
+
+      await act(() => result.current.register(registerValues));
+
+      expect(result.current.error).toBe(message);
+      expect(handleUser).not.toHaveBeenCalled();
+      expect(push).not.toHaveBeenCalled();
     });
   });
 });

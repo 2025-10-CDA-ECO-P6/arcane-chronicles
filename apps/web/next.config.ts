@@ -5,6 +5,9 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   output: 'standalone',
   outputFileTracingRoot: path.join(__dirname, '../..'),
+  images: {
+    qualities: [75, 90],
+  },
 };
 
 export default nextConfig;

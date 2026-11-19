@@ -1,0 +1,29 @@
+@use '@/styles/variables' as *;
+
+.form {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: $space-md;
+  min-block-size: 0;
+
+  &__fields {
+    display: flex;
+    flex-direction: column;
+    gap: $space-md;
+    overflow-y: auto;
+    min-block-size: 0;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  &__password {
+    display: flex;
+    flex-direction: column;
+    gap: $space-xs;
+  }
+}

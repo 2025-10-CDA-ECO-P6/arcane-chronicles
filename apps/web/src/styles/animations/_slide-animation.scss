@@ -1,0 +1,11 @@
+@mixin slide-down-animation {
+  @keyframes slide-down {
+    from {
+      translate: 0 -100%;
+    }
+
+    to {
+      translate: 0 0;
+    }
+  }
+}

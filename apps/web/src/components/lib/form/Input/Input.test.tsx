@@ -22,6 +22,19 @@ describe('Input', () => {
     expect(field).toHaveAccessibleDescription('Mot de passe obligatoire');
   });
 
+  it('adds its error to the description it is given', () => {
+    render(
+      <>
+        <Input label="Mot de passe" aria-describedby="rules" error="Mot de passe obligatoire" />
+        <p id="rules">12 caractères minimum</p>
+      </>,
+    );
+
+    expect(screen.getByLabelText('Mot de passe')).toHaveAccessibleDescription(
+      'Mot de passe obligatoire 12 caractères minimum',
+    );
+  });
+
   it('hides the label visually when srOnly is set', () => {
     render(<Input label="Rechercher" srOnly />);
 

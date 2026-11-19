@@ -23,16 +23,17 @@ describe('MainNav', () => {
     vi.clearAllMocks();
   });
 
-  it('shows the login link to a guest', () => {
+  it('shows the login and register links to a guest', () => {
     mockSession(false);
     render(<MainNav />);
 
     expect(screen.getByRole('link', { name: 'Accueil' })).toHaveAttribute('href', '/');
     expect(screen.getByRole('link', { name: 'Connexion' })).toHaveAttribute('href', '/login');
+    expect(screen.getByRole('link', { name: 'Inscription' })).toHaveAttribute('href', '/register');
     expect(screen.queryByRole('link', { name: 'Tableau de bord' })).not.toBeInTheDocument();
   });
 
-  it('shows the dashboard link instead of the login link to a signed-in GM', () => {
+  it('shows the dashboard link instead of the login and register links to a signed-in GM', () => {
     mockSession(true);
     render(<MainNav />);
 
@@ -41,5 +42,6 @@ describe('MainNav', () => {
       '/dashboard',
     );
     expect(screen.queryByRole('link', { name: 'Connexion' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Inscription' })).not.toBeInTheDocument();
   });
 });

@@ -26,6 +26,16 @@ export const getCookieOptions = (): CookieOptions => ({
   domain: process.env.COOKIE_DOMAIN || undefined,
 });
 
+export const openSession = (res: Response, user: AuthPayload) => {
+  const token = jwt.sign(user, getJwtSecret(), { expiresIn: getJwtExpiresIn() });
+  const { exp } = jwt.decode(token) as JwtPayload & { exp: number };
+
+  res.cookie('token', token, {
+    ...getCookieOptions(),
+    expires: new Date(exp * 1000),
+  });
+};
+
 export const checkCookie = (req: Request, res: Response, next: NextFunction) => {
   const secret = getJwtSecret();
 

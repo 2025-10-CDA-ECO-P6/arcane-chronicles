@@ -3,21 +3,30 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useAuth } from '@/hooks/useAuth';
+import type { AuthFieldErrors } from '@/types/auth';
 
 import { LoginForm } from './LoginForm';
 
 vi.mock('@/hooks/useAuth', () => ({ useAuth: vi.fn() }));
 
 const login = vi.fn();
-const clearError = vi.fn();
+const clearFieldError = vi.fn();
 
-const mockAuth = (error?: string, lockedMinutes = 0, hasInvalidCredentials = false) => {
+const mockAuth = (
+  error?: string,
+  lockedMinutes = 0,
+  hasInvalidCredentials = false,
+  fieldErrors: AuthFieldErrors = {},
+) => {
   vi.mocked(useAuth).mockReturnValue({
     login,
+    register: vi.fn(),
     logout: vi.fn(),
     isLoading: false,
     error,
-    clearError,
+    fieldErrors,
+    clearError: vi.fn(),
+    clearFieldError,
     hasInvalidCredentials,
     isLocked: lockedMinutes > 0,
     lockedMinutes,
@@ -27,31 +36,29 @@ const mockAuth = (error?: string, lockedMinutes = 0, hasInvalidCredentials = fal
 describe('LoginForm', () => {
   beforeEach(() => {
     login.mockReset();
-    clearError.mockReset();
+    clearFieldError.mockReset();
     mockAuth();
   });
 
-  it('shows French field errors and does not call the API on an empty submit', async () => {
+  it('shows the field errors given by useAuth', () => {
+    mockAuth(undefined, 0, false, {
+      email: 'Adresse e-mail invalide',
+      password: 'Mot de passe obligatoire',
+    });
     render(<LoginForm />);
-
-    await userEvent.click(screen.getByRole('button', { name: 'Se connecter' }));
 
     expect(screen.getByLabelText('Email')).toHaveAccessibleDescription('Adresse e-mail invalide');
     expect(screen.getByLabelText('Mot de passe')).toHaveAccessibleDescription(
       'Mot de passe obligatoire',
     );
-    expect(login).not.toHaveBeenCalled();
-    expect(clearError).toHaveBeenCalled();
   });
 
-  it('clears a field error as soon as the user types in that field', async () => {
+  it('asks useAuth to clear the error of the field being typed in', async () => {
     render(<LoginForm />);
-    await userEvent.click(screen.getByRole('button', { name: 'Se connecter' }));
 
     await userEvent.type(screen.getByLabelText('Email'), 'm');
 
-    expect(screen.getByLabelText('Email')).not.toHaveAttribute('aria-invalid');
-    expect(screen.getByLabelText('Mot de passe')).toHaveAttribute('aria-invalid', 'true');
+    expect(clearFieldError).toHaveBeenCalledWith('email');
   });
 
   it('sends the credentials and the redirect target', async () => {
@@ -92,15 +99,6 @@ describe('LoginForm', () => {
 
     expect(screen.getByLabelText('Email')).toHaveAttribute('aria-invalid', 'true');
     expect(screen.getByLabelText('Mot de passe')).toHaveAttribute('aria-invalid', 'true');
-  });
-
-  it('clears the login error as soon as the user edits a field', async () => {
-    mockAuth('Email ou mot de passe incorrect', 0, true);
-    render(<LoginForm />);
-
-    await userEvent.type(screen.getByLabelText('Email'), 'a');
-
-    expect(clearError).toHaveBeenCalled();
   });
 
   it('turns the button red while locked', () => {

@@ -13,9 +13,12 @@ export interface ButtonProps {
   icon?: string;
   iconOnly?: boolean;
   round?: boolean;
+  transparent?: boolean;
   buttonType?: ButtonType;
   buttonText: string;
   className?: string;
   disabled?: boolean;
+  expanded?: boolean;
+  controls?: string;
   handleClick?: MouseEventHandler<HTMLButtonElement>;
 }

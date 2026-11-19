@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import argon2 from 'argon2';
 import jwt from 'jsonwebtoken';
 import request from 'supertest';
@@ -7,7 +8,7 @@ import app from '../../config.js';
 import { UserModel } from '../../models/userModel.js';
 
 vi.mock('../../models/userModel.js', () => ({
-  UserModel: { getByEmail: vi.fn(), getById: vi.fn() },
+  UserModel: { create: vi.fn(), getByEmail: vi.fn(), getById: vi.fn() },
 }));
 
 const password = 'correct-horse-battery';
@@ -33,8 +34,105 @@ beforeAll(async () => {
 });
 
 beforeEach(() => {
+  vi.mocked(UserModel.create).mockReset();
   vi.mocked(UserModel.getByEmail).mockReset();
   vi.mocked(UserModel.getById).mockReset();
+});
+
+describe('POST /api/auth/register', () => {
+  const registration = {
+    displayName: publicUser.displayName,
+    email: publicUser.email,
+    password: 'Archipel-du-n3ant',
+  };
+
+  it('responds 201 with the user, stores a hash of the password and opens the session', async () => {
+    vi.mocked(UserModel.getByEmail).mockResolvedValue(null);
+    vi.mocked(UserModel.create).mockResolvedValue(publicUser);
+
+    const response = await request(app).post('/api/auth/register').send(registration);
+
+    expect(response.status).toBe(201);
+    expect(response.body).toEqual(publicUser);
+    expect(getTokenCookie(response)).toMatch(/HttpOnly/);
+    const { passwordHash } = vi.mocked(UserModel.create).mock.calls[0][0];
+    expect(passwordHash).not.toBe(registration.password);
+    expect(await argon2.verify(passwordHash, registration.password)).toBe(true);
+  });
+
+  it('only saves the expected fields, trimmed, whatever else the body contains', async () => {
+    vi.mocked(UserModel.getByEmail).mockResolvedValue(null);
+    vi.mocked(UserModel.create).mockResolvedValue(publicUser);
+
+    await request(app)
+      .post('/api/auth/register')
+      .send({ ...registration, displayName: '  Maître du jeu  ', isAdmin: true });
+
+    expect(UserModel.create).toHaveBeenCalledWith({
+      displayName: 'Maître du jeu',
+      email: registration.email,
+      passwordHash: expect.any(String),
+    });
+  });
+
+  it('saves the email in lowercase', async () => {
+    vi.mocked(UserModel.getByEmail).mockResolvedValue(null);
+    vi.mocked(UserModel.create).mockResolvedValue(publicUser);
+
+    await request(app)
+      .post('/api/auth/register')
+      .send({ ...registration, email: 'MJ@Example.com' });
+
+    expect(UserModel.getByEmail).toHaveBeenCalledWith('mj@example.com');
+    expect(UserModel.create).toHaveBeenCalledWith(
+      expect.objectContaining({ email: 'mj@example.com' }),
+    );
+  });
+
+  it('responds 409 without hashing or creating anything when the email already has an account', async () => {
+    vi.mocked(UserModel.getByEmail).mockResolvedValue(dbUser);
+    const hash = vi.spyOn(argon2, 'hash');
+
+    const response = await request(app).post('/api/auth/register').send(registration);
+
+    expect(response.status).toBe(409);
+    expect(response.body).toEqual({ message: 'An account already exists with this email' });
+    expect(hash).not.toHaveBeenCalled();
+    expect(UserModel.create).not.toHaveBeenCalled();
+    expect(getTokenCookie(response)).toBeUndefined();
+    hash.mockRestore();
+  });
+
+  it('responds 409 when the database refuses a duplicate email created in the meantime', async () => {
+    vi.mocked(UserModel.getByEmail).mockResolvedValue(null);
+    vi.mocked(UserModel.create).mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+        code: 'P2002',
+        clientVersion: 'test',
+      }),
+    );
+
+    const response = await request(app).post('/api/auth/register').send(registration);
+
+    expect(response.status).toBe(409);
+    expect(response.body).toEqual({ message: 'An account already exists with this email' });
+    expect(getTokenCookie(response)).toBeUndefined();
+  });
+
+  it('responds 422 with every broken password rule before reading the database', async () => {
+    const response = await request(app)
+      .post('/api/auth/register')
+      .send({ ...registration, password: 'weak' });
+
+    expect(response.status).toBe(422);
+    expect(response.body.errors).toEqual([
+      { field: 'password', message: 'Password must contain at least 12 characters' },
+      { field: 'password', message: 'Password must contain an uppercase letter' },
+      { field: 'password', message: 'Password must contain a digit' },
+      { field: 'password', message: 'Password must contain a special character' },
+    ]);
+    expect(UserModel.getByEmail).not.toHaveBeenCalled();
+  });
 });
 
 describe('POST /api/auth/login', () => {
@@ -51,6 +149,17 @@ describe('POST /api/auth/login', () => {
     expect(cookie).toMatch(/HttpOnly/);
     expect(cookie).toMatch(/SameSite=Lax/);
     expect(cookie).toMatch(/Expires=/);
+  });
+
+  it('finds the account whatever the case of the email', async () => {
+    vi.mocked(UserModel.getByEmail).mockResolvedValue(dbUser);
+
+    const response = await request(app)
+      .post('/api/auth/login')
+      .send({ email: ' MJ@Example.com ', password });
+
+    expect(response.status).toBe(200);
+    expect(UserModel.getByEmail).toHaveBeenCalledWith('mj@example.com');
   });
 
   it('responds 401 with a generic message on a wrong password', async () => {

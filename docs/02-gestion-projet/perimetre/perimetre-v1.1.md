@@ -45,6 +45,7 @@ Tickets : KAN-224 à KAN-230, KAN-232, KAN-510, KAN-237, KAN-238
 - Retirer personnages et monstres d'une scène, associer un personnage à une scène, importer un personnage depuis sa bibliothèque
 - Contrôler les éléments visibles ; changement de scène automatique côté joueur
 - Mot de passe oublié, gestion du profil et suppression du compte, message de confirmation après une action
+- Confirmation de l'e-mail à l'inscription, avec l'envoi d'e-mails du mot de passe oublié : même réponse que l'e-mail ait déjà un compte ou non (fin du risque R11 accepté au MVP, voir `04-securite/securite.md`)
 
 Tickets : KAN-63, KAN-69 à KAN-72, KAN-222, KAN-49, KAN-521, KAN-85, KAN-87, KAN-103, KAN-105, KAN-242, KAN-243, KAN-28, KAN-30, KAN-175
 
