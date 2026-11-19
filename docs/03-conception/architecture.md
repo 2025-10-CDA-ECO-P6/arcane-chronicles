@@ -51,14 +51,14 @@ arcane-chronicles/
 ├── apps/
 │   ├── web/                  # Next.js
 │   │   ├── Dockerfile
-│   │   ├── public/           # fichiers servis tels quels (vidéo de fond et son image fixe)
+│   │   ├── public/           # fichiers servis tels quels (vidéo de fond complète et recadrée en portrait, son image fixe)
 │   │   └── src/
 │   │       ├── app/          # routes (App Router)
 │   │       ├── assets/       # polices, police d'icônes, images, vidéos
 │   │       ├── components/   # composants repris de la page « composants » de Figma
-│   │       ├── hooks/        # logique réutilisable (useAuth : connexion, déconnexion)
-│   │       ├── lib/          # client API (apiFetch), client Socket.io, polices
-│   │       └── styles/       # design system : variables, mixins, classes globales
+│   │       ├── hooks/        # logique réutilisable (useAuth : connexion, inscription, déconnexion, erreurs de formulaire ; useDisclosure : ouverture d'une bulle)
+│   │       ├── lib/          # client API (apiFetch), client Socket.io, polices, règles du mot de passe, classe de page
+│   │       └── styles/       # design system : variables, mixins, animations, classes globales
 │   └── api/                  # Express + Socket.io
 │       ├── Dockerfile
 │       ├── prisma/           # schema.prisma, migrations, seeds (référence D&D et démo)

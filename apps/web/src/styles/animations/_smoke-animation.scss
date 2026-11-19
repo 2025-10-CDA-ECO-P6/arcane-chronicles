@@ -182,7 +182,6 @@ $smoke-steps: (
           mask-repeat: no-repeat;
         }
         mask-size: map.get($mask, size);
-
         mask-position: map.get($mask, position);
       }
     }

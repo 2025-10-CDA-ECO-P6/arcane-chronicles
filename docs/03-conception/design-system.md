@@ -12,6 +12,7 @@ Les fichiers sont rangés **par type** : les variables d'un côté, les fonction
 | `variables/` | **Uniquement des variables** : couleurs (variables CSS), breakpoints, espacements, arrondis, typographie, ombres, noms des icônes, réglages des boutons, des boîtes, du conteneur, dégradés des images |
 | `functions/` | **Uniquement des fonctions** : `_global-functions.scss` (`with-alpha()`, `fluid()`, `glow()`), `_layout-functions.scss` (`breakpoint()`), `_overlay-functions.scss` (`fade()`, `fade-edges()`) |
 | `mixins/` | **Uniquement des mixins** : `_global-mixin.scss` (`visually-hidden`, `truncate`) puis un fichier par élément (`_icons-mixin.scss`, `_effects-mixin.scss`, `_buttons-mixin.scss`, `_links-mixin.scss`, `_form-mixin.scss`, `_box-mixin.scss`, `_layout-mixin.scss`, `_overlay-mixin.scss`, `_typography-mixin.scss`) |
+| `animations/` | **Uniquement des mixins d'animation** : chacun écrit une `@keyframes` (`_glow-animation.scss`, `_slide-animation.scss`, `_smoke-animation.scss`), voir [Animations](#animations) |
 | `base/` | **Classes et styles globaux** : `_reset.scss`, `_typography.scss` (balises, `.text-as--h1` à `h6`), `_layout.scss` (`.container`), `_utilities.scss` (`.sr-only`, `.truncate`) |
 | `base/lib/` | Classes des éléments d'interface : `_icons.scss`, `_buttons.scss`, `_links.scss`, `_form.scss`, `_box.scss`, `_overlay.scss` (et les éléments à venir) |
 
@@ -257,6 +258,35 @@ Le terme du milieu combine rem et vw (`2.637rem + 1.502vw`) : la partie en rem s
 | `$shadow-dropdown` | Menus déroulants (Menu de scènes) |
 | `$shadow-separator` | Lignes de séparation |
 | `$backdrop-blur-sm` / `$backdrop-blur-md` | Flou derrière les modales et overlays (2px et 5,5px dans Figma) |
+
+---
+
+## Animations
+
+Les animations partagées sont dans `apps/web/src/styles/animations/`, importées avec `@use '@/styles/animations' as *;`.
+
+Ce sont des **mixins qui écrivent une `@keyframes`**, et non des `@keyframes` globales. Les CSS Modules renomment les `@keyframes` de chaque fichier (`glow-appear` devient `Header-module__x1y2__glow-appear`) : une animation déclarée dans un fichier n'est donc pas visible depuis un autre. Le module qui veut l'animation appelle le mixin, ce qui crée la `@keyframes` dans son propre fichier, puis l'utilise par son nom dans `animation`.
+
+| Mixin | `@keyframes` créée | Effet | Paramètres |
+|---|---|---|---|
+| `glow-appear-animation($glow-color, $start-scale)` | `glow-appear` | apparition en fondu, avec un halo et un grossissement | `$glow-color` (`var(--secondary-color)` par défaut, `null` pour ne pas mettre de halo), `$start-scale` (`0.4` par défaut, `null` pour ne pas grossir) |
+| `glow-pulse-animation($color)` | `glow-pulse` | halo qui pulse, à jouer en boucle (`infinite alternate`) | `$color` (`var(--secondary-color)` par défaut) |
+| `smoke-reveal-animation($size)` | `smoke-reveal` | l'élément apparaît à travers des volutes de fumée (masque CSS animé) | `$size` : `large` (par défaut, éléments larges comme le header) ou `small` (éléments étroits comme un logo) ; une autre valeur fait échouer la compilation |
+| `slide-down-animation` | `slide-down` | l'élément glisse depuis le haut | — |
+
+```scss
+@use '@/styles/animations' as *;
+
+.banner__logo {
+  animation: smoke-reveal 6s linear backwards;
+}
+
+@include smoke-reveal-animation($size: small);
+```
+
+La fumée utilise un minutage `linear` : avec `ease-out`, le ralentissement s'appliquerait à chaque étape de la `@keyframes` et l'animation marquerait des pauses. Un masque coupe tout ce qui dépasse de l'élément, halo compris : sur un même élément, on ne combine pas `smoke-reveal` et un halo en `drop-shadow` ; on met le halo sur le parent (c'est le cas du logo de la bannière d'accueil).
+
+Chaque module coupe ses animations quand l'utilisateur demande moins d'animations (`prefers-reduced-motion: reduce`).
 
 ---
 
@@ -542,6 +572,7 @@ L'état d'erreur passe par l'attribut `aria-invalid` et non par une classe : il 
 | `inputType` | `text` (par défaut), `email`, `password`, `search`, `tel`, `url`, `number` |
 | `error` | Message affiché sous le champ ; passe aussi le champ en `aria-invalid` |
 | `handleChange` | Fonction appelée à chaque saisie, pour un champ contrôlé (`value` gardée dans un état React) |
+| `aria-describedby` | Identifiant d'un texte qui décrit le champ (règles à respecter, aide) ; le composant y ajoute celui du message d'erreur, lu en premier |
 
 ```tsx
 <Input
@@ -560,16 +591,20 @@ L'état d'erreur passe par l'attribut `aria-invalid` et non par une classe : il 
 
 `apps/web/src/components/lib/form/PasswordStrength/` se place sous le champ mot de passe d'un formulaire de création (inscription, plus tard changement de mot de passe). Il reçoit le mot de passe saisi (`password`) et affiche :
 
-- **une barre de progression** (composant [`ProgressBar`](#barre-de-progression)) : sa longueur suit le nombre de règles respectées sur 5 ; elle est `--hostile-color` tant qu'il en manque une et passe en `--primary-color` quand le mot de passe est valable. Elle n'a pas de `label` : elle est donc masquée aux lecteurs d'écran, qui ont la liste des règles ;
-- **un bouton rond avec une icône** (`question-light` en attendant une icône « info » dans la police d'icônes) qui ouvre une petite bulle sous le champ avec les règles : `✓` en `--primary-color` si la règle est respectée, `✗` en `--hostile-color` sinon. L'état est aussi écrit pour les lecteurs d'écran (« respectée », « non respectée ») : la couleur seule ne suffit pas (WCAG 1.4.1). Le bouton porte `aria-expanded` et `aria-controls` ; la bulle se ferme avec Échap ou un clic ailleurs.
+- **une barre de progression** (composant [`ProgressBar`](#barre-de-progression)) : sa longueur suit le nombre de règles respectées sur 5 ; elle est `--hostile-color` tant qu'il en manque une et passe en `--primary-color` quand le mot de passe est valable. Elle n'a pas de `label` : elle est donc masquée aux lecteurs d'écran, qui ont le résumé décrit plus bas ;
+- **un bouton rond avec une icône** (`question-light` en attendant une icône « info » dans la police d'icônes) qui ouvre une petite bulle au-dessus du bouton avec les règles : `✓` en `--primary-color` si la règle est respectée, `✗` en `--hostile-color` sinon. L'état est aussi écrit pour les lecteurs d'écran (« respectée », « non respectée ») : la couleur seule ne suffit pas (WCAG 1.4.1). Le bouton porte `aria-expanded` et `aria-controls` ; la bulle se ferme avec Échap ou un clic ailleurs.
 
 Les règles et leurs libellés sont dans `apps/web/src/lib/passwordRules.ts` (`checkPasswordRules(password)` renvoie chaque règle avec `isMet`). Elles s'appuient sur les constantes de `packages/shared` (`PASSWORD_MIN_LENGTH`, `PASSWORD_MAX_LENGTH`, `PASSWORD_PATTERNS`) : ce sont les mêmes que celles du schéma Zod vérifié par l'API, il n'y a qu'un endroit à modifier.
 
-La bulle est un composant [`Toggletip`](#bulle-dinformation-toggletip).
+La bulle est un composant [`Toggletip`](#bulle-dinformation-toggletip), ouvert vers le haut (`placement="top"`) pour ne pas recouvrir le bouton d'envoi.
+
+Le composant écrit aussi un **résumé réservé aux lecteurs d'écran** (`.sr-only`), qui porte l'identifiant reçu dans `rulesId` : « Règles à respecter : Une majuscule, Un chiffre. », puis « Toutes les règles du mot de passe sont respectées. ». Le champ mot de passe y est relié par `aria-describedby` : le lecteur d'écran annonce les règles manquantes en arrivant sur le champ, sans devoir ouvrir la bulle. Le résumé est un texte à part, toujours présent, plutôt que la liste de la bulle : quand la bulle est fermée, la liste est cachée (`hidden`), et tous les navigateurs ne lisent pas un contenu caché désigné par `aria-describedby`.
 
 ```tsx
-<Input label="Mot de passe" inputType="password" name="password" autoComplete="new-password" … />
-<PasswordStrength password={values.password} />
+const passwordRulesId = useId();
+
+<Input label="Mot de passe" inputType="password" name="password" autoComplete="new-password" aria-describedby={passwordRulesId} … />
+<PasswordStrength password={values.password} rulesId={passwordRulesId} />
 ```
 
 ```tsx
@@ -753,6 +788,38 @@ Une section dont le fond doit couvrir toute la largeur de l'écran garde son fon
 ```
 
 Le mixin accepte une autre largeur et d'autres marges, pour une page plus étroite (formulaire de connexion, texte long) : `@include container(60rem);` ou `@include container(80rem, $space-lg);`.
+
+---
+
+## Classe de page sur `<body>`
+
+Le `<body>` porte une classe qui dépend de la page affichée. Elle sert à donner un style propre à une page à un élément commun à toutes, sans ajouter de prop : le header, par exemple, flotte au-dessus de la bannière sur l'accueil seulement.
+
+| Adresse | Classe |
+|---|---|
+| `/` | `home-index` |
+| `/login` | `login-index` |
+| `/campaigns` | `campaigns-index` |
+| `/campaigns/42` | `campaigns-details-index` |
+| `/campaigns/42/sessions` | `campaigns-details-sessions-index` |
+
+Les segments de l'adresse sont joints par des tirets, puis suivis de `-index`. Un segment qui est un paramètre de la route (un identifiant, un slug) devient `details` : `/campaigns/42` et `/campaigns/7` sont la même page avec d'autres données, elles ont donc la même classe.
+
+La classe est calculée par `getPageClassName(pathname, params)` (`apps/web/src/lib/pageClassName.ts`) et posée par le composant client `PageBody`, qui rend le `<body>` dans `app/layout.tsx`. Il lit l'adresse avec `usePathname()` et `useParams()` : la classe est donc déjà dans le HTML rendu par le serveur (pas de saut à l'affichage) et se met à jour à chaque navigation, alors que le layout racine, lui, n'est pas rendu à nouveau.
+
+Dans un `.module.scss`, la classe se cible avec `:global()`, puisqu'elle n'appartient à aucun module :
+
+```scss
+:global(.home-index) .header {
+  position: absolute;
+  background-color: transparent;
+}
+```
+
+Sur l'accueil, le header utilise cette classe pour :
+
+- **flotter au-dessus de la bannière**, transparent, et apparaître avec `glow-appear` et `smoke-reveal` (classe `header--intro`, retirée au premier défilement) ;
+- **revenir en haut de l'écran une fois la page défilée** (classe `header--scrolled`). Dès que le défilement dépasse sa hauteur plus 32px, il passe en `position: fixed`, reprend son fond et son halo, et glisse depuis le haut (`slide-down`). Il ne redevient transparent qu'en revenant tout en haut de la page. Cet écart entre les deux seuils évite qu'il clignote quand on défile autour de sa hauteur. Sa hauteur est suivie par un `ResizeObserver`, et l'écoute du défilement est passive (`{ passive: true }`) pour ne pas ralentir le défilement.
 
 ---
 
