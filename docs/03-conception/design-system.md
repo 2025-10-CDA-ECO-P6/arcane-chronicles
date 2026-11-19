@@ -556,6 +556,22 @@ L'état d'erreur passe par l'attribut `aria-invalid` et non par une classe : il 
 />
 ```
 
+### Composant React `PasswordStrength`
+
+`apps/web/src/components/lib/form/PasswordStrength/` se place sous le champ mot de passe d'un formulaire de création (inscription, plus tard changement de mot de passe). Il reçoit le mot de passe saisi (`password`) et affiche :
+
+- **une barre de progression** (composant [`ProgressBar`](#barre-de-progression)) : sa longueur suit le nombre de règles respectées sur 5 ; elle est `--hostile-color` tant qu'il en manque une et passe en `--primary-color` quand le mot de passe est valable. Elle n'a pas de `label` : elle est donc masquée aux lecteurs d'écran, qui ont la liste des règles ;
+- **un bouton rond avec une icône** (`question-light` en attendant une icône « info » dans la police d'icônes) qui ouvre une petite bulle sous le champ avec les règles : `✓` en `--primary-color` si la règle est respectée, `✗` en `--hostile-color` sinon. L'état est aussi écrit pour les lecteurs d'écran (« respectée », « non respectée ») : la couleur seule ne suffit pas (WCAG 1.4.1). Le bouton porte `aria-expanded` et `aria-controls` ; la bulle se ferme avec Échap ou un clic ailleurs.
+
+Les règles et leurs libellés sont dans `apps/web/src/lib/passwordRules.ts` (`checkPasswordRules(password)` renvoie chaque règle avec `isMet`). Elles s'appuient sur les constantes de `packages/shared` (`PASSWORD_MIN_LENGTH`, `PASSWORD_MAX_LENGTH`, `PASSWORD_PATTERNS`) : ce sont les mêmes que celles du schéma Zod vérifié par l'API, il n'y a qu'un endroit à modifier.
+
+La bulle est un composant [`Toggletip`](#bulle-dinformation-toggletip).
+
+```tsx
+<Input label="Mot de passe" inputType="password" name="password" autoComplete="new-password" … />
+<PasswordStrength password={values.password} />
+```
+
 ```tsx
 <div className="form-field">
   <label className="form-label" htmlFor="email">Email</label>
