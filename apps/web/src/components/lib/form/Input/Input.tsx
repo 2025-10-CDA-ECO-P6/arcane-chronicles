@@ -11,11 +11,13 @@ export function Input({
   handleChange,
   id,
   className,
+  'aria-describedby': describedBy,
   ...rest
 }: InputProps) {
   const generatedId = useId();
   const inputId = id ?? generatedId;
   const errorId = `${inputId}-error`;
+  const descriptionIds = [error && errorId, describedBy].filter(Boolean).join(' ');
 
   return (
     <div className="form-field">
@@ -29,7 +31,7 @@ export function Input({
         type={inputType}
         onChange={handleChange}
         aria-invalid={error || invalid ? true : undefined}
-        aria-describedby={error ? errorId : undefined}
+        aria-describedby={descriptionIds || undefined}
       />
       {error && (
         <p id={errorId} className="form-error">

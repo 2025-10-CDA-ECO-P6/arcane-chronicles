@@ -38,12 +38,36 @@ L'objectif est de limiter les ressources consommées (données transférées, ca
 | **Polices** | Fichiers locaux (aucune requête vers un service tiers), une police variable par famille au lieu d'un fichier par graisse |
 | **Icônes** | Une seule police d'icônes de 33 Ko (WOFF) pour 84 icônes, au lieu de dizaines d'images ou d'une bibliothèque d'icônes complète |
 | **Images** | WebP en deux tailles (`-desktop` et `-mobile`), chargement différé (`loading="lazy"`) ; images uploadées redimensionnées par Cloudinary au format demandé |
-| **Vidéo de fond** | Une seule vidéo courte et compressée (2,3 Mo), muette, en boucle, dans un composant unique (`BackgroundVideo`) utilisé par les pages de connexion et d'inscription et par la bannière de l'accueil ; jamais téléchargée sur mobile ni quand l'utilisateur demande moins d'animations, où une image fixe de 17 Ko la remplace |
+| **Vidéo de fond** | Une seule boucle courte (14 s) et compressée (2,6 Mo en AV1, 3,5 Mo en H.264 pour les navigateurs qui ne lisent pas l'AV1), recadrée en portrait pour les téléphones et tablettes en portrait (1 Mo en AV1, 1,8 Mo en H.264), muette, dans un composant unique (`BackgroundVideo`) utilisé par les pages de connexion et d'inscription et par la bannière de l'accueil ; jamais téléchargée quand l'utilisateur demande moins d'animations, où une image fixe de 17 Ko la remplace (détail ci-dessous) |
 | **Session** | Le `proxy` de Next ne fait aucun appel réseau : il lit seulement la date d'expiration du jeton. Pour un utilisateur connecté, un seul appel `GET /api/auth/me` par page, partagé entre le layout et la page (`cache` de React), et aucun pour un visiteur sans cookie. Contrepartie assumée : les pages sont rendues à chaque requête (lecture du cookie), pour afficher une session toujours à jour |
 | **Thème sombre** | Fond `#080808` : moins d'énergie consommée sur les écrans OLED des téléphones |
 | **Pas de traceurs** | Aucun outil d'analyse ni script publicitaire tiers |
 | **Hébergement** | Neon met la base en veille quand elle ne sert pas ; l'API Render est maintenue éveillée par un ping toutes les 10 minutes, un compromis assumé entre disponibilité pour les démonstrations et sobriété : intervalle le plus long qui garde une marge avant la mise en veille (15 minutes), soit deux fois moins de requêtes qu'un ping toutes les 5 minutes ; la route pingée ne lit pas la base, qui reste en veille ; une seule petite instance gratuite |
 | **Docker** | Images en plusieurs étapes, sans dépendances de développement : images plus légères à construire, stocker et déployer |
+
+### Vidéo de fond : codec, conteneur et version de secours
+
+Un fichier vidéo combine deux choses :
+
+- **le codec** : la façon dont les images sont compressées (H.264, AV1, VP9…). C'est lui qui fixe le rapport entre qualité et poids ;
+- **le conteneur** : la « boîte » qui range la vidéo et ses métadonnées (durée, pistes…). C'est lui qui donne l'extension du fichier (`.mp4`, `.webm`…).
+
+`fire-av1.mp4` est donc un conteneur MP4 qui contient une vidéo compressée en AV1, et `fire.mp4` un conteneur MP4 qui contient une vidéo en H.264. Il n'existe pas de fichier `.av1` pour le web : l'AV1 est toujours rangé dans un conteneur. Le MP4 a été choisi plutôt que le WebM parce que Safari lit mieux l'AV1 dans ce conteneur.
+
+L'AV1 compresse beaucoup mieux que le H.264 : pour la même boucle en 1080p, 2,6 Mo au lieu de 3,5 Mo, avec une qualité comparable. Mais tous les navigateurs ne le lisent pas : Chrome, Edge et Firefox oui ; Safari seulement sur les appareils équipés d'un décodeur AV1 matériel (Mac M3 et plus récents, iPhone 15 Pro et plus récents). Le composant propose donc deux `<source>` :
+
+```tsx
+<source src="/videos/fire-mobile-av1.mp4" type={AV1_TYPE} media={PORTRAIT_MEDIA} />
+<source src="/videos/fire-mobile.mp4" type="video/mp4" media={PORTRAIT_MEDIA} />
+<source src="/videos/fire-av1.mp4" type={AV1_TYPE} media={MOTION_MEDIA} />
+<source src="/videos/fire.mp4" type="video/mp4" media={MOTION_MEDIA} />
+```
+
+Le navigateur prend la **première** source qu'il sait lire et dont la condition `media` est vraie, et ne télécharge qu'elle : la plupart des visiteurs reçoivent la version AV1, les autres la version H.264. Garder plusieurs versions ne coûte rien en bande passante, seulement de la place dans le dépôt.
+
+Sur un écran en portrait, la vidéo affichée en `object-fit: cover` ne montre qu'une bande verticale au centre de l'image 16:9 : le reste est coupé. Les deux premières sources sont donc cette bande centrale, déjà découpée au format 3:4 (810 × 1080 px), proposées aux écrans au plus aussi larges que hauts dans ce rapport (`max-aspect-ratio: 3/4` : téléphones et tablettes en portrait). Les pixels affichés sont les mêmes qu'avec la vidéo complète, à la même résolution, mais le fichier pèse 2,7 fois moins en AV1 (1 Mo au lieu de 2,6 Mo) et 2 fois moins en H.264 (1,8 Mo au lieu de 3,5 Mo). Le découpage ne touche pas au temps : les 420 images et la boucle de 14 s sont identiques. Pour garder la même qualité, l'encodage est un peu moins compressé que la version complète (CRF 36 au lieu de 38 en AV1, 25 au lieu de 28 en H.264) : mesurée par VMAF sur la même zone centrale, la version portrait obtient 92,3 en AV1 (91,8 pour la version complète) et 93,5 en H.264 (93,3).
+
+L'attribut `type` précise le conteneur (`video/mp4`) **et** le codec (`codecs="av01…"`). Sans la partie `codecs`, un navigateur qui ne lit pas l'AV1 croirait pouvoir lire le fichier, puisqu'il connaît le MP4 : il le téléchargerait pour rien avant d'échouer.
 
 ---
 
@@ -52,7 +76,7 @@ L'objectif est de limiter les ressources consommées (données transférées, ca
 | Fichier | Poids actuel | Recommandation |
 |---|--:|---|
 | `apps/web/src/assets/videos/fire.mp4` | 58 Mo | **Fait** : retiré des assets, seule la boucle courte est gardée |
-| `apps/web/src/assets/videos/fire_loop_14s.mp4` | 4,3 Mo | **Fait** : fichier source de travail, jamais servi. La version servie, `apps/web/public/videos/fire.mp4`, est en 720p H.264 sans piste audio (2,3 Mo, −48 %), avec une image fixe `fire-poster.webp` (17 Ko). Elle sert de fond aux pages de connexion et d'inscription et n'est téléchargée que sur un écran d'au moins 768 px sans `prefers-reduced-motion` (attribut `media` de `<source>`) ; sinon seule l'image fixe s'affiche |
+| `apps/web/src/assets/videos/fire_loop_14s.mp4` | 4,3 Mo | **Fait** : fichier source de travail, jamais servi. La version servie reprend toute la boucle, en 1080p sans piste audio : `apps/web/public/videos/fire-av1.mp4` en AV1 (2,6 Mo, −40 %), proposée en premier, et `apps/web/public/videos/fire.mp4` en H.264 (3,5 Mo) pour les navigateurs qui ne lisent pas l'AV1, plus leur recadrage portrait 810 × 1080 `fire-mobile-av1.mp4` (1 Mo) et `fire-mobile.mp4` (1,8 Mo), avec une image fixe `fire-poster.webp` (17 Ko). Une boucle plus courte (8,3 s) a été testée : plus légère, mais son raccord était moins fluide. Elle sert de fond aux pages de connexion et d'inscription et n'est téléchargée que sans `prefers-reduced-motion` (attribut `media` de `<source>`), mobile compris ; sinon seule l'image fixe s'affiche |
 | `apps/web/src/assets/fonts/Inter-Variable.ttf` | 854 Ko | Convertir en WOFF2 et ne garder que les caractères latins (environ 10 fois plus léger) |
 | `apps/web/src/assets/fonts/Cinzel-Variable.ttf` | 123 Ko | Convertir en WOFF2 |
 | `apps/web/src/assets/fonts/icons/Arcane-chronicle.woff` | 33 Ko | Générer aussi un WOFF2 ; retirer de la police les icônes non utilisées |

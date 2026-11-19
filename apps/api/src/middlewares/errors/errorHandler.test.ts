@@ -2,7 +2,7 @@ import express from 'express';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 
-import app from '../config.js';
+import app from '../../config.js';
 import { errorHandler } from './errorHandler.js';
 
 describe('errorHandler', () => {

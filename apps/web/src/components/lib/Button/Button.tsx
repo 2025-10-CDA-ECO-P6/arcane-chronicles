@@ -7,10 +7,13 @@ export function Button({
   icon,
   iconOnly,
   round,
+  transparent = false,
   buttonType = 'button',
   buttonText,
   className,
   disabled,
+  expanded,
+  controls,
   handleClick,
 }: ButtonProps) {
   const classes = [
@@ -21,13 +24,21 @@ export function Button({
     icon && `icon--${icon}`,
     iconOnly && 'btn--icon-only',
     round && 'btn--round',
+    transparent && 'btn--transparent',
     className,
   ]
     .filter(Boolean)
     .join(' ');
 
   return (
-    <button type={buttonType} className={classes} disabled={disabled} onClick={handleClick}>
+    <button
+      type={buttonType}
+      className={classes}
+      disabled={disabled}
+      aria-expanded={expanded}
+      aria-controls={controls}
+      onClick={handleClick}
+    >
       <span className={iconOnly ? 'sr-only' : undefined}>{buttonText}</span>
     </button>
   );

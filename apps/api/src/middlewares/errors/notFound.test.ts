@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 
-import app from '../config.js';
+import app from '../../config.js';
 
 describe('Unknown route', () => {
   it('responds 404 in JSON', async () => {

@@ -1,3 +1,4 @@
+@use '@/styles/animations' as *;
 @use '@/styles/variables' as *;
 @use '@/styles/functions' as *;
 
@@ -6,7 +7,7 @@
   display: grid;
   place-items: center;
   inline-size: 100%;
-  block-size: 70vh;
+  block-size: 80vh;
 
   &::after {
     content: '';
@@ -26,44 +27,25 @@
     object-fit: cover;
   }
 
-  &__logo {
-    max-inline-size: 30rem;
-    block-size: auto;
+  &__title {
     animation:
-      logo-appear 8s ease-out both,
-      logo-pulse 3s ease-in-out 8s infinite alternate;
+      glow-appear 8s ease-out both,
+      glow-pulse 3s ease-in-out 8s infinite alternate;
+  }
+
+  &__logo {
+    inline-size: 23rem;
+    block-size: auto;
+    animation: smoke-reveal 6s linear backwards;
   }
 }
 
-@keyframes logo-appear {
-  from {
-    opacity: 0;
-    filter: drop-shadow(0 0 0 with-alpha(var(--secondary-color), 0));
-    transform: scale(0.4);
-  }
-
-  to {
-    opacity: 1;
-    filter: drop-shadow(0 0 2rem with-alpha(var(--secondary-color), 0.7));
-    transform: scale(1);
-  }
-}
-
-@keyframes logo-pulse {
-  from {
-    opacity: 1;
-    filter: drop-shadow(0 0 2rem with-alpha(var(--secondary-color), 0.7));
-    transform: scale(1);
-  }
-
-  to {
-    opacity: 0.7;
-    filter: drop-shadow(0 0 0 with-alpha(var(--secondary-color), 0.2));
-    transform: scale(0.95);
-  }
-}
+@include glow-appear-animation($start-scale: 0.6);
+@include glow-pulse-animation;
+@include smoke-reveal-animation($size: small);
 
 @media (prefers-reduced-motion: reduce) {
+  .banner__title,
   .banner__logo {
     animation: none;
   }

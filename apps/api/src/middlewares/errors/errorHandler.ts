@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import { logger } from '../lib/logger.js';
+import { logger } from '../../lib/logger.js';
 
 interface ClientError extends Error {
   status: number;

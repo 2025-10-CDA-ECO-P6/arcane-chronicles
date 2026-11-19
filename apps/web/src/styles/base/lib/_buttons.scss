@@ -11,6 +11,10 @@
   }
 }
 
+.btn--transparent {
+  @include button-transparent;
+}
+
 .btn--filled {
   @include button-filled;
 }

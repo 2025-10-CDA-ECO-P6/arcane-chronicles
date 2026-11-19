@@ -51,14 +51,14 @@ arcane-chronicles/
 ├── apps/
 │   ├── web/                  # Next.js
 │   │   ├── Dockerfile
-│   │   ├── public/           # fichiers servis tels quels (vidéo de fond et son image fixe)
+│   │   ├── public/           # fichiers servis tels quels (vidéo de fond complète et recadrée en portrait, son image fixe)
 │   │   └── src/
 │   │       ├── app/          # routes (App Router)
 │   │       ├── assets/       # polices, police d'icônes, images, vidéos
 │   │       ├── components/   # composants repris de la page « composants » de Figma
-│   │       ├── hooks/        # logique réutilisable (useAuth : connexion, déconnexion)
-│   │       ├── lib/          # client API (apiFetch), client Socket.io, polices
-│   │       └── styles/       # design system : variables, mixins, classes globales
+│   │       ├── hooks/        # logique réutilisable (useAuth : connexion, inscription, déconnexion, erreurs de formulaire ; useDisclosure : ouverture d'une bulle)
+│   │       ├── lib/          # client API (apiFetch), client Socket.io, polices, règles du mot de passe, classe de page
+│   │       └── styles/       # design system : variables, mixins, animations, classes globales
 │   └── api/                  # Express + Socket.io
 │       ├── Dockerfile
 │       ├── prisma/           # schema.prisma, migrations, seeds (référence D&D et démo)
@@ -72,7 +72,7 @@ arcane-chronicles/
 │           ├── database/     # client Prisma
 │           ├── sockets/      # serveur temps réel, handlers par domaine
 │           ├── services/     # auth, sécurité, validation, règles de jeu partagées
-│           ├── middlewares/  # gestion des erreurs
+│           ├── middlewares/  # rangés par rôle : errors/, limiters/, validation/
 │           └── lib/          # journalisation (pino)
 ├── packages/
 │   └── shared/               # schémas Zod, types d'événements, constantes de règles
@@ -109,10 +109,12 @@ Requête HTTP
 | `database/db.ts` | Client Prisma unique, connecté par l'adaptateur PostgreSQL |
 | `sockets/index.ts` | Serveur temps réel (Socket.io) ; les événements sont rangés par domaine dans `sockets/handlers/` |
 | `services/` | Outils transverses : authentification, sécurité, validation, et règles de jeu partagées entre les routes et les sockets |
-| `middlewares/errorHandler.ts` | Transforme une erreur en réponse propre et la journalise ; ne divulgue jamais le détail au client |
-| `middlewares/validate.ts` | Valide le corps d'une requête avec un schéma Zod de `packages/shared` ; renvoie 422 avec `errors: [{ field, message }]` |
-| `middlewares/notFound.ts` | Répond 404 en JSON pour toute route inconnue (monté après le routeur `/api`, avant le middleware d'erreur) |
-| `middlewares/loginLimiter.ts` | Limite les tentatives de connexion échouées (express-rate-limit) |
+| `middlewares/errors/errorHandler.ts` | Transforme une erreur en réponse propre et la journalise ; ne divulgue jamais le détail au client |
+| `middlewares/validation/validate.ts` | Valide le corps d'une requête avec un schéma Zod de `packages/shared` ; renvoie 422 avec `errors: [{ field, message }]` |
+| `middlewares/errors/notFound.ts` | Répond 404 en JSON pour toute route inconnue (monté après le routeur `/api`, avant le middleware d'erreur) |
+| `middlewares/limiters/rateLimiter.ts` | Fabrique les limiteurs (express-rate-limit) : réponse 429 avec `message` et `retryAfter` (secondes restantes) |
+| `middlewares/limiters/loginLimiter.ts` | Limite les tentatives de connexion échouées : 5 par adresse IP sur 15 minutes |
+| `middlewares/limiters/registerLimiter.ts` | Limite les tentatives d'inscription, réussies ou non : 10 par adresse IP sur une heure (risque R11) |
 | `types/` | Types TypeScript partagés entre plusieurs couches (`AuthPayload`), et extension du type `Request` d'Express (`req.auth`) |
 | `lib/logger.ts` | Journalisation (pino) |
 

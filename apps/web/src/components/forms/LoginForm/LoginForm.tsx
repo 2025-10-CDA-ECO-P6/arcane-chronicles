@@ -1,6 +1,6 @@
 'use client';
 
-import { type LoginInput, loginSchema } from '@arcane-chronicles/shared';
+import type { LoginInput } from '@arcane-chronicles/shared';
 import { type ChangeEvent, type SubmitEvent, useState } from 'react';
 
 import { Button } from '@/components/lib/Button/Button';
@@ -8,47 +8,29 @@ import { Input } from '@/components/lib/form/Input/Input';
 import { useAuth } from '@/hooks/useAuth';
 
 import styles from './LoginForm.module.scss';
-import type { LoginFormErrors, LoginFormProps } from './LoginForm.types';
-
-const FIELD_MESSAGES = {
-  email: 'Adresse e-mail invalide',
-  password: 'Mot de passe obligatoire',
-};
+import type { LoginFormProps } from './LoginForm.types';
 
 export function LoginForm({ redirectTo }: LoginFormProps) {
-  const { login, error, clearError, hasInvalidCredentials, isLocked, lockedMinutes } = useAuth();
+  const {
+    login,
+    error,
+    fieldErrors,
+    clearFieldError,
+    hasInvalidCredentials,
+    isLocked,
+    lockedMinutes,
+  } = useAuth();
   const [values, setValues] = useState<LoginInput>({ email: '', password: '' });
-  const [errors, setErrors] = useState<LoginFormErrors>({});
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setValues((current) => ({ ...current, [name]: value }));
-    setErrors((current) => ({ ...current, [name]: undefined }));
-    if (error) {
-      clearError();
-    }
+    clearFieldError(name as keyof LoginInput);
   };
 
   const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (isLocked) {
-      return;
-    }
-
-    const result = loginSchema.safeParse(values);
-
-    if (!result.success) {
-      const invalidFields = result.error.issues.map((issue) => issue.path[0]);
-      setErrors({
-        email: invalidFields.includes('email') ? FIELD_MESSAGES.email : undefined,
-        password: invalidFields.includes('password') ? FIELD_MESSAGES.password : undefined,
-      });
-      clearError();
-      return;
-    }
-
-    setErrors({});
-    await login(result.data, redirectTo);
+    await login(values, redirectTo);
   };
 
   return (
@@ -61,7 +43,7 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
         required
         value={values.email}
         handleChange={handleChange}
-        error={errors.email}
+        error={fieldErrors.email}
         invalid={hasInvalidCredentials}
         disabled={isLocked}
       />
@@ -73,7 +55,7 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
         required
         value={values.password}
         handleChange={handleChange}
-        error={errors.password}
+        error={fieldErrors.password}
         invalid={hasInvalidCredentials}
         disabled={isLocked}
       />
