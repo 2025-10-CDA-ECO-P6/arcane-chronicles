@@ -12,6 +12,8 @@ export function Button({
   buttonText,
   className,
   disabled,
+  expanded,
+  controls,
   handleClick,
 }: ButtonProps) {
   const classes = [
@@ -29,7 +31,14 @@ export function Button({
     .join(' ');
 
   return (
-    <button type={buttonType} className={classes} disabled={disabled} onClick={handleClick}>
+    <button
+      type={buttonType}
+      className={classes}
+      disabled={disabled}
+      aria-expanded={expanded}
+      aria-controls={controls}
+      onClick={handleClick}
+    >
       <span className={iconOnly ? 'sr-only' : undefined}>{buttonText}</span>
     </button>
   );

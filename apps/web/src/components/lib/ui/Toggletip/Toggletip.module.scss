@@ -1,0 +1,32 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.toggletip {
+  position: relative;
+
+  &__panel {
+    @include box;
+    @include box-rounded;
+    position: absolute;
+    z-index: 1;
+    inset-inline-end: 0;
+    inline-size: max-content;
+    max-inline-size: 20rem;
+    padding: $space-sm $space-md;
+    background-color: var(--background-color-secondary);
+    font-size: $text-small-size;
+    box-shadow: $shadow-dropdown;
+
+    &--bottom {
+      inset-block-start: calc(100% + #{$space-xs});
+    }
+
+    &--top {
+      inset-block-end: calc(100% + #{$space-xs});
+    }
+
+    &[hidden] {
+      display: none;
+    }
+  }
+}

@@ -63,6 +63,23 @@ describe('Button', () => {
     expect(handleClick).not.toHaveBeenCalled();
   });
 
+  it('tells assistive technologies which panel it opens and whether it is open', () => {
+    render(
+      <Button
+        color="neutral"
+        buttonText="Règles"
+        icon="question-light"
+        iconOnly
+        expanded
+        controls="rules"
+      />,
+    );
+
+    const button = screen.getByRole('button', { name: 'Règles' });
+    expect(button).toHaveAttribute('aria-expanded', 'true');
+    expect(button).toHaveAttribute('aria-controls', 'rules');
+  });
+
   it('only gets a transparent background when asked', () => {
     const { rerender } = render(<Button color="primary" buttonText="Menu" />);
     expect(screen.getByRole('button', { name: 'Menu' })).not.toHaveClass('btn--transparent');

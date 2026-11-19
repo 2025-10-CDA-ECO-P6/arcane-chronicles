@@ -621,6 +621,51 @@ La liste ouverte (les `<option>`) est dessinée par le système : fond et couleu
 
 ---
 
+## Bulle d'information (`Toggletip`)
+
+Composant React `Toggletip` (`apps/web/src/components/lib/ui/Toggletip/`) : un bouton rond avec une icône qui ouvre, au clic, une petite bulle sous lui ou au-dessus, alignée sur son bord droit. Le contenu de la bulle est passé en `children`.
+
+| Prop | Rôle |
+|---|---|
+| `label` | texte du bouton, lu par les lecteurs d'écran (le bouton n'affiche que l'icône) |
+| `icon` | icône du bouton, `question-light` par défaut |
+| `placement` | `bottom` (bulle sous le bouton, par défaut) ou `top` (au-dessus, quand le dessous est occupé, par exemple par le bouton d'envoi d'un formulaire) |
+| `children` | contenu de la bulle |
+| `className` | classe ajoutée, pour le placer dans son parent |
+
+Le bouton porte `aria-expanded` et `aria-controls` ; la bulle se ferme avec Échap ou un clic ailleurs.
+
+```tsx
+<Toggletip label="Règles du mot de passe">
+  <ul>…</ul>
+</Toggletip>
+```
+
+Toute la logique (état ouvert, clic en dehors, Échap, identifiant qui relie le bouton à la bulle) vient du hook `useDisclosure` (`apps/web/src/hooks/`). Un contenu qui s'ouvre avec un autre balisage (menu, filtres…) utilise directement ce hook : il donne `isOpen`, `toggle`, `close`, `closeOnEscape` (à brancher sur `onKeyDown`), une `containerRef` (un clic en dehors de ce conteneur ferme le contenu) et un `panelId` unique pour `aria-controls`. Ni l'un ni l'autre ne gère une modale (piège du focus, reste de la page inerte) : pour cela, utiliser la balise `<dialog>` ouverte avec `showModal()`.
+
+## Barre de progression
+
+Composant React `ProgressBar` (`apps/web/src/components/lib/ui/ProgressBar/`), pour toute progression : règles d'un mot de passe, chapitres joués, points de vie…
+
+| Prop | Rôle |
+|---|---|
+| `value`, `max` | valeur actuelle et maximum (obligatoires) |
+| `min` | minimum, `0` par défaut |
+| `color` | `primary` (par défaut), `secondary`, `third`, `gold` ou `hostile` |
+| `completeColor` | couleur prise quand la barre est pleine (facultatif) |
+| `label` | nom lu par les lecteurs d'écran ; sans `label`, la barre est décorative et masquée (`aria-hidden`) |
+| `valueText` | valeur lue à la place du nombre brut, par exemple « 3 chapitres sur 11 » |
+| `className` | classe ajoutée, pour la placer dans son parent |
+
+Le composant calcule lui-même le pourcentage à partir de `value`, `min` et `max` (borné entre 0 et 100 %) et le passe au CSS par une variable, `--progress-value`, dans l'attribut `style`. C'est la seule façon de transmettre une longueur quelconque au CSS : un attribut `data-*` ne peut pas devenir une largeur (`attr()` ne marche pas pour les tailles dans tous les navigateurs). L'attribut `style` ne porte que cette donnée ; l'apparence reste dans le SCSS. La barre se remplit avec une transition, coupée si l'utilisateur demande moins d'animations.
+
+Avec un `label`, la barre porte `role="progressbar"` et `aria-valuenow`, `aria-valuemin`, `aria-valuemax` (et `aria-valuetext` si `valueText` est donné).
+
+```tsx
+<ProgressBar value={3} max={11} label="Chapitres joués" valueText="3 chapitres sur 11" />
+<ProgressBar value={metCount} max={5} color="hostile" completeColor="primary" />
+```
+
 ## Boîtes
 
 Fichiers des boîtes dans `apps/web/src/styles/` :
