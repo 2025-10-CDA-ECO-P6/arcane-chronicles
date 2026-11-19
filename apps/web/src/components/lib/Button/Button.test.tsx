@@ -62,4 +62,12 @@ describe('Button', () => {
     expect(button).toBeDisabled();
     expect(handleClick).not.toHaveBeenCalled();
   });
+
+  it('only gets a transparent background when asked', () => {
+    const { rerender } = render(<Button color="primary" buttonText="Menu" />);
+    expect(screen.getByRole('button', { name: 'Menu' })).not.toHaveClass('btn--transparent');
+
+    rerender(<Button color="primary" buttonText="Menu" transparent />);
+    expect(screen.getByRole('button', { name: 'Menu' })).toHaveClass('btn--transparent');
+  });
 });

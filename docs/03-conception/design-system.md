@@ -357,6 +357,7 @@ Les deux utilisent les mêmes briques : un bouton fait avec les classes ou avec 
 | Taille | `sm` (par défaut), `md` | `.btn--md` | `$size: md` |
 | Icône seule | bouton carré | `.btn--icon-only` | `$icon-only: true` |
 | Rond | bouton rond (avec icône seule) | `.btn--round` | `$round: true` |
+| Transparent | fond transparent au lieu de `--background-color`, pour un bouton posé sur une image ou une vidéo (bouton menu du header de l'accueil) ; sans effet sur un bouton rempli, le survol garde son fond | `.btn--transparent` | `$transparent: true` |
 | Icône | nom d'une icône de la police | — | `$icon: play-fill` |
 | Position de l'icône | `before` (devant le texte, par défaut) ou `after` | — | `$icon-position: after` |
 | Taille de l'icône | `calc(1em + 0.2rem)` par défaut : 2px de plus que le texte du bouton | — | `$icon-size: 2rem` |

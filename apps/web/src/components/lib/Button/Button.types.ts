@@ -13,6 +13,7 @@ export interface ButtonProps {
   icon?: string;
   iconOnly?: boolean;
   round?: boolean;
+  transparent?: boolean;
   buttonType?: ButtonType;
   buttonText: string;
   className?: string;

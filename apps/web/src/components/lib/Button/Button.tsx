@@ -7,6 +7,7 @@ export function Button({
   icon,
   iconOnly,
   round,
+  transparent = false,
   buttonType = 'button',
   buttonText,
   className,
@@ -21,6 +22,7 @@ export function Button({
     icon && `icon--${icon}`,
     iconOnly && 'btn--icon-only',
     round && 'btn--round',
+    transparent && 'btn--transparent',
     className,
   ]
     .filter(Boolean)

@@ -142,6 +142,10 @@
   border-radius: $radius-circle;
 }
 
+@mixin button-transparent {
+  background-color: transparent;
+}
+
 @mixin button(
   $color,
   $filled: false,
@@ -149,6 +153,7 @@
   $icon-position: before,
   $icon-only: false,
   $round: false,
+  $transparent: false,
   $size: $button-default-size,
   $icon-size: $button-icon-size
 ) {
@@ -160,6 +165,10 @@
     @include _filled-look;
   } @else {
     @include _outlined-look;
+
+    @if $transparent {
+      @include button-transparent;
+    }
   }
 
   @if $icon-only {
