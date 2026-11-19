@@ -9,7 +9,7 @@ export function HeroBanner() {
   return (
     <div className={styles.banner}>
       <BackgroundVideo className={styles.banner__video} />
-      <h1>
+      <h1 className={styles.banner__title}>
         <Image src={logo} alt="Arcane Chronicles" className={styles.banner__logo} preload />
       </h1>
     </div>
