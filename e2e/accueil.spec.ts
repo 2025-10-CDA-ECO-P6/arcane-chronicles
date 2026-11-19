@@ -4,5 +4,5 @@ test("la page d'accueil s'affiche", async ({ page }) => {
   await page.goto('/');
 
   await expect(page).toHaveTitle('Arcane Chronicles');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Arcane Chronicles');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveAccessibleName('Arcane Chronicles');
 });

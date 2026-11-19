@@ -1,8 +1,19 @@
-export default function HomePage() {
+import { LogoutButton } from '@/components/auth/LogoutButton/LogoutButton';
+import { HeroBanner } from '@/components/lib/HeroBanner/HeroBanner';
+import { getCurrentUser } from '@/lib/auth';
+
+export default async function HomePage() {
+  const user = await getCurrentUser();
+
   return (
-    <main>
-      <h1>Arcane Chronicles</h1>
-      <p>Préparez vos campagnes, pilotez vos parties.</p>
-    </main>
+    <section>
+      <HeroBanner />
+      {user && (
+        <>
+          <p>Connecté en tant que {user.displayName}.</p>
+          <LogoutButton />
+        </>
+      )}
+    </section>
   );
 }

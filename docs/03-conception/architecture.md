@@ -51,12 +51,14 @@ arcane-chronicles/
 ├── apps/
 │   ├── web/                  # Next.js
 │   │   ├── Dockerfile
+│   │   ├── public/           # fichiers servis tels quels (vidéo de fond complète et recadrée en portrait, son image fixe)
 │   │   └── src/
 │   │       ├── app/          # routes (App Router)
 │   │       ├── assets/       # polices, police d'icônes, images, vidéos
 │   │       ├── components/   # composants repris de la page « composants » de Figma
-│   │       ├── lib/          # client API (apiFetch), client Socket.io, polices
-│   │       └── styles/       # design system : variables, mixins, classes globales
+│   │       ├── hooks/        # logique réutilisable (useAuth : connexion, inscription, déconnexion, erreurs de formulaire ; useDisclosure : ouverture d'une bulle)
+│   │       ├── lib/          # client API (apiFetch), client Socket.io, polices, règles du mot de passe, classe de page
+│   │       └── styles/       # design system : variables, mixins, animations, classes globales
 │   └── api/                  # Express + Socket.io
 │       ├── Dockerfile
 │       ├── prisma/           # schema.prisma, migrations, seeds (référence D&D et démo)
@@ -70,7 +72,7 @@ arcane-chronicles/
 │           ├── database/     # client Prisma
 │           ├── sockets/      # serveur temps réel, handlers par domaine
 │           ├── services/     # auth, sécurité, validation, règles de jeu partagées
-│           ├── middlewares/  # gestion des erreurs
+│           ├── middlewares/  # rangés par rôle : errors/, limiters/, validation/
 │           └── lib/          # journalisation (pino)
 ├── packages/
 │   └── shared/               # schémas Zod, types d'événements, constantes de règles
@@ -107,7 +109,13 @@ Requête HTTP
 | `database/db.ts` | Client Prisma unique, connecté par l'adaptateur PostgreSQL |
 | `sockets/index.ts` | Serveur temps réel (Socket.io) ; les événements sont rangés par domaine dans `sockets/handlers/` |
 | `services/` | Outils transverses : authentification, sécurité, validation, et règles de jeu partagées entre les routes et les sockets |
-| `middlewares/errorHandler.ts` | Transforme une erreur en réponse propre et la journalise ; ne divulgue jamais le détail au client |
+| `middlewares/errors/errorHandler.ts` | Transforme une erreur en réponse propre et la journalise ; ne divulgue jamais le détail au client |
+| `middlewares/validation/validate.ts` | Valide le corps d'une requête avec un schéma Zod de `packages/shared` ; renvoie 422 avec `errors: [{ field, message }]` |
+| `middlewares/errors/notFound.ts` | Répond 404 en JSON pour toute route inconnue (monté après le routeur `/api`, avant le middleware d'erreur) |
+| `middlewares/limiters/rateLimiter.ts` | Fabrique les limiteurs (express-rate-limit) : réponse 429 avec `message` et `retryAfter` (secondes restantes) |
+| `middlewares/limiters/loginLimiter.ts` | Limite les tentatives de connexion échouées : 5 par adresse IP sur 15 minutes |
+| `middlewares/limiters/registerLimiter.ts` | Limite les tentatives d'inscription, réussies ou non : 10 par adresse IP sur une heure (risque R11) |
+| `types/` | Types TypeScript partagés entre plusieurs couches (`AuthPayload`), et extension du type `Request` d'Express (`req.auth`) |
 | `lib/logger.ts` | Journalisation (pino) |
 
 | Couche | Responsabilité | Ne fait pas |
@@ -117,7 +125,17 @@ Requête HTTP
 | Model | Requêtes Prisma d'une ressource (sélection, relations à inclure, pagination) | Ne connaît ni Express ni Socket.io |
 | Middleware d'erreur | Transforme une erreur en réponse propre (400, 401, 403, 404, 422, 500) et la journalise avec pino | Ne divulgue pas la pile d'erreur au client |
 
-Toutes les routes sont préfixées par `/api` (ex. `GET /api/health`). Les règles de jeu utilisées à la fois par une route REST et par un événement temps réel (par exemple « modifier les PV ») sont des fonctions de `services/` indépendantes d'Express et de Socket.io : elles sont appelées par l'action **et** par le handler, et se testent sans serveur.
+Toutes les routes sont préfixées par `/api` (ex. `GET /api/health`).
+
+Toutes les erreurs ont la même forme : `{ message }`, en anglais (ex. `{ "message": "Route not found" }`), et `{ errors: [{ field, message }] }` pour une validation refusée. Le middleware d'erreur renvoie le code de l'erreur quand il s'agit d'une erreur du client (400 à 499, par exemple un JSON mal formé) et 500 sinon, sans jamais renvoyer le détail d'une erreur serveur.
+
+Routes d'authentification (`routers/auth/`, actions dans `controllers/authActions.ts`) :
+
+| Route | Middlewares | Réponse |
+|---|---|---|
+| `POST /api/auth/login` | `loginLimiter`, `validate(loginSchema)` | 200 avec l'utilisateur (`id`, `displayName`, `email`) et le cookie de session ; 401 si l'e-mail ou le mot de passe est faux ; 422 si le corps est invalide ; 429 après trop d'échecs, avec `retryAfter` (secondes restantes) |
+| `POST /api/auth/logout` | aucun | 200 et suppression du cookie, même si la session a déjà expiré |
+| `GET /api/auth/me` | `checkCookie` | 200 avec l'utilisateur lu en base ; 401 sans session valide. Permet au front de savoir qui est connecté au chargement d'une page | Les règles de jeu utilisées à la fois par une route REST et par un événement temps réel (par exemple « modifier les PV ») sont des fonctions de `services/` indépendantes d'Express et de Socket.io : elles sont appelées par l'action **et** par le handler, et se testent sans serveur.
 
 Socket.io ne passe pas par une route Express : il se greffe sur le même serveur HTTP (port 4000) et écoute sur son propre chemin (`/socket.io`). Les routes REST servent à préparer la campagne, les sockets à jouer la partie.
 

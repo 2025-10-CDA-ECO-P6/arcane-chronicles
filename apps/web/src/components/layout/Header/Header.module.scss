@@ -1,0 +1,120 @@
+@use '@/styles/variables' as *;
+@use '@/styles/animations' as *;
+@use '@/styles/mixins' as *;
+
+.header {
+  position: sticky;
+  z-index: 1000;
+  inset-block-start: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background-color: var(--background-color);
+  @include glow();
+
+  &__content {
+    display: flex;
+    align-items: center;
+    gap: $space-md;
+
+    &__menu:global(.btn) {
+      --btn-border: transparent;
+      --btn-font-size: #{$h3-size};
+    }
+
+    &__title {
+      @include text-heading-transform(h3);
+      @include glow($on: text);
+      color: var(--primary-color);
+    }
+  }
+  &__nav_wrapper {
+    display: flex;
+    gap: $space-lg;
+
+    &__nav {
+      display: flex;
+      align-items: center;
+      gap: $space-md;
+    }
+
+    &__logo {
+      inline-size: 4rem;
+      block-size: auto;
+    }
+  }
+}
+
+@include until(m) {
+  .header {
+    &__content {
+      gap: $space-sm;
+
+      &__menu:global(.btn) {
+        --btn-font-size: #{$text-body-size};
+      }
+
+      &__title {
+        font-size: $h4-size;
+      }
+    }
+
+    &__nav_wrapper {
+      gap: $space-sm;
+
+      &__nav {
+        gap: $space-sm;
+        font-size: $text-small-size;
+      }
+
+      &__logo {
+        inline-size: 3rem;
+      }
+    }
+  }
+}
+
+:global(.home-index) .header {
+  position: absolute;
+  inset-inline: 0;
+  background-color: transparent;
+  box-shadow: none;
+  transition:
+    background-color 0.5s ease,
+    box-shadow 0.5s ease;
+
+  &--intro {
+    animation:
+      glow-appear 3s ease-out both,
+      smoke-reveal 3s linear backwards;
+  }
+
+  &--scrolled {
+    position: fixed;
+    background-color: var(--background-color);
+    @include glow();
+    animation: slide-down 0.4s ease-out;
+  }
+}
+
+@include until(sm) {
+  .header {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global(.home-index) .header {
+    transition: none;
+
+    &--intro,
+    &--scrolled {
+      animation: none;
+    }
+  }
+}
+
+@include glow-appear-animation($glow-color: null, $start-scale: null);
+@include slide-down-animation;
+@include smoke-reveal-animation;

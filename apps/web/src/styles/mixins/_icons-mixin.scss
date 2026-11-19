@@ -4,8 +4,8 @@
 
 @mixin icon-font {
   font-family: var(--font-icons);
-  font-style: normal;
   font-weight: normal;
+  font-style: normal;
   font-variant: normal;
   line-height: 1;
   text-transform: none;
@@ -15,11 +15,11 @@
 
 @mixin add-icon($name, $size: 1em, $color: currentColor, $position: before) {
   @if not map.has-key($icons-names, $name) {
-    @error "Icône inconnue : '#{$name}'. Liste dans src/styles/icons/_names.scss.";
+    @error "add-icon: unknown icon '#{$name}'. See the list in src/styles/variables/_icons.scss.";
   }
 
   @if $position != before and $position != after {
-    @error "$position doit valoir before ou after, pas '#{$position}'.";
+    @error "add-icon: $position must be before or after, not '#{$position}'.";
   }
 
   &::#{$position} {

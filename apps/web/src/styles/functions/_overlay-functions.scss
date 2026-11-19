@@ -10,18 +10,55 @@ $_opposite: (
   left: right,
 );
 
+@function _stop-color($color, $alpha) {
+  @if $alpha == 1 {
+    @return $color;
+  }
+
+  @if $alpha == 0 {
+    @return transparent;
+  }
+
+  @return with-alpha($color, $alpha);
+}
+
+@function _fade-stops($direction, $color, $stops) {
+  $gradient: (#{'to ' + $direction});
+
+  @each $stop in $stops {
+    @if list.length($stop) != 2 {
+      @error "fade: each stop must be 'alpha position' (e.g. 0.8 15%), not '#{$stop}'.";
+    }
+
+    $alpha: list.nth($stop, 1);
+    $position: list.nth($stop, 2);
+    $gradient: list.append($gradient, #{_stop-color($color, $alpha)} #{$position}, comma);
+  }
+
+  @return linear-gradient($gradient...);
+}
+
 @function fade(
   $side,
-  $length,
+  $length: null,
   $color: var(--background-color-secondary),
   $mid-alpha: null,
-  $mid-at: 50%
+  $mid-at: 50%,
+  $stops: null
 ) {
   @if not map.has-key($_opposite, $side) {
-    @error "fade : $side doit valoir top, right, bottom ou left, pas '#{$side}'.";
+    @error "fade: $side must be top, right, bottom or left, not '#{$side}'.";
   }
 
   $direction: map.get($_opposite, $side);
+
+  @if $stops != null {
+    @return _fade-stops($direction, $color, $stops);
+  }
+
+  @if $length == null {
+    @error "fade: give either $length or $stops.";
+  }
 
   @if $mid-alpha == null {
     @return linear-gradient(to #{$direction}, #{$color} 0%, transparent #{$length});

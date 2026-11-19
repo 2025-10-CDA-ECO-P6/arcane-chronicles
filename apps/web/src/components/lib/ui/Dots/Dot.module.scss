@@ -1,0 +1,20 @@
+@use '@/styles/variables' as *;
+@use '@/styles/functions' as *;
+
+$_colors: ('primary', 'secondary', 'third', 'gold', 'hostile');
+
+.dot {
+  display: inline-block;
+  flex-shrink: 0;
+  inline-size: 0.5em;
+  block-size: 0.5em;
+  border-radius: $radius-circle;
+  background-color: var(--dot-color);
+  box-shadow: glow(var(--dot-color), $glow-sm);
+}
+
+@each $color in $_colors {
+  .#{$color} {
+    --dot-color: var(--#{$color}-color);
+  }
+}

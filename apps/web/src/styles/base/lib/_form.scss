@@ -16,6 +16,10 @@
   @include form-input;
 }
 
+.form-error {
+  @include form-error;
+}
+
 .form-textarea {
   @include form-textarea;
 }

@@ -1,3 +1,5 @@
+@use 'sass:math';
+
 @mixin visually-hidden {
   position: absolute;
   overflow: hidden;
@@ -6,6 +8,26 @@
   padding: 0;
   border: 0;
   margin: -0.1rem;
-  clip-path: inset(50%);
   white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+@mixin truncate($lines: 1, $max-size: null) {
+  @if not(math.is-unitless($lines) and $lines >= 1 and math.round($lines) == $lines) {
+    @error "truncate: $lines must be a whole number of at least 1, not '#{$lines}'.";
+  }
+
+  @if $lines == 1 {
+    overflow: hidden;
+    max-inline-size: $max-size;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  } @else {
+    display: -webkit-box;
+    overflow: hidden;
+    max-inline-size: $max-size;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: $lines;
+    line-clamp: $lines;
+  }
 }

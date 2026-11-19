@@ -11,6 +11,6 @@
   } @else if $on == shape {
     filter: drop-shadow($shadow);
   } @else {
-    @error "glow : $on doit valoir box, text ou shape, pas '#{$on}'.";
+    @error "glow: $on must be box, text or shape, not '#{$on}'.";
   }
 }

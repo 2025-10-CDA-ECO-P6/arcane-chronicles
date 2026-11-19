@@ -16,6 +16,7 @@ Vérifier en priorité ce qui casserait la fonctionnalité principale : les **dr
 | Niveau | Outil | Périmètre | Quand |
 |---|---|---|---|
 | Unitaire | Vitest 5.1 | Fonctions pures et services, sans base ni réseau | À chaque push (CI) |
+| Composants front | Vitest + React Testing Library 16.3 + user-event 14.6, jsdom 31 | Composants et hooks React, rendus et utilisés comme par un utilisateur (lecture par rôle et par label) | À chaque push (CI) |
 | Intégration API | Vitest + Supertest 7.3, base PostgreSQL de test (conteneur Docker) | Routes Express avec la vraie base | À chaque push (CI) |
 | Temps réel | Vitest + socket.io-client | Événements Socket.io, diffusion par room | À chaque push (CI) |
 | End-to-end | Playwright 1.64 (un contexte MJ desktop, deux contextes joueurs mobiles 375 px) | Parcours complet dans de vrais navigateurs | Avant chaque déploiement en production |
@@ -24,10 +25,13 @@ Vérifier en priorité ce qui casserait la fonctionnalité principale : les **dr
 
 | Élément | État |
 |---|---|
-| Emplacement | Tests unitaires et d'intégration dans des fichiers `*.test.ts` à côté du code testé (`apps/*/src`, `packages/shared/src`) ; tests end-to-end dans `e2e/` |
+| Emplacement | Tests unitaires et d'intégration dans des fichiers `*.test.ts` à côté du code testé (`apps/*/src`, `packages/shared/src`) ; tests de composants et de hooks React dans des fichiers `*.test.tsx` ; tests end-to-end dans `e2e/` |
+| Configuration Vitest | Deux projets dans `vitest.config.ts` : `node` (tous les `*.test.ts` : API, `shared`, logique du front sans DOM) et `web` (les `*.test.tsx` du front, dans jsdom, avec le plugin React et `apps/web/vitest.setup.ts`, qui charge les vérifications de `jest-dom` et nettoie le DOM après chaque test) |
 | Commandes | `npm test` (Vitest) et `npm run test:e2e` (Playwright, qui lance l'application si elle ne tourne pas) |
 | Configuration Playwright | Deux profils sur Chromium : `mj-desktop` et `joueur-mobile` (375 px). Firefox et WebKit (NF-03) seront ajoutés avec les premiers parcours complets |
 | Premiers tests | `GET /api/health` (intégration), utilitaire d'appel à l'API `apiFetch` (unitaire), affichage de la page d'accueil (end-to-end, deux profils) |
+| Authentification | Routes `/api/auth` (inscription, connexion, `/me`, déconnexion, limites de tentatives) et 404 JSON, testées avec Supertest. Le modèle `UserModel` est remplacé par un faux (`vi.mock`), car `npm test` tourne en CI sans base de données ; les tests avec la vraie base viendront quand la CI lancera les tests d'intégration dans le job qui a PostgreSQL. Schéma d'inscription de `shared` (règles du mot de passe, un message par règle) testé à part |
+| Front (connexion et inscription) | Composants `Button`, `Input` (description fusionnée avec l'erreur), `Dot`, `NavLink`, `MainNav`, `Header` (apparition sur l'accueil, passage en haut de l'écran au défilement), `BackgroundVideo` (sources AV1 puis H.264, version portrait, nouveau choix de la source quand l'écran tourne), `ProgressBar`, `Toggletip`, `LoginForm`, `RegisterForm` (messages en français, confirmation du mot de passe, description du champ mot de passe, données envoyées), `PasswordStrength` (règles respectées ou non, résumé pour les lecteurs d'écran, barre, ouverture et fermeture de la bulle), contexte `ArcaneProvider` ; hooks `useAuth` (validation des formulaires, effacement des erreurs, redirection après connexion ou inscription, refus des adresses de retour externes, messages d'erreur, déconnexion) et `useDisclosure` (ouverture, fermeture avec Échap ou un clic à l'extérieur) ; fonctions `checkPasswordRules` et `getPageClassName` ; `proxy` (redirections sans appel à l'API) ; `getCurrentUser` et `requireCurrentUser` côté serveur (session acceptée, absente, refusée, API injoignable) ; route `/session-expired` (suppression du cookie). Le routeur de Next, les cookies et `apiFetch` sont remplacés par des faux (`vi.mock`) |
 | CI | GitHub Actions (`.github/workflows/ci.yml`) à chaque pull request : tests unitaires et d'intégration, puis migrations, seeds et tests end-to-end sur une base PostgreSQL 17 neuve (voir [déploiement §4](../06-deploiement/deploiement.md)) |
 | Recette manuelle | — | Scénario de recette du MVP, accessibilité, navigateurs | En fin d'itération |
 
@@ -63,7 +67,7 @@ Vérifier en priorité ce qui casserait la fonctionnalité principale : les **dr
 
 | ID | Cas | Résultat attendu |
 |---|---|---|
-| TI-01 | Inscription avec un e-mail déjà utilisé | 409 |
+| TI-01 | Inscription avec un e-mail déjà utilisé | 409, sans hachage ni création ; aussi quand la base refuse le doublon (inscriptions simultanées) |
 | TI-02 | Connexion valide | 200 et cookie `httpOnly` posé |
 | TI-03 | Connexion avec un mauvais mot de passe | 401, même message que pour un e-mail inconnu |
 | TI-04 | Trop de tentatives de connexion | 429 |
@@ -76,6 +80,8 @@ Vérifier en priorité ce qui casserait la fonctionnalité principale : les **dr
 | TI-11 | Upload d'un fichier qui n'est pas une image, ou trop lourd | 400 |
 | TI-12 | Duplication d'une campagne publique | Copie appartenant au MJ, liée à l'original |
 | TI-13 | Suppression du compte MJ | Compte, campagnes et parties supprimés |
+| TI-14 | Inscription valide | 201, cookie posé, mot de passe enregistré haché, seuls les champs attendus enregistrés |
+| TI-15 | Trop de tentatives d'inscription (réussies, refusées ou invalides) | 429 |
 
 ### 4.3 Temps réel
 

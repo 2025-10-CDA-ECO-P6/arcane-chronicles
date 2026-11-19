@@ -4,6 +4,7 @@
 @use './base/typography';
 @use './base/lib/icons';
 @use './base/lib/buttons';
+@use './base/lib/links';
 @use './base/lib/form';
 @use './base/lib/box';
 @use './base/layout';
@@ -11,9 +12,9 @@
 @use './base/utilities';
 
 * {
+  box-sizing: border-box;
   padding: 0;
   margin: 0;
-  box-sizing: border-box;
 }
 
 html {
@@ -23,8 +24,8 @@ html {
 body {
   background-color: var(--background-color);
   color: var(--text-color-primary);
-  font-size: $text-body-size;
   font-family: $font-family-body;
-  line-height: $line-height-normal;
+  font-size: $text-body-size;
   font-weight: $font-weight-regular;
+  line-height: $line-height-normal;
 }

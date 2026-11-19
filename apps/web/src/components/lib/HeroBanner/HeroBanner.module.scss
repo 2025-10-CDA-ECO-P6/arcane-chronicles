@@ -1,0 +1,52 @@
+@use '@/styles/animations' as *;
+@use '@/styles/variables' as *;
+@use '@/styles/functions' as *;
+
+.banner {
+  position: relative;
+  display: grid;
+  place-items: center;
+  inline-size: 100%;
+  block-size: 80vh;
+
+  &::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: 0 0 -0.2rem;
+    background-image: fade(bottom, $color: var(--background-color), $stops: (1 0%, 0.6 15%, 0 40%));
+    pointer-events: none;
+  }
+
+  &__video {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+  }
+
+  &__title {
+    animation:
+      glow-appear 8s ease-out both,
+      glow-pulse 3s ease-in-out 8s infinite alternate;
+  }
+
+  &__logo {
+    inline-size: 23rem;
+    block-size: auto;
+    animation: smoke-reveal 6s linear backwards;
+  }
+}
+
+@include glow-appear-animation($start-scale: 0.6);
+@include glow-pulse-animation;
+@include smoke-reveal-animation($size: small);
+
+@media (prefers-reduced-motion: reduce) {
+  .banner__title,
+  .banner__logo {
+    animation: none;
+  }
+}

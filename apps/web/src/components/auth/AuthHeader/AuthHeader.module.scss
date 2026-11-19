@@ -1,0 +1,17 @@
+@use '@/styles/variables' as *;
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+
+  &__title {
+    inline-size: fit-content;
+    border-block-end: 0.1rem solid var(--secondary-color);
+    font-size: $h2-size;
+  }
+
+  &__redirect {
+    color: var(--text-color-secondary);
+  }
+}
