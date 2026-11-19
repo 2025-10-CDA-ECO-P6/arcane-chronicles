@@ -3,14 +3,14 @@
 @use '@/styles/mixins' as *;
 
 .header {
+  position: sticky;
+  z-index: 1000;
+  inset-block-start: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  position: sticky;
-  inset-block-start: 0;
-  z-index: 1000;
-  background-color: var(--background-color);
   padding: 1rem;
+  background-color: var(--background-color);
   @include glow();
 
   &__content {
@@ -86,7 +86,7 @@
 
   &--intro {
     animation:
-      glow-appear 6s ease-out both,
+      glow-appear 3s ease-out both,
       smoke-reveal 5s linear backwards;
   }
 

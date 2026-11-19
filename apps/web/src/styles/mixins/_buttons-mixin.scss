@@ -6,8 +6,8 @@
 
 @mixin _outlined-look {
   background-color: var(--background-color);
-  box-shadow: none;
   color: var(--btn-text);
+  box-shadow: none;
 }
 
 @mixin _filled-look {
@@ -57,11 +57,11 @@
   border-radius: $radius-sm;
   font-size: var(--btn-font-size);
   line-height: $line-height-tight;
-  cursor: pointer;
   transition:
     background-color 0.2s,
     color 0.2s,
     box-shadow 0.2s;
+  cursor: pointer;
 }
 
 @mixin _button-icon-size($size: $button-icon-size) {
@@ -105,8 +105,8 @@
   }
 
   &:disabled {
-    cursor: not-allowed;
     opacity: 0.5;
+    cursor: not-allowed;
   }
 
   &[aria-disabled='true'] {
@@ -134,8 +134,8 @@
 }
 
 @mixin button-icon-only {
-  padding-inline: var(--btn-padding-block);
   aspect-ratio: 1;
+  padding-inline: var(--btn-padding-block);
 }
 
 @mixin button-round {

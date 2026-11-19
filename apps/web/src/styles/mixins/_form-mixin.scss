@@ -27,8 +27,8 @@
   }
 
   &:disabled {
-    cursor: not-allowed;
     opacity: 0.5;
+    cursor: not-allowed;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -74,8 +74,8 @@
   padding-inline: $space-sm;
   background-color: var(--border-color);
   resize: vertical;
-  scrollbar-color: var(--input-color) transparent;
   scrollbar-width: thin;
+  scrollbar-color: var(--input-color) transparent;
 
   @include _field-line;
 }
@@ -96,8 +96,8 @@
     inset-block-start: 50%;
     inset-inline-end: $space-md;
     font-size: $text-body-size;
-    pointer-events: none;
     translate: 0 -50%;
+    pointer-events: none;
   }
 
   select {

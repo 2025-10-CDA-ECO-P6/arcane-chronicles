@@ -8,8 +8,8 @@
   padding: 0;
   border: 0;
   margin: -0.1rem;
-  clip-path: inset(50%);
   white-space: nowrap;
+  clip-path: inset(50%);
 }
 
 @mixin truncate($lines: 1, $max-size: null) {
