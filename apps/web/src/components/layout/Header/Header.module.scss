@@ -1,4 +1,5 @@
 @use '@/styles/variables' as *;
+@use '@/styles/animations' as *;
 @use '@/styles/mixins' as *;
 
 .header {
@@ -74,8 +75,46 @@
   }
 }
 
+:global(.home-index) .header {
+  position: absolute;
+  inset-inline: 0;
+  background-color: transparent;
+  box-shadow: none;
+  transition:
+    background-color 0.5s ease,
+    box-shadow 0.5s ease;
+
+  &--intro {
+    animation:
+      glow-appear 6s ease-out both,
+      smoke-reveal 5s linear backwards;
+  }
+
+  &--scrolled {
+    position: fixed;
+    background-color: var(--background-color);
+    @include glow();
+    animation: slide-down 0.4s ease-out;
+  }
+}
+
 @include until(sm) {
   .header {
     display: none;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  :global(.home-index) .header {
+    transition: none;
+
+    &--intro,
+    &--scrolled {
+      animation: none;
+    }
+  }
+}
+
+@include glow-appear-animation($glow-color: null, $start-scale: null);
+@include slide-down-animation;
+@include smoke-reveal-animation;
