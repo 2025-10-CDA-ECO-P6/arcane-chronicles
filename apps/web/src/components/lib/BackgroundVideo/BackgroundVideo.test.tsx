@@ -15,12 +15,25 @@ describe('BackgroundVideo', () => {
     expect(video).toHaveAttribute('loop');
   });
 
+  it('offers the AV1 video first and the H.264 one as a fallback', () => {
+    const { container } = render(<BackgroundVideo />);
+    const sources = [...container.querySelectorAll('source')];
+
+    expect(sources.map((source) => source.getAttribute('src'))).toEqual([
+      '/videos/fire-av1.mp4',
+      '/videos/fire.mp4',
+    ]);
+    expect(sources[0]).toHaveAttribute('type', 'video/mp4; codecs="av01.0.08M.08"');
+  });
+
   it('only loads the video on large screens for people who accept motion', () => {
     const { container } = render(<BackgroundVideo />);
 
-    expect(container.querySelector('source')).toHaveAttribute(
-      'media',
-      '(min-width: 768px) and (prefers-reduced-motion: no-preference)',
-    );
+    for (const source of container.querySelectorAll('source')) {
+      expect(source).toHaveAttribute(
+        'media',
+        '(min-width: 768px) and (prefers-reduced-motion: no-preference)',
+      );
+    }
   });
 });
