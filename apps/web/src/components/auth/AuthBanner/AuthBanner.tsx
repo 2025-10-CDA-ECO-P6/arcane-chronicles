@@ -15,7 +15,14 @@ const FEATURES = [
 export function AuthBanner({ className }: AuthBannerProps) {
   return (
     <section className={className ? `${styles.banner} ${className}` : styles.banner}>
-      <Image className={styles.banner__logo} src={logo} alt="Arcane Chronicles" priority />
+      <Image
+        className={styles.banner__logo}
+        src={logo}
+        alt="Arcane Chronicles"
+        sizes="8rem"
+        quality={90}
+        priority
+      />
       <div className={styles.banner__content}>
         <p className={styles.banner__content__title}>Préparez vos campagnes en un seul lieu</p>
         <ul className={styles.banner__content__list}>
