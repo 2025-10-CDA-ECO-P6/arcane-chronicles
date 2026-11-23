@@ -161,24 +161,36 @@ model User {
 }
 
 model Campaign {
-  id                 String   @id @default(uuid()) @db.Uuid
-  gmId               String   @map("gm_id") @db.Uuid
-  sourceCampaignId   String?  @map("source_campaign_id") @db.Uuid
-  title              String
-  description        String?
-  imageUrl           String?  @map("image_url")
-  /// Shown in the visitor catalogue and can be duplicated. Publishing a
-  /// campaign automatically publishes every item, ability and effect it uses.
-  isPublic           Boolean  @default(false) @map("is_public")
-  createdAt          DateTime @default(now()) @map("created_at")
-  updatedAt          DateTime @updatedAt @map("updated_at")
+  id               String    @id @default(uuid()) @db.Uuid
+  gmId             String    @map("gm_id") @db.Uuid
+  sourceCampaignId String?   @map("source_campaign_id") @db.Uuid
+  /// Set only on a public version: the GM's campaign it was published from.
+  /// The GM keeps editing that original; "publish the changes" copies its
+  /// content again into this same row, so its id (catalogue link, duplicates)
+  /// never changes. Unique: an original has at most one public version.
+  publishedFromId  String?   @unique @map("published_from_id") @db.Uuid
+  title            String
+  description      String?
+  imageUrl         String?   @map("image_url")
+  /// Shown in the visitor catalogue and can be duplicated. Only a public
+  /// version (publishedFromId set) can be public, never an original (CHECK in
+  /// migration). Publishing a campaign automatically publishes every item,
+  /// ability and effect it uses.
+  isPublic         Boolean   @default(false) @map("is_public")
+  /// Last time the content was published (on the original). Content edited
+  /// after it (updatedAt > publishedAt) means unpublished changes.
+  publishedAt      DateTime? @map("published_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
 
-  gm             User        @relation(fields: [gmId], references: [id])
-  sourceCampaign Campaign?   @relation("CampaignDuplicate", fields: [sourceCampaignId], references: [id])
-  duplicates     Campaign[]  @relation("CampaignDuplicate")
-  chapters       Chapter[]
-  characters     Character[]
-  quests         Quest[]
+  gm               User        @relation(fields: [gmId], references: [id])
+  sourceCampaign   Campaign?   @relation("CampaignDuplicate", fields: [sourceCampaignId], references: [id])
+  duplicates       Campaign[]  @relation("CampaignDuplicate")
+  publishedFrom    Campaign?   @relation("CampaignPublication", fields: [publishedFromId], references: [id], onDelete: Restrict)
+  publishedVersion Campaign?   @relation("CampaignPublication")
+  chapters         Chapter[]
+  characters       Character[]
+  quests           Quest[]
 
   @@map("campaigns")
 }
@@ -212,30 +224,30 @@ model Chapter {
 }
 
 model Scene {
-  id         String    @id @default(uuid()) @db.Uuid
-  chapterId  String    @map("chapter_id") @db.Uuid
-  title      String
+  id        String    @id @default(uuid()) @db.Uuid
+  chapterId String    @map("chapter_id") @db.Uuid
+  title     String
   /// position 1 = starting scene.
-  position   Int
-  narration  String?
-  imageUrl   String?   @map("image_url")
+  position  Int
+  narration String?
+  imageUrl  String?   @map("image_url")
   /// Uploaded map (image).
-  mapUrl     String?   @map("map_url")
+  mapUrl    String?   @map("map_url")
   /// Set the first time the group enters the scene; empty = never played.
-  playedAt   DateTime? @map("played_at")
-  createdAt  DateTime  @default(now()) @map("created_at")
-  updatedAt  DateTime  @updatedAt @map("updated_at")
+  playedAt  DateTime? @map("played_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
 
-  chapter         Chapter         @relation("ChapterScenes", fields: [chapterId], references: [id])
-  currentForChapters Chapter[]    @relation("ChapterCurrentScene")
-  sceneGroups     SceneGroup[]
-  sceneCreatures  SceneCreature[]
-  quests          Quest[]
-  objectives      Objective[]
-  combats         Combat[]
-  chests          Chest[]
-  riddles         Riddle[]
-  traps           Trap[]
+  chapter            Chapter         @relation("ChapterScenes", fields: [chapterId], references: [id])
+  currentForChapters Chapter[]       @relation("ChapterCurrentScene")
+  sceneGroups        SceneGroup[]
+  sceneCreatures     SceneCreature[]
+  quests             Quest[]
+  objectives         Objective[]
+  combats            Combat[]
+  chests             Chest[]
+  riddles            Riddle[]
+  traps              Trap[]
 
   @@unique([chapterId, position])
   @@map("scenes")
@@ -318,9 +330,9 @@ model ClassAbility {
 /// modifier (+ proficiency bonus if the character's race, class or
 /// background grants the skill).
 model Skill {
-  id   String       @id @default(uuid()) @db.Uuid
+  id      String       @id @default(uuid()) @db.Uuid
   /// e.g. Acrobatics, Athletics, Perception.
-  name String       @unique
+  name    String       @unique
   /// Ability used for the modifier, e.g. Acrobatics -> DEXTERITY.
   ability AbilityScore
 
@@ -397,54 +409,54 @@ model BackgroundSkill {
 /// Sheet for heroes, NPCs and monsters. Placed in a scene through
 /// scene_creatures.
 model Character {
-  id             String         @id @default(uuid()) @db.Uuid
-  campaignId     String         @map("campaign_id") @db.Uuid
+  id            String         @id @default(uuid()) @db.Uuid
+  campaignId    String         @map("campaign_id") @db.Uuid
   /// Catalogue character it was imported or duplicated from.
-  sourceId       String?        @map("source_id") @db.Uuid
-  type           CharacterType
-  name           String
-  imageUrl       String?        @map("image_url")
-  raceId         String?        @map("race_id") @db.Uuid
+  sourceId      String?        @map("source_id") @db.Uuid
+  type          CharacterType
+  name          String
+  imageUrl      String?        @map("image_url")
+  raceId        String?        @map("race_id") @db.Uuid
   /// Usually empty for a monster.
-  classId        String?        @map("class_id") @db.Uuid
+  classId       String?        @map("class_id") @db.Uuid
   /// Goes up automatically when xp crosses a D&D threshold; the GM can also
   /// change it with +/- (e.g. create a level 10 monster).
-  level          Int            @default(1)
-  xp             Int            @default(0)
+  level         Int            @default(1)
+  xp            Int            @default(0)
   /// true for heroes and quest NPCs: one live state shared by every
   /// scene/chapter they appear in.
-  isUnique       Boolean        @default(false) @map("is_unique")
-  alignment      Alignment?
-  backgroundId   String?        @map("background_id") @db.Uuid
+  isUnique      Boolean        @default(false) @map("is_unique")
+  alignment     Alignment?
+  backgroundId  String?        @map("background_id") @db.Uuid
   /// NPC: Armorer, Herbalist, Merchant...
-  occupation     String?
-  strength       Int            @default(10)
-  dexterity      Int            @default(10)
-  constitution   Int            @default(10)
-  intelligence   Int            @default(10)
-  wisdom         Int            @default(10)
-  charisma       Int            @default(10)
+  occupation    String?
+  strength      Int            @default(10)
+  dexterity     Int            @default(10)
+  constitution  Int            @default(10)
+  intelligence  Int            @default(10)
+  wisdom        Int            @default(10)
+  charisma      Int            @default(10)
   /// Single armor worn (an ARMOR item from the inventory). AC is computed,
   /// not stored.
-  wornArmorId    String?        @map("worn_armor_id") @db.Uuid
+  wornArmorId   String?        @map("worn_armor_id") @db.Uuid
   /// Rolled with the class hit die at creation; +1 roll every 5 levels.
-  maxHp          Int            @map("max_hp")
+  maxHp         Int            @map("max_hp")
   /// Live value for unique characters; template value for generic ones.
-  currentHp      Int            @map("current_hp")
+  currentHp     Int            @map("current_hp")
   /// Live value for unique NPCs (persists everywhere); empty for heroes.
-  attitude       Attitude?
+  attitude      Attitude?
   /// Live value for unique characters.
-  status         CreatureStatus @default(ACTIVE)
-  gold           Int            @default(0)
-  isBoss         Boolean        @default(false) @map("is_boss")
-  biography      String?
-  personality    String?
-  personalQuest  String?        @map("personal_quest")
-  secrets        String?
+  status        CreatureStatus @default(ACTIVE)
+  gold          Int            @default(0)
+  isBoss        Boolean        @default(false) @map("is_boss")
+  biography     String?
+  personality   String?
+  personalQuest String?        @map("personal_quest")
+  secrets       String?
   /// Private hints for the GM.
-  gmNotes        String?        @map("gm_notes")
-  createdAt      DateTime       @default(now()) @map("created_at")
-  updatedAt      DateTime       @updatedAt @map("updated_at")
+  gmNotes       String?        @map("gm_notes")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
 
   campaign   Campaign    @relation(fields: [campaignId], references: [id])
   source     Character?  @relation("CharacterDuplicate", fields: [sourceId], references: [id])
@@ -505,11 +517,11 @@ model Ability {
 /// The character's own copy: filled from race_abilities, class_abilities
 /// and background_abilities, then the GM can add or remove.
 model CharacterAbility {
-  id             String @id @default(uuid()) @db.Uuid
-  characterId    String @map("character_id") @db.Uuid
-  abilityId      String @map("ability_id") @db.Uuid
+  id            String @id @default(uuid()) @db.Uuid
+  characterId   String @map("character_id") @db.Uuid
+  abilityId     String @map("ability_id") @db.Uuid
   /// Managed by the GM (decrement on use, reset by hand; no rests in MVP).
-  usesRemaining  Int?   @map("uses_remaining")
+  usesRemaining Int?   @map("uses_remaining")
 
   character Character @relation(fields: [characterId], references: [id])
   ability   Ability   @relation(fields: [abilityId], references: [id])
@@ -704,28 +716,28 @@ model SceneCreatureItem {
 /// MAIN) = (chapter_id IS NULL); unique partial index: one MAIN quest per
 /// campaign.
 model Quest {
-  id                  String      @id @default(uuid()) @db.Uuid
-  campaignId          String      @map("campaign_id") @db.Uuid
+  id                 String      @id @default(uuid()) @db.Uuid
+  campaignId         String      @map("campaign_id") @db.Uuid
   /// SIDE: required (chapter quest). MAIN: empty (campaign quest).
-  chapterId           String?     @map("chapter_id") @db.Uuid
+  chapterId          String?     @map("chapter_id") @db.Uuid
   /// SIDE only: scene where the quest appears.
-  sceneId             String?     @map("scene_id") @db.Uuid
+  sceneId            String?     @map("scene_id") @db.Uuid
   /// NPC who gives or is tied to the quest.
-  relatedCharacterId  String?     @map("related_character_id") @db.Uuid
+  relatedCharacterId String?     @map("related_character_id") @db.Uuid
   /// Catalogue quest it was imported or duplicated from.
-  sourceId            String?     @map("source_id") @db.Uuid
-  title               String
-  description         String?
-  type                QuestType
-  status              QuestStatus @default(INACTIVE)
-  isRevealed          Boolean     @default(false) @map("is_revealed")
-  position            Int
-  rewardXp            Int         @default(0) @map("reward_xp")
-  rewardGold          Int         @default(0) @map("reward_gold")
+  sourceId           String?     @map("source_id") @db.Uuid
+  title              String
+  description        String?
+  type               QuestType
+  status             QuestStatus @default(INACTIVE)
+  isRevealed         Boolean     @default(false) @map("is_revealed")
+  position           Int
+  rewardXp           Int         @default(0) @map("reward_xp")
+  rewardGold         Int         @default(0) @map("reward_gold")
   /// e.g. "Passage to the archipelago".
-  rewardText          String?     @map("reward_text")
-  createdAt           DateTime    @default(now()) @map("created_at")
-  updatedAt           DateTime    @updatedAt @map("updated_at")
+  rewardText         String?     @map("reward_text")
+  createdAt          DateTime    @default(now()) @map("created_at")
+  updatedAt          DateTime    @updatedAt @map("updated_at")
 
   campaign         Campaign   @relation(fields: [campaignId], references: [id])
   chapter          Chapter?   @relation(fields: [chapterId], references: [id])
@@ -810,15 +822,15 @@ model Game {
 }
 
 model Participant {
-  id          String             @id @default(uuid()) @db.Uuid
-  gameId      String             @map("game_id") @db.Uuid
+  id          String            @id @default(uuid()) @db.Uuid
+  gameId      String            @map("game_id") @db.Uuid
   nickname    String
   /// Lets the player reconnect without an account.
-  tokenHash   String             @unique @map("token_hash")
+  tokenHash   String            @unique @map("token_hash")
   /// Hero assigned by the GM; empty = no hero.
-  characterId String?            @map("character_id") @db.Uuid
-  status      ParticipantStatus  @default(CONNECTED)
-  joinedAt    DateTime           @default(now()) @map("joined_at")
+  characterId String?           @map("character_id") @db.Uuid
+  status      ParticipantStatus @default(CONNECTED)
+  joinedAt    DateTime          @default(now()) @map("joined_at")
 
   game      Game       @relation(fields: [gameId], references: [id])
   character Character? @relation(fields: [characterId], references: [id])
@@ -829,13 +841,13 @@ model Participant {
 }
 
 model Combat {
-  id                 String       @id @default(uuid()) @db.Uuid
-  gameId             String       @map("game_id") @db.Uuid
-  sceneId            String       @map("scene_id") @db.Uuid
-  status             CombatStatus @default(IN_PROGRESS)
+  id                String       @id @default(uuid()) @db.Uuid
+  gameId            String       @map("game_id") @db.Uuid
+  sceneId           String       @map("scene_id") @db.Uuid
+  status            CombatStatus @default(IN_PROGRESS)
   /// Whose turn it is.
-  activeCombatantId  String?      @map("active_combatant_id") @db.Uuid
-  createdAt          DateTime     @default(now()) @map("created_at")
+  activeCombatantId String?      @map("active_combatant_id") @db.Uuid
+  createdAt         DateTime     @default(now()) @map("created_at")
 
   game            Game        @relation(fields: [gameId], references: [id])
   scene           Scene       @relation(fields: [sceneId], references: [id])
@@ -877,8 +889,8 @@ model Chest {
   isRevealed Boolean  @default(false) @map("is_revealed")
   createdAt  DateTime @default(now()) @map("created_at")
 
-  scene            Scene       @relation(fields: [sceneId], references: [id])
-  chestItems       ChestItem[]
+  scene                Scene       @relation(fields: [sceneId], references: [id])
+  chestItems           ChestItem[]
   targetedByObjectives Objective[]
 
   @@map("chests")

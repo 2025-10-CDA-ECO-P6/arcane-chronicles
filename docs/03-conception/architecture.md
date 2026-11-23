@@ -241,4 +241,10 @@ Les migrations sont dans `apps/api/prisma/migrations/`. La première, `202611050
 | `objectives_at_most_one_target_check` | `objectives` | CHECK : au plus une cible par objectif |
 | `combatants_exactly_one_source_check` | `combatants` | CHECK : un combattant est soit une fiche unique (`character_id`), soit une créature posée (`scene_creature_id`), jamais les deux ni aucun |
 
+La deuxième, `20261123000000_campaign_publication` (RG20, versions publiques des campagnes), ajoute à `campaigns` les colonnes `published_from_id` (version publique → campagne d'origine, unique, `ON DELETE RESTRICT`) et `published_at`. Elle repasse en privées les campagnes publiques qui ne sont pas des versions publiées (la campagne de démonstration), puis ajoute à la main :
+
+| Contrainte | Table | Règle |
+|---|---|---|
+| `campaigns_only_published_version_is_public_check` | `campaigns` | CHECK : seule une version publique (`published_from_id` renseigné) peut avoir `is_public` à vrai ; une campagne d'origine n'est jamais publique (RG20) |
+
 Prisma ignore ces contraintes lorsqu'il compare le schéma à la base : une nouvelle migration (`npm run prisma:migrate -- --name ...`) ne cherche pas à les supprimer. Toute modification ultérieure du modèle passe par une nouvelle migration, appliquée en production au démarrage de l'API (`prisma migrate deploy`).

@@ -69,7 +69,10 @@ async function clearDemo(db: Db, gmId: string) {
   await db.gmNote.deleteMany({ where: inChapters });
   await db.scene.deleteMany({ where: inChapters });
   await db.chapter.deleteMany({ where: inCampaigns });
-  await db.campaign.updateMany({ where: { gmId }, data: { sourceCampaignId: null } });
+  await db.campaign.updateMany({
+    where: { gmId },
+    data: { sourceCampaignId: null, publishedFromId: null, isPublic: false },
+  });
   await db.campaign.deleteMany({ where: { gmId } });
 
   const ownedAbility = { ability: { ownerId: gmId } };
@@ -910,7 +913,6 @@ export async function seedDemo(db: Db, ref: ReferenceData, passwordHash: string)
       description:
         'Une quête incroyable au cœur d’un archipel d’îles flottantes, suspendues entre ciel et nuages. Chaque île cache des secrets anciens, des ruines oubliées et des créatures mystérieuses qui défient les lois de la gravité. Le vent guide les voyageurs d’un fragment de terre à l’autre, à travers des ponts naturels de brume et de lumière. Dans cet univers instable, chaque choix peut faire basculer l’équilibre du monde. Une aventure où courage, exploration et découverte s’entrelacent au-dessus du vide.',
       imageUrl: PLACEHOLDER_IMAGE_URL,
-      isPublic: true,
     },
   });
 

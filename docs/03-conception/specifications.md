@@ -80,6 +80,7 @@ Les règles RG1 à RG9 de la fonctionnalité principale sont dans le [cahier des
 | RG17 | Un code de partie donne accès à une seule partie ; le jeton du joueur n'est valable que pour cette partie |
 | RG18 | Les tentatives de connexion et d'entrée dans une partie sont limitées dans le temps |
 | RG19 | Le contenu D&D officiel provient du SRD 5.2.1 (CC-BY-4.0) et affiche la mention d'attribution |
+| RG20 | Publier une campagne crée sa **version publique** : une copie figée, seule visible dans le catalogue et seule duplicable. Le MJ continue de modifier sa campagne d'origine sans effet sur le catalogue ; « Publier les modifications » recopie le contenu de l'original dans la même version publique, dont l'adresse et le lien avec les copies déjà faites ne changent pas. Une campagne a au plus une version publique ; une campagne d'origine n'est jamais publique elle-même. Le tableau de bord du MJ ne liste que ses campagnes d'origine et signale les modifications non publiées |
 
 ---
 
