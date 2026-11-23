@@ -26,6 +26,9 @@ coverage/
 test-results/
 playwright-report/
 
+# Requêtes de test locales (extension REST Client)
+*.http
+
 # OS / editor
 .DS_Store
 .vscode/*

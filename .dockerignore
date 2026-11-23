@@ -31,6 +31,9 @@ README.md
 apps/web/src/assets/images_originals_backup
 apps/web/src/assets/fonts/icons/*.icomoon.json
 
+# Requêtes de test locales (extension REST Client)
+**/*.http
+
 # Tests et rapports
 coverage
 test-results
