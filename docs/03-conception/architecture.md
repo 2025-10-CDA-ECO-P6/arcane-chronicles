@@ -135,7 +135,20 @@ Routes d'authentification (`routers/auth/`, actions dans `controllers/authAction
 |---|---|---|
 | `POST /api/auth/login` | `loginLimiter`, `validate(loginSchema)` | 200 avec l'utilisateur (`id`, `displayName`, `email`) et le cookie de session ; 401 si l'e-mail ou le mot de passe est faux ; 422 si le corps est invalide ; 429 après trop d'échecs, avec `retryAfter` (secondes restantes) |
 | `POST /api/auth/logout` | aucun | 200 et suppression du cookie, même si la session a déjà expiré |
-| `GET /api/auth/me` | `checkCookie` | 200 avec l'utilisateur lu en base ; 401 sans session valide. Permet au front de savoir qui est connecté au chargement d'une page | Les règles de jeu utilisées à la fois par une route REST et par un événement temps réel (par exemple « modifier les PV ») sont des fonctions de `services/` indépendantes d'Express et de Socket.io : elles sont appelées par l'action **et** par le handler, et se testent sans serveur.
+| `POST /api/auth/register` | `registerLimiter`, `validate(registerSchema)` | 201 avec l'utilisateur et le cookie de session ; 409 si l'e-mail a déjà un compte ; 422 si le corps est invalide ; 429 après trop d'inscriptions |
+| `GET /api/auth/me` | `checkCookie` | 200 avec l'utilisateur lu en base ; 401 sans session valide. Permet au front de savoir qui est connecté au chargement d'une page |
+
+Routes des campagnes (`routers/campaigns/`, actions dans `controllers/campaignActions.ts`) :
+
+| Route | Middlewares | Réponse |
+|---|---|---|
+| `GET /api/campaigns` ou `?scope=public` | `optionalAuth`, `validate(campaignListQuerySchema, 'query')` | 200 avec le catalogue : les campagnes publiques (versions publiées, RG20), avec le nom de leur MJ |
+| `GET /api/campaigns?scope=mine` | idem | 200 avec les campagnes d'origine du MJ connecté (`CampaignSummary` : statut, progression, chapitre en cours, compteurs, dernière session, publication ; calcul dans `services/campaigns/campaignSummary.ts`) ; 401 sans session valide. L'identité du MJ vient toujours du cookie, jamais de l'URL |
+| `GET /api/campaigns?scope=…` (autre valeur) | idem | 422 `{ errors: [{ field: "scope", message }] }` |
+
+`optionalAuth` lit la session si elle existe et l'ignore si le cookie est absent, invalide ou expiré : le catalogue reste accessible à un visiteur qui a gardé un ancien cookie. `validate(schema, 'query')` valide les paramètres d'URL comme `validate(schema)` valide le corps, et remplace `req.query` par la valeur validée (valeurs par défaut comprises).
+
+Les règles de jeu utilisées à la fois par une route REST et par un événement temps réel (par exemple « modifier les PV ») sont des fonctions de `services/` indépendantes d'Express et de Socket.io : elles sont appelées par l'action **et** par le handler, et se testent sans serveur.
 
 Socket.io ne passe pas par une route Express : il se greffe sur le même serveur HTTP (port 4000) et écoute sur son propre chemin (`/socket.io`). Les routes REST servent à préparer la campagne, les sockets à jouer la partie.
 

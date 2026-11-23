@@ -97,6 +97,9 @@ Les règles RG1 à RG9 de la fonctionnalité principale sont dans le [cahier des
 | Mort | PV = 0 |
 | Ordre de tour | Initiative décroissante, égalité départagée par la DEX ; les morts sont sautés |
 | Progression d'une quête / d'un chapitre | Objectifs validés / objectifs totaux |
+| Progression d'une campagne | Objectifs validés / objectifs totaux de toutes ses quêtes (0 % sans objectif) |
+| Statut d'une campagne | `NEW` (pas encore jouée) : aucun chapitre, ou tous en `NEW` ; `COMPLETED` (terminée) : tous ses chapitres en `COMPLETED` ; `IN_PROGRESS` (en cours) dans les autres cas. Ajouter un chapitre à une campagne terminée la repasse en cours |
+| Sessions d'une campagne | Parties lancées (`started_at` renseigné) sur ses chapitres ; la dernière donne la date de dernière session, la fin de la dernière donne la date de fin d'une campagne terminée |
 
 ---
 

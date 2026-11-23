@@ -39,7 +39,7 @@ Le MJ crée son compte et accède à son tableau de bord. Les joueurs n'ont pas 
 
 ## Ce que permet le use case
 - Inscription, connexion, déconnexion
-- Tableau de bord avec la liste de ses campagnes
+- Tableau de bord avec la liste de ses campagnes : statut (pas encore jouée, en cours, terminée), progression, chapitre en cours, nombre de chapitres, de quêtes, de sessions et de héros, date de la dernière session
 
 ## Personas concernés
 - Emma, Rémi, Julien (à valider)
@@ -459,6 +459,8 @@ Le MJ garde une trace du déroulement de ses sessions.
 - Notes narratives de chapitre (indices, conseils)
 - Progression et statut du chapitre
 - Historique des sessions et des modifications faites pendant la partie
+- Planifier la prochaine session (date et heure), affichée sur la carte de la campagne avec les héros attendus
+- Suivre l'avancement de la préparation d'une campagne pas encore jouée : un chapitre est prêt quand il a une narration et au moins une scène ; avancement = chapitres prêts ÷ chapitres
 
 ## Personas concernés
 - Rémi → cohérence narrative

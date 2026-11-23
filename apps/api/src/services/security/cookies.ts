@@ -48,11 +48,13 @@ export const checkCookie = (req: Request, res: Response, next: NextFunction) => 
   next();
 };
 
-export const optionalAuth = (req: Request, res: Response, next: NextFunction) => {
-  if (req.cookies.token) {
-    checkCookie(req, res, next);
-  } else {
+export const optionalAuth = (req: Request, _res: Response, next: NextFunction) => {
+  try {
+    req.auth = req.cookies.token
+      ? (jwt.verify(req.cookies.token, getJwtSecret()) as AuthPayload & JwtPayload)
+      : null;
+  } catch {
     req.auth = null;
-    next();
   }
+  next();
 };
