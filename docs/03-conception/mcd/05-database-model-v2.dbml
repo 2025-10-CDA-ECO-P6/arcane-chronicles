@@ -144,7 +144,7 @@ Table campaigns {
   source_campaign_id uuid [ref: > campaigns.id, note: 'Catalogue campaign this one was duplicated from']
   published_from_id uuid [ref: - campaigns.id, unique, note: 'Set only on a public version: the GM campaign it was published from. The GM keeps editing the original; "publish the changes" copies its content again into this same row, so its id (catalogue link, duplicates) never changes. Unique: an original has at most one public version. ON DELETE RESTRICT: the app removes the public version before its original']
   title varchar [not null]
-  description text
+  description text [not null]
   image_url varchar
   is_public boolean [not null, default: false, note: 'Shown in the visitor catalogue and can be duplicated. Publishing a campaign automatically publishes every item, ability and effect it uses (informative message to confirm at publication); a duplicated campaign then simply points to these public elements']
   published_at timestamp [note: 'On the original: last publication. updated_at > published_at means changes not published yet']
