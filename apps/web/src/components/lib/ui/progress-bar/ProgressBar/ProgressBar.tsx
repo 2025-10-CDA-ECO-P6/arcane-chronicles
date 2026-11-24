@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
+import type { ProgressBarProps } from './ProgressBar.types';
 
 import styles from './ProgressBar.module.scss';
-import type { ProgressBarProps } from './ProgressBar.types';
 
 export const getProgressPercentage = (value: number, min: number, max: number): number => {
   if (max <= min) {

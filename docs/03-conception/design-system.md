@@ -13,7 +13,7 @@ Les fichiers sont rangés **par type** : les variables d'un côté, les fonction
 | `functions/` | **Uniquement des fonctions** : `_global-functions.scss` (`with-alpha()`, `fluid()`, `glow()`), `_layout-functions.scss` (`breakpoint()`), `_overlay-functions.scss` (`fade()`, `fade-edges()`) |
 | `mixins/` | **Uniquement des mixins** : `_global-mixin.scss` (`visually-hidden`, `truncate`) puis un fichier par élément (`_icons-mixin.scss`, `_effects-mixin.scss`, `_buttons-mixin.scss`, `_links-mixin.scss`, `_form-mixin.scss`, `_box-mixin.scss`, `_layout-mixin.scss`, `_overlay-mixin.scss`, `_typography-mixin.scss`) |
 | `animations/` | **Uniquement des mixins d'animation** : chacun écrit une `@keyframes` (`_glow-animation.scss`, `_slide-animation.scss`, `_smoke-animation.scss`), voir [Animations](#animations) |
-| `base/` | **Classes et styles globaux** : `_reset.scss`, `_typography.scss` (balises, `.text-as--h1` à `h6`), `_layout.scss` (`.container`), `_utilities.scss` (`.sr-only`, `.truncate`) |
+| `base/` | **Classes et styles globaux** : `_reset.scss`, `_typography.scss` (balises, `.text-as--h1` à `h6`), `_layout.scss` (`.main-content`), `_utilities.scss` (`.sr-only`, `.truncate`) |
 | `base/lib/` | Classes des éléments d'interface : `_icons.scss`, `_buttons.scss`, `_links.scss`, `_form.scss`, `_box.scss`, `_overlay.scss` (et les éléments à venir) |
 
 Chaque dossier `variables/`, `functions/` et `mixins/` a un `_index.scss` qui regroupe ses fichiers. Les fichiers de `variables/`, `functions/` et `mixins/` ne génèrent aucun CSS : seuls `variables/_colors.scss` et les fichiers de `base/` en produisent, chargés une fois par `globals.scss`.
@@ -696,7 +696,7 @@ Toute la logique (état ouvert, clic en dehors, Échap, identifiant qui relie le
 
 ## Barre de progression
 
-Composant React `ProgressBar` (`apps/web/src/components/lib/ui/ProgressBar/`), pour toute progression : règles d'un mot de passe, chapitres joués, points de vie…
+Composant React `ProgressBar` (`apps/web/src/components/lib/ui/progress-bar/ProgressBar/`), pour toute progression : règles d'un mot de passe, chapitres joués, points de vie…
 
 | Prop | Rôle |
 |---|---|
@@ -715,6 +715,83 @@ Avec un `label`, la barre porte `role="progressbar"` et `aria-valuenow`, `aria-v
 ```tsx
 <ProgressBar value={3} max={11} label="Chapitres joués" valueText="3 chapitres sur 11" />
 <ProgressBar value={metCount} max={5} color="hostile" completeColor="primary" />
+```
+
+Les composants de progression sont regroupés dans `progress-bar/` : `ProgressBar`, `ProgressRing` et `SegmentedProgress`.
+
+### Anneau de progression (`ProgressRing`)
+
+Composant React `ProgressRing` (`apps/web/src/components/lib/ui/progress-bar/ProgressRing/`) : un anneau qui se remplit dans le sens des aiguilles d'une montre à partir de midi, avec le pourcentage au centre. Il sert pour la progression globale d'une campagne.
+
+| Prop | Rôle |
+|---|---|
+| `value` | pourcentage, de 0 à 100 (borné) |
+| `label` | nom lu par les lecteurs d'écran |
+| `color` | `primary` (par défaut), `secondary`, `third`, `gold` ou `hostile` |
+| `background` | couleur du fond sur lequel il est posé, `primary` (par défaut) ou `secondary` : le disque central prend cette couleur pour former l'anneau |
+| `className` | classe ajoutée, pour le placer dans son parent |
+
+L'anneau est un `conic-gradient` (la partie remplie, puis le reste à 20 % d'opacité), recouvert au centre par un `radial-gradient` de la couleur du fond. Comme pour la barre, la valeur passe au CSS par `--progress-value`. Il n'a pas de largeur propre : il est carré (`aspect-ratio: 1`) et prend la hauteur que lui donne son parent (par exemple une cellule de grille `auto 1fr`).
+
+```tsx
+<ProgressRing value={42} label="Progression de la campagne" background="secondary" />
+```
+
+### Progression par segments (`SegmentedProgress`)
+
+Composant React `SegmentedProgress` (`apps/web/src/components/lib/ui/progress-bar/SegmentedProgress/`) : une barre découpée en segments, un par étape (par exemple un par chapitre).
+
+| Prop | Rôle |
+|---|---|
+| `segments` | état de chaque segment, dans l'ordre : `done` (rempli), `current` (en cours, avec un halo) ou `todo` (vide) |
+| `currentProgress` | pourcentage de remplissage du segment en cours (facultatif) |
+| `label` | nom lu par les lecteurs d'écran |
+| `valueText` | valeur lue à la place du nombre brut, par exemple « 2 chapitres terminés sur 5, chapitre en cours à 40 % » |
+| `color` | `primary` (par défaut), `secondary`, `third`, `gold` ou `hostile` |
+| `className` | classe ajoutée |
+
+La barre porte `role="progressbar"` ; `aria-valuenow` est le nombre de segments terminés et `aria-valuemax` le nombre total.
+
+```tsx
+<SegmentedProgress
+  segments={['done', 'done', 'current', 'todo']}
+  currentProgress={40}
+  label="Chapitres"
+  valueText="2 chapitres terminés sur 4, chapitre en cours à 40 %"
+/>
+```
+
+## Étiquette (`Tag`)
+
+Composant React `Tag` (`apps/web/src/components/lib/ui/Tag/`) : une courte étiquette, par exemple le statut d'une campagne.
+
+| Prop | Rôle |
+|---|---|
+| `text` | texte de l'étiquette |
+| `color` | `primary` (par défaut), `secondary`, `third`, `gold` ou `hostile` |
+| `dot` | ajoute une pastille (`Dot`) de la même couleur devant le texte |
+| `className` | classe ajoutée |
+
+```tsx
+<Tag text="En cours" color="primary" dot />
+```
+
+## Bandeau de page (`PageHeader`)
+
+Composant React `PageHeader` (`apps/web/src/components/lib/PageHeader/`) : le bandeau en haut d'une page, sur toute la largeur, avec le titre `h1` et une image de fond fondue dans le fond de la page en haut et en bas.
+
+| Prop | Rôle |
+|---|---|
+| `title` | titre de la page (`h1`) |
+| `image` | image de fond : une image importée (`StaticImageData`) ou une URL (image d'une campagne) ; sans `image`, l'image de titre par défaut (version mobile et desktop) |
+| `actions` | boutons placés à droite du titre (facultatif) |
+| `children` | contenu ajouté sous le titre (facultatif) |
+| `className` | classe ajoutée |
+
+L'image passe au CSS par la variable `--page-header-image` ; les dégradés restent dans le SCSS.
+
+```tsx
+<PageHeader title={campaign.title} image={campaign.imageUrl ?? campaignDefaultImage} />
 ```
 
 ## Boîtes
@@ -765,29 +842,30 @@ Pour changer seulement la couleur du halo d'une boîte (au survol, selon un éta
 
 ---
 
-## Conteneur de page
+## Contenu principal de la page
 
-Classe `.container` (`base/_layout.scss`) et mixin `container()` (`mixins/_layout-mixin.scss`), réglages dans `variables/_layout.scss` : centre le contenu de la page, limite sa largeur et ajoute des marges sur les côtés.
+Classe `.main-content` (`base/_layout.scss`), construite sur le mixin `container()` (`mixins/_layout-mixin.scss`), réglages dans `variables/_layout.scss` : centre le contenu principal de la page, limite sa largeur, ajoute des marges sur les quatre côtés et espace ses blocs.
 
 | Propriété | Valeur |
 |---|---|
 | Largeur maximale | 144rem (1440px, `$screen-xl`) |
 | Marges latérales | fluides, de 16px sur mobile (`$space-md`) à 40px sur desktop (`$space-2xl`) |
+| Marges haut et bas | fluides, de 24px sur mobile (`$space-lg`) à 40px sur desktop (`$space-2xl`) |
 | Centrage | `margin-inline: auto` |
+| Mise en page | colonne flex qui occupe la hauteur restante de `<main>`, blocs espacés de `$space-lg` |
+
+Les marges utilisent `fluid()` : elles grandissent progressivement de `$screen-s` à `$screen-xl`, sans media query par breakpoint.
+
+Le bandeau de la page (`PageHeader`) reste en dehors, pour couvrir toute la largeur de l'écran :
 
 ```tsx
-<main className="container">…</main>
+<>
+  <PageHeader title="Mes campagnes" />
+  <div className="main-content">…</div>
+</>
 ```
 
-Une section dont le fond doit couvrir toute la largeur de l'écran garde son fond sur l'élément extérieur et place le `.container` à l'intérieur :
-
-```tsx
-<section className={styles.hero}>
-  <div className="container">…</div>
-</section>
-```
-
-Le mixin accepte une autre largeur et d'autres marges, pour une page plus étroite (formulaire de connexion, texte long) : `@include container(60rem);` ou `@include container(80rem, $space-lg);`.
+Pour aligner un autre bloc sur la même colonne (contenu d'un header ou d'un footer pleine largeur), on utilise directement le mixin : `@include container;`. Il accepte une autre largeur et d'autres marges, pour un contenu plus étroit (formulaire, texte long) : `@include container(60rem);` ou `@include container(80rem, $space-lg);`.
 
 ---
 

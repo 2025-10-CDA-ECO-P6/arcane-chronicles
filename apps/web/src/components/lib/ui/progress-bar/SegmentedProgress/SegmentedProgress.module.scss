@@ -1,0 +1,36 @@
+@use '@/styles/variables' as *;
+@use '@/styles/functions' as *;
+@use '@/styles/mixins' as *;
+
+$_colors: ('primary', 'secondary', 'third', 'gold', 'hostile');
+
+.segmented-progress {
+  display: flex;
+  gap: $space-xs;
+
+  &__segment {
+    flex: 1;
+    block-size: 0.4rem;
+    border-radius: $radius-pill;
+    background-color: with-alpha(var(--progress-color), 0.2);
+
+    &--done {
+      background-color: var(--progress-color);
+    }
+
+    &--current {
+      @include glow(var(--progress-color), $glow-sm, $on: shape);
+      background-image: linear-gradient(
+        to right,
+        var(--progress-color) var(--current-progress, 0%),
+        transparent 0
+      );
+    }
+  }
+
+  @each $color in $_colors {
+    &--#{$color} {
+      --progress-color: var(--#{$color}-color);
+    }
+  }
+}

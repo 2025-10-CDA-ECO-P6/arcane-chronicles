@@ -1,0 +1,34 @@
+@use '@/styles/variables' as *;
+@use '@/styles/functions' as *;
+
+$_colors: ('primary', 'secondary', 'third', 'gold', 'hostile');
+
+.progress-ring {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(closest-side, var(--ring-background) 80%, transparent 81%),
+    conic-gradient(
+      var(--progress-color) var(--progress-value, 0%),
+      with-alpha(var(--progress-color), 0.2) 0
+    );
+  color: var(--progress-color);
+  font-size: $text-small-size;
+  font-weight: $font-weight-semibold;
+
+  @each $color in $_colors {
+    &--#{$color} {
+      --progress-color: var(--#{$color}-color);
+    }
+  }
+
+  &--on-primary {
+    --ring-background: var(--background-color);
+  }
+
+  &--on-secondary {
+    --ring-background: var(--background-color-secondary);
+  }
+}

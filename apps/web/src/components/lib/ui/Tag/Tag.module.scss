@@ -1,0 +1,26 @@
+@use '@/styles/variables' as *;
+@use '@/styles/functions' as *;
+
+$_colors: ('primary', 'secondary', 'third', 'gold', 'hostile');
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-sm;
+  inline-size: fit-content;
+  padding-block: $space-xs;
+  padding-inline: $space-sm;
+  border: 0.1rem solid var(--tag-color);
+  border-radius: $radius-pill;
+  background-color: var(--background-color);
+  color: var(--tag-color);
+  font-size: $text-small-size;
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-tight;
+
+  @each $color in $_colors {
+    &--#{$color} {
+      --tag-color: var(--#{$color}-color);
+    }
+  }
+}

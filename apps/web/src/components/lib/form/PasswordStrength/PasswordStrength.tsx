@@ -1,9 +1,10 @@
-import { ProgressBar } from '@/components/lib/ui/ProgressBar/ProgressBar';
-import { Toggletip } from '@/components/lib/ui/Toggletip/Toggletip';
-import { checkPasswordRules } from '@/lib/passwordRules';
-
-import styles from './PasswordStrength.module.scss';
 import type { PasswordStrengthProps } from './PasswordStrength.types';
+
+import { ProgressBar } from '@/components/lib/ui/progress-bar/ProgressBar/ProgressBar';
+import { Toggletip } from '@/components/lib/ui/Toggletip/Toggletip';
+
+import { checkPasswordRules } from '@/lib/passwordRules';
+import styles from './PasswordStrength.module.scss';
 
 export function PasswordStrength({ password, rulesId }: PasswordStrengthProps) {
   const rules = checkPasswordRules(password);
