@@ -1,9 +1,10 @@
 'use client';
 
-import { NavLink } from '@/components/lib/NavLink/NavLink';
-import { useArcane } from '@/context/ArcaneContext';
-
 import type { MainNavProps } from './MainNav.types';
+
+import { NavLink } from '@/components/lib/NavLink/NavLink';
+
+import { useArcane } from '@/context/ArcaneContext';
 
 export function MainNav({ className }: MainNavProps) {
   const { isAuthenticated } = useArcane();
@@ -14,7 +15,7 @@ export function MainNav({ className }: MainNavProps) {
         Accueil
       </NavLink>
       {isAuthenticated ? (
-        <NavLink className="link--text-secondary" href="/dashboard">
+        <NavLink className="link--text-secondary" href="/dashboard/campaigns">
           Tableau de bord
         </NavLink>
       ) : (

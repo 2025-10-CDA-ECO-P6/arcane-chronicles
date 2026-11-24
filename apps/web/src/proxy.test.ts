@@ -55,7 +55,7 @@ describe('proxy', () => {
   it('sends a GM with an unexpired token from the login page to the dashboard without calling the API', () => {
     const response = proxy(request('/login', token(3600)));
 
-    expect(new URL(response.headers.get('location') ?? '').pathname).toBe('/dashboard');
+    expect(new URL(response.headers.get('location') ?? '').pathname).toBe('/dashboard/campaigns');
   });
 
   it('keeps a guest on the register page', () => {

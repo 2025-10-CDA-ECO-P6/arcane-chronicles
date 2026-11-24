@@ -51,13 +51,13 @@ arcane-chronicles/
 ├── apps/
 │   ├── web/                  # Next.js
 │   │   ├── Dockerfile
-│   │   ├── public/           # fichiers servis tels quels (vidéo de fond complète et recadrée en portrait, son image fixe)
+│   │   ├── public/           # fichiers servis tels quels (vidéo de fond complète et recadrée en portrait, son image fixe, illustrations de la campagne de démo)
 │   │   └── src/
 │   │       ├── app/          # routes (App Router)
 │   │       ├── assets/       # polices, police d'icônes, images, vidéos
-│   │       ├── components/   # composants repris de la page « composants » de Figma
+│   │       ├── components/   # composants repris de la page « composants » de Figma (lib/ : composants génériques ; campaign/ : cartes et progression des campagnes)
 │   │       ├── hooks/        # logique réutilisable (useAuth : connexion, inscription, déconnexion, erreurs de formulaire ; useDisclosure : ouverture d'une bulle)
-│   │       ├── lib/          # client API (apiFetch), client Socket.io, polices, règles du mot de passe, classe de page
+│   │       ├── lib/          # client API (apiFetch, serverGet), session (auth), campagnes, formats (dates, quantités), client Socket.io, polices, règles du mot de passe, classe de page
 │   │       └── styles/       # design system : variables, mixins, animations, classes globales
 │   └── api/                  # Express + Socket.io
 │       ├── Dockerfile
@@ -143,10 +143,11 @@ Routes des campagnes (`routers/campaigns/`, actions dans `controllers/campaignAc
 | Route | Middlewares | Réponse |
 |---|---|---|
 | `GET /api/campaigns` ou `?scope=public` | `optionalAuth`, `validate(campaignListQuerySchema, 'query')` | 200 avec le catalogue : les campagnes publiques (versions publiées, RG20), avec le nom de leur MJ |
-| `GET /api/campaigns?scope=mine` | idem | 200 avec les campagnes d'origine du MJ connecté (`CampaignSummary` : statut, progression, chapitre en cours, compteurs, dernière session, publication ; calcul dans `services/campaigns/campaignSummary.ts`) ; 401 sans session valide. L'identité du MJ vient toujours du cookie, jamais de l'URL |
+| `GET /api/campaigns?scope=mine` | idem | 200 avec les campagnes d'origine du MJ connecté (`CampaignSummary` : statut, progression, chapitre en cours et sa progression (objectifs de la quête principale rattachés au chapitre), compteurs, dernière session, publication ; calcul dans `services/campaigns/campaignSummary.ts`) ; 401 sans session valide. L'identité du MJ vient toujours du cookie, jamais de l'URL |
 | `GET /api/campaigns?scope=…` (autre valeur) | idem | 422 `{ errors: [{ field: "scope", message }] }` |
+| `GET /api/campaigns/:id` | `checkCookie`, `validate(campaignIdParamsSchema, 'params')` | 200 avec la campagne d'origine du MJ connecté (`CampaignDetail` : `id`, `title`, `imageUrl`) ; 404 si elle n'existe pas ou appartient à un autre MJ (on ne révèle pas son existence) ; 401 sans session valide ; 422 si l'identifiant n'est pas un UUID |
 
-`optionalAuth` lit la session si elle existe et l'ignore si le cookie est absent, invalide ou expiré : le catalogue reste accessible à un visiteur qui a gardé un ancien cookie. `validate(schema, 'query')` valide les paramètres d'URL comme `validate(schema)` valide le corps, et remplace `req.query` par la valeur validée (valeurs par défaut comprises).
+`optionalAuth` lit la session si elle existe et l'ignore si le cookie est absent, invalide ou expiré : le catalogue reste accessible à un visiteur qui a gardé un ancien cookie. Si le secret JWT manque dans la configuration, il renvoie une erreur 500 au lieu de traiter le MJ comme un visiteur. `validate(schema, source)` valide le corps (`body`, par défaut), les paramètres d'URL (`query`) ou les segments de la route (`params`), et remplace la donnée par la valeur validée (valeurs par défaut comprises). Une route n'a qu'un `validate` par source : pour ajouter des filtres, on étend le schéma existant (`z.object({ ...campaignListQuerySchema.shape, … })`) plutôt que d'enchaîner deux `validate`, car le second supprimerait les clés inconnues du premier.
 
 Les règles de jeu utilisées à la fois par une route REST et par un événement temps réel (par exemple « modifier les PV ») sont des fonctions de `services/` indépendantes d'Express et de Socket.io : elles sont appelées par l'action **et** par le handler, et se testent sans serveur.
 
@@ -237,7 +238,11 @@ await apiFetch.delete(`/campaigns/${id}`);
 | 204 (sans contenu) | `null` |
 | 4xx ou 5xx | une `ApiError` avec `status` et `data` (la réponse de l'API), par exemple la liste `errors: [{ field, message }]` d'une validation refusée (422), à afficher sous les champs du formulaire |
 
-Le dernier argument (`options`) accepte les options de `fetch` : en-têtes supplémentaires, `signal` pour annuler une requête, options de cache de Next.js. Le temps réel passe par le client Socket.io (`apps/web/src/lib/socket.ts`), sur la même adresse sans préfixe `/api`.
+Le dernier argument (`options`) accepte les options de `fetch` : en-têtes supplémentaires, `signal` pour annuler une requête, options de cache de Next.js.
+
+Dans un composant serveur (page, layout), le navigateur n'est pas là pour joindre le cookie de session : les lectures passent par `serverGet` (`apps/web/src/lib/serverApi.ts`), qui lit le cookie `token` de la requête avec `cookies()` de Next, le transmet à l'API et désactive le cache (`no-store`). Ce fichier est séparé de `api.ts`, car `cookies()` n'existe que côté serveur et `api.ts` est aussi importé par des composants client (`useAuth`). Les fonctions de chaque ressource s'appuient dessus : `getSession` (`lib/auth.ts`), `getMyCampaigns` et `getCampaign` (`lib/campaigns.ts`, qui renvoie `null` sur un 404 ou un 422 pour que la page affiche `notFound()`).
+
+Le temps réel passe par le client Socket.io (`apps/web/src/lib/socket.ts`), sur la même adresse sans préfixe `/api`.
 
 ---
 
@@ -260,4 +265,17 @@ La deuxième, `20261123000000_campaign_publication` (RG20, versions publiques de
 |---|---|---|
 | `campaigns_only_published_version_is_public_check` | `campaigns` | CHECK : seule une version publique (`published_from_id` renseigné) peut avoir `is_public` à vrai ; une campagne d'origine n'est jamais publique (RG20) |
 
+La troisième, `20261124000000_campaign_description_required`, rend la description d'une campagne obligatoire (`description` en `NOT NULL`) : chaque carte du tableau de bord l'affiche.
+
 Prisma ignore ces contraintes lorsqu'il compare le schéma à la base : une nouvelle migration (`npm run prisma:migrate -- --name ...`) ne cherche pas à les supprimer. Toute modification ultérieure du modèle passe par une nouvelle migration, appliquée en production au démarrage de l'API (`prisma migrate deploy`).
+
+### Seeds
+
+Deux seeds remplissent la base :
+
+- `npm run seed` (`prisma/seed.ts`, données dans `prisma/seeds/reference.ts`) : les données de référence D&D (races, classes, historiques, compétences, capacités, effets et objets officiels) ;
+- `npm run seed:demo` (`prisma/seed-demo.ts`) : le compte MJ de démonstration et trois campagnes (« L’archipel du néant » en cours, « La malédiction de Brumecombe » terminée, « Les forges de Khaz Dumar » pas commencée), pour montrer chaque état du tableau de bord. Il efface d'abord les données du MJ de démonstration, il peut donc être relancé sans créer de doublons.
+
+Chaque campagne de démonstration est décrite comme un simple objet (`prisma/seeds/campaigns/*.ts`) : personnages, chapitres, scènes, quêtes, liés entre eux par leur nom. Le constructeur `prisma/seeds/builder.ts` insère ces objets dans le bon ordre, retrouve les identifiants générés par la base et déduit les données qui en découlent (capacités héritées de la race et de la classe, objectifs cochés et scènes jouées dans un chapitre terminé, créatures numérotées).
+
+> **Choix proposé par l'IA.** Ce constructeur a été proposé et écrit avec l'assistant IA (Claude) pour simplifier l'insertion des données de démonstration : le modèle compte 38 tables très liées entre elles, et écrire chaque insertion à la main pour trois campagnes complètes aurait demandé des milliers de lignes et de nombreux identifiants à reporter. Il ne sert qu'au seed de démonstration ; le code de l'application n'en dépend pas.

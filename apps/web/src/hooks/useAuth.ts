@@ -12,7 +12,7 @@ import { useArcane } from '@/context/ArcaneContext';
 import { ApiError, apiFetch } from '@/lib/api';
 import type { AuthField, AuthFieldErrors, AuthUser, RegisterValues } from '@/types/auth';
 
-const DEFAULT_REDIRECT = '/dashboard';
+const DEFAULT_REDIRECT = '/dashboard/campaigns';
 const LOCK_STORAGE_KEY = 'arcane-chronicles:login-locked-until';
 
 const LOGIN_FIELD_MESSAGES: AuthFieldErrors = {

@@ -1,0 +1,112 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+@use '@/styles/functions' as *;
+
+$_colors: ('primary', 'secondary', 'third', 'gold', 'hostile');
+
+.campaign_card {
+  display: flex;
+  flex: 1 1 max(min(100%, 36rem), calc((100% - 2 * $space-lg) / 3));
+  flex-direction: column;
+  background-color: var(--background-color-secondary);
+  border: 0.1rem solid var(--card-color);
+  border-radius: $radius-xl;
+  transition:
+    transform 0.4s ease-out,
+    box-shadow 0.2s ease-out;
+  @include glow(var(--card-color), $glow-md, $on: shape);
+
+  @each $color in $_colors {
+    &--#{$color} {
+      --card-color: var(--#{$color}-color);
+    }
+  }
+
+  &:hover {
+    transform: scale(1.01);
+  }
+
+  &__header {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: $space-md;
+    min-block-size: 24rem;
+    isolation: isolate;
+
+    &::after {
+      content: '';
+      position: absolute;
+      z-index: 0;
+      inset: 0;
+      background-image: fade(
+        bottom,
+        $color: var(--background-color-secondary),
+        $stops: (1 0%, 0.6 20%, 0 60%)
+      );
+    }
+
+    &__status {
+      z-index: 10;
+    }
+
+    &__image {
+      position: absolute;
+      z-index: -1;
+      inset: 0;
+      inline-size: 100%;
+      block-size: calc(100% - 0.2rem);
+      object-fit: cover;
+      border-radius: $radius-xl $radius-xl 0 0;
+    }
+
+    &__info {
+      z-index: 10;
+    }
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: $space-md;
+    padding: $space-md;
+    border-radius: 0 0 $radius-xl $radius-xl;
+  }
+}
+
+@include from(m) {
+  .campaign_card {
+    &--in-progress {
+      flex-basis: 100%;
+
+      .campaign_card__link {
+        display: flex;
+
+        .campaign_card__header {
+          min-inline-size: 40%;
+
+          &::after {
+            border-radius: $radius-xl 0 0 $radius-xl;
+            background-image:
+              fade(
+                right,
+                $color: var(--background-color-secondary),
+                $stops: (1 0%, 0.6 10%, 0 30%)
+              ),
+              fade(
+                bottom,
+                $color: var(--background-color-secondary),
+                $stops: (1 0%, 0.6 20%, 0 60%)
+              );
+          }
+
+          &__image {
+            inline-size: calc(100% - 0.2rem);
+            border-radius: $radius-xl 0 0 $radius-xl;
+          }
+        }
+      }
+    }
+  }
+}

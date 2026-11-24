@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
   images: {
     qualities: [75, 90],
   },
+  redirects: async () => [
+    { source: '/dashboard', destination: '/dashboard/campaigns', permanent: false },
+  ],
 };
 
 export default nextConfig;

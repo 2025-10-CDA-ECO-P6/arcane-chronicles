@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useArcane } from '@/context/ArcaneContext';
-
 import { MainNav } from './MainNav';
+
+import { useArcane } from '@/context/ArcaneContext';
 
 vi.mock('next/navigation', () => ({ usePathname: () => '/' }));
 vi.mock('@/context/ArcaneContext', () => ({ useArcane: vi.fn() }));
@@ -39,7 +39,7 @@ describe('MainNav', () => {
 
     expect(screen.getByRole('link', { name: 'Tableau de bord' })).toHaveAttribute(
       'href',
-      '/dashboard',
+      '/dashboard/campaigns',
     );
     expect(screen.queryByRole('link', { name: 'Connexion' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Inscription' })).not.toBeInTheDocument();

@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 const GM_ROUTES = ['/dashboard'];
 const GUEST_ONLY_ROUTES = ['/login', '/register'];
-const DEFAULT_GM_ROUTE = '/dashboard';
+const DEFAULT_GM_ROUTE = '/dashboard/campaigns';
 
 const matchesRoute = (path: string, routes: string[]) =>
   routes.some((route) => path === route || path.startsWith(`${route}/`));

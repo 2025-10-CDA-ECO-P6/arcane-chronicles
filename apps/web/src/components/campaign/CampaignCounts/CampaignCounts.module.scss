@@ -1,0 +1,18 @@
+@use '@/styles/variables' as *;
+
+.campaign-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-sm;
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: $space-xs;
+    color: var(--text-color-secondary);
+
+    &::before {
+      color: var(--card-color);
+    }
+  }
+}

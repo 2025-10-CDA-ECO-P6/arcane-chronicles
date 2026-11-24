@@ -4,7 +4,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useArcane } from '@/context/ArcaneContext';
 import { ApiError, apiFetch } from '@/lib/api';
-
 import { useAuth } from './useAuth';
 
 vi.mock('next/navigation', () => ({ useRouter: vi.fn() }));
@@ -47,7 +46,7 @@ describe('useAuth', () => {
 
     expect(apiFetch.post).toHaveBeenCalledWith('/auth/login', credentials);
     expect(handleUser).toHaveBeenCalledWith(user);
-    expect(push).toHaveBeenCalledWith('/dashboard');
+    expect(push).toHaveBeenCalledWith('/dashboard/campaigns');
     expect(refresh).toHaveBeenCalled();
   });
 
@@ -73,7 +72,7 @@ describe('useAuth', () => {
 
     await act(() => result.current.login(credentials, target));
 
-    expect(push).toHaveBeenCalledWith('/dashboard');
+    expect(push).toHaveBeenCalledWith('/dashboard/campaigns');
   });
 
   it.each([
@@ -288,7 +287,7 @@ describe('useAuth', () => {
       expect(apiFetch.post).toHaveBeenCalledWith('/auth/register', registration);
       expect(result.current.fieldErrors).toEqual({});
       expect(handleUser).toHaveBeenCalledWith(user);
-      expect(push).toHaveBeenCalledWith('/dashboard');
+      expect(push).toHaveBeenCalledWith('/dashboard/campaigns');
       expect(refresh).toHaveBeenCalled();
     });
 

@@ -1,0 +1,7 @@
+@use '@/styles/variables' as *;
+
+.campaign-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-lg;
+}

@@ -1,26 +1,22 @@
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { cache } from 'react';
 
-import { ApiError, apiFetch } from '@/lib/api';
 import type { AuthUser } from '@/types/auth';
+
+import { ApiError } from '@/lib/api';
+import { getSessionToken, serverGet } from '@/lib/serverApi';
 
 type Session =
   | { user: AuthUser; status: 'accepted' }
   | { user: null; status: 'missing' | 'rejected' | 'unavailable' };
 
 const getSession = cache(async (): Promise<Session> => {
-  const token = (await cookies()).get('token')?.value;
-
-  if (!token) {
+  if (!(await getSessionToken())) {
     return { user: null, status: 'missing' };
   }
 
   try {
-    const user = await apiFetch.get<AuthUser>('/auth/me', {
-      headers: { Cookie: `token=${token}` },
-      cache: 'no-store',
-    });
+    const user = await serverGet<AuthUser>('/auth/me');
     return { user, status: 'accepted' };
   } catch (error) {
     const isRejected = error instanceof ApiError && error.status === 401;

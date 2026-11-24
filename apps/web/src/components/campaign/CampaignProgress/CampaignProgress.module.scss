@@ -1,0 +1,24 @@
+@use '@/styles/variables' as *;
+
+.campaign-progress {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: $space-md;
+
+  &__chapter {
+    display: flex;
+    flex-direction: column;
+    gap: $space-xs;
+  }
+
+  &__heading {
+    color: var(--input-color);
+    font-family: $font-family-body;
+    font-size: $text-body-size;
+    text-transform: uppercase;
+  }
+
+  &__name {
+    font-family: $font-family-title;
+  }
+}
