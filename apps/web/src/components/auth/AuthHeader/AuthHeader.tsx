@@ -1,7 +1,8 @@
 import Link from 'next/link';
 
-import styles from './AuthHeader.module.scss';
 import type { AuthHeaderProps } from './AuthHeader.types';
+
+import styles from './AuthHeader.module.scss';
 
 export function AuthHeader({
   title,

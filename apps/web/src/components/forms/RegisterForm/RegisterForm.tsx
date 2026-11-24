@@ -2,12 +2,13 @@
 
 import { type ChangeEvent, type SubmitEvent, useId, useState } from 'react';
 
+import type { AuthField, RegisterValues } from '@/types/auth';
+
 import { Button } from '@/components/lib/Button/Button';
 import { Input } from '@/components/lib/form/Input/Input';
 import { PasswordStrength } from '@/components/lib/form/PasswordStrength/PasswordStrength';
-import { useAuth } from '@/hooks/useAuth';
-import type { AuthField, RegisterValues } from '@/types/auth';
 
+import { useAuth } from '@/hooks/useAuth';
 import styles from './RegisterForm.module.scss';
 
 const EMPTY_VALUES: RegisterValues = {

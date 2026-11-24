@@ -3,7 +3,6 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
 import type { AuthUser } from '@/types/auth';
-
 import type { ArcaneContextValue, ArcaneProviderProps } from './ArcaneContext.types';
 
 const ArcaneContext = createContext<ArcaneContextValue | null>(null);

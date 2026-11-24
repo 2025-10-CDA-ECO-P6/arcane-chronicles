@@ -1,14 +1,15 @@
 'use client';
 
-import type { LoginInput } from '@arcane-chronicles/shared';
 import { type ChangeEvent, type SubmitEvent, useState } from 'react';
+
+import type { LoginInput } from '@arcane-chronicles/shared';
+import type { LoginFormProps } from './LoginForm.types';
 
 import { Button } from '@/components/lib/Button/Button';
 import { Input } from '@/components/lib/form/Input/Input';
-import { useAuth } from '@/hooks/useAuth';
 
+import { useAuth } from '@/hooks/useAuth';
 import styles from './LoginForm.module.scss';
-import type { LoginFormProps } from './LoginForm.types';
 
 export function LoginForm({ redirectTo }: LoginFormProps) {
   const {

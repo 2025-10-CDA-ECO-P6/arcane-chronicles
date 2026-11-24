@@ -1,10 +1,11 @@
 'use client';
 
-import { Button } from '@/components/lib/Button/Button';
-import { useDisclosure } from '@/hooks/useDisclosure';
-
-import styles from './Toggletip.module.scss';
 import type { ToggletipProps } from './Toggletip.types';
+
+import { Button } from '@/components/lib/Button/Button';
+
+import { useDisclosure } from '@/hooks/useDisclosure';
+import styles from './Toggletip.module.scss';
 
 export function Toggletip({
   label,

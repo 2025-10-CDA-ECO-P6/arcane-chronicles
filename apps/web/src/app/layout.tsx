@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Header } from '@/components/layout/Header/Header';
 import { PageBody } from '@/components/layout/PageBody/PageBody';
 import { ArcaneProvider } from '@/context/ArcaneContext';
+
 import { getCurrentUser } from '@/lib/auth';
 import { cinzel, crimsonText, icons, inter } from '@/lib/fonts';
 import '@/styles/globals.scss';

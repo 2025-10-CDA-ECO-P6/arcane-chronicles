@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/lib/Button/Button';
+
 import { useAuth } from '@/hooks/useAuth';
 
 export function LogoutButton() {

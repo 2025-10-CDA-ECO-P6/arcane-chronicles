@@ -2,10 +2,11 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useAuth } from '@/hooks/useAuth';
 import type { AuthFieldErrors } from '@/types/auth';
 
 import { LoginForm } from './LoginForm';
+
+import { useAuth } from '@/hooks/useAuth';
 
 vi.mock('@/hooks/useAuth', () => ({ useAuth: vi.fn() }));
 

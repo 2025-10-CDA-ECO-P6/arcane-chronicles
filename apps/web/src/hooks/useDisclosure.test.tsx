@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
-import type { KeyboardEvent } from 'react';
 import { describe, expect, it } from 'vitest';
+
+import type { KeyboardEvent } from 'react';
 
 import { useDisclosure } from './useDisclosure';
 

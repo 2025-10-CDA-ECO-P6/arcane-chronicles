@@ -1,10 +1,11 @@
 import Image from 'next/image';
 
-import logo from '@/assets/images/logo-desktop.webp';
+import type { AuthBannerProps } from './AuthBanner.types';
+
 import { Dot } from '@/components/lib/ui/Dots/Dot';
 
+import logo from '@/assets/images/logo-desktop.webp';
 import styles from './AuthBanner.module.scss';
-import type { AuthBannerProps } from './AuthBanner.types';
 
 const FEATURES = [
   'Chapitres, scènes, quêtes',
