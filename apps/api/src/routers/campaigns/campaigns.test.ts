@@ -6,7 +6,7 @@ import app from '../../config.js';
 import { CampaignModel } from '../../models/campaignModel.js';
 
 vi.mock('../../models/campaignModel.js', () => ({
-  CampaignModel: { getAllPublic: vi.fn(), getAllByGm: vi.fn() },
+  CampaignModel: { getAllPublic: vi.fn(), getAllByGm: vi.fn(), getOneByGm: vi.fn() },
 }));
 
 const gm = {
@@ -21,7 +21,7 @@ const publicCampaign = { id: 'public-1', title: 'L’archipel du néant' };
 const gmCampaign = {
   id: 'mine-1',
   title: 'Ma campagne',
-  description: null,
+  description: 'Une campagne de test.',
   imageUrl: null,
   createdAt: new Date('2026-04-08T10:00:00Z'),
   updatedAt: new Date('2026-04-08T10:00:00Z'),
@@ -44,6 +44,7 @@ beforeEach(() => {
   vi.mocked(CampaignModel.getAllByGm)
     .mockReset()
     .mockResolvedValue([gmCampaign] as never);
+  vi.mocked(CampaignModel.getOneByGm).mockReset().mockResolvedValue(null);
 });
 
 describe('GET /api/campaigns', () => {
@@ -90,6 +91,20 @@ describe('GET /api/campaigns', () => {
     expect(CampaignModel.getAllByGm).not.toHaveBeenCalled();
   });
 
+  it('fails with a server error instead of treating the GM as a visitor when JWT_SECRET is missing', async () => {
+    const cookie = sessionCookie();
+    delete process.env.JWT_SECRET;
+
+    try {
+      const response = await request(app).get('/api/campaigns?scope=mine').set('Cookie', cookie);
+
+      expect(response.status).toBe(500);
+      expect(response.body).toEqual({ message: 'Internal server error' });
+    } finally {
+      process.env.JWT_SECRET = 'test-secret';
+    }
+  });
+
   it('responds 422 to an unknown scope', async () => {
     const response = await request(app).get('/api/campaigns?scope=all');
 
@@ -97,5 +112,50 @@ describe('GET /api/campaigns', () => {
     expect(response.body).toEqual({
       errors: [{ field: 'scope', message: 'Scope must be public or mine' }],
     });
+  });
+});
+
+describe('GET /api/campaigns/:id', () => {
+  const campaignId = '5d2f8a3c-1b4e-4f6a-9c7d-2e8b0a1f3c5d';
+
+  it('returns a campaign of the GM read from the session', async () => {
+    const campaign = { id: campaignId, title: 'Ma campagne', imageUrl: null };
+    vi.mocked(CampaignModel.getOneByGm).mockResolvedValue(campaign);
+
+    const response = await request(app)
+      .get(`/api/campaigns/${campaignId}`)
+      .set('Cookie', sessionCookie());
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(campaign);
+    expect(CampaignModel.getOneByGm).toHaveBeenCalledWith(campaignId, gm.id);
+  });
+
+  it('responds 404 to a campaign that does not exist or belongs to another GM', async () => {
+    const response = await request(app)
+      .get(`/api/campaigns/${campaignId}`)
+      .set('Cookie', sessionCookie());
+
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({ message: 'Campaign not found' });
+  });
+
+  it('refuses a request without a valid session', async () => {
+    const response = await request(app).get(`/api/campaigns/${campaignId}`);
+
+    expect(response.status).toBe(401);
+    expect(CampaignModel.getOneByGm).not.toHaveBeenCalled();
+  });
+
+  it('responds 422 to an id that is not a UUID', async () => {
+    const response = await request(app)
+      .get('/api/campaigns/not-a-uuid')
+      .set('Cookie', sessionCookie());
+
+    expect(response.status).toBe(422);
+    expect(response.body).toEqual({
+      errors: [{ field: 'id', message: 'Campaign id must be a valid UUID' }],
+    });
+    expect(CampaignModel.getOneByGm).not.toHaveBeenCalled();
   });
 });

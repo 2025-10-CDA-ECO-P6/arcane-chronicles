@@ -16,6 +16,13 @@ export class CampaignModel {
     });
   }
 
+  static getOneByGm(id: string, gmId: string) {
+    return db.campaign.findFirst({
+      where: { id, gmId, publishedFromId: null },
+      select: { id: true, title: true, imageUrl: true },
+    });
+  }
+
   static getAllByGm(gmId: string) {
     return db.campaign.findMany({
       where: { gmId, publishedFromId: null },
@@ -37,6 +44,7 @@ export class CampaignModel {
               where: { startedAt: { not: null } },
               select: { startedAt: true, endedAt: true },
             },
+            objectives: { select: { isCompleted: true } },
           },
           orderBy: { position: 'asc' },
         },

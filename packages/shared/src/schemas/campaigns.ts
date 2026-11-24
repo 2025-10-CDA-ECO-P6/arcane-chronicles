@@ -8,8 +8,13 @@ export const campaignListQuerySchema = z.object({
     .default('public'),
 });
 
+export const campaignIdParamsSchema = z.object({
+  id: z.uuid({ error: 'Campaign id must be a valid UUID' }),
+});
+
 export type CampaignScope = (typeof CAMPAIGN_SCOPES)[number];
 export type CampaignListQuery = z.infer<typeof campaignListQuerySchema>;
+export type CampaignIdParams = z.infer<typeof campaignIdParamsSchema>;
 
 export const CHAPTER_STATUSES = ['NEW', 'IN_PROGRESS', 'COMPLETED'] as const;
 export const CAMPAIGN_STATUSES = ['NEW', 'IN_PROGRESS', 'COMPLETED'] as const;
@@ -20,15 +25,21 @@ export type CampaignStatus = (typeof CAMPAIGN_STATUSES)[number];
 export interface CampaignSummary {
   id: string;
   title: string;
-  description: string | null;
+  description: string;
   imageUrl: string | null;
   createdAt: string;
   status: CampaignStatus;
   progress: number;
   chapterStatuses: ChapterStatus[];
-  currentChapter: { position: number; title: string } | null;
+  currentChapter: { position: number; title: string; progress: number } | null;
   counts: { chapters: number; quests: number; sessions: number; heroes: number };
   lastSessionAt: string | null;
   completedAt: string | null;
   publication: { isPublished: boolean; hasUnpublishedChanges: boolean };
+}
+
+export interface CampaignDetail {
+  id: string;
+  title: string;
+  imageUrl: string | null;
 }

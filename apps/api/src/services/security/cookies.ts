@@ -49,9 +49,11 @@ export const checkCookie = (req: Request, res: Response, next: NextFunction) => 
 };
 
 export const optionalAuth = (req: Request, _res: Response, next: NextFunction) => {
+  const secret = getJwtSecret();
+
   try {
     req.auth = req.cookies.token
-      ? (jwt.verify(req.cookies.token, getJwtSecret()) as AuthPayload & JwtPayload)
+      ? (jwt.verify(req.cookies.token, secret) as AuthPayload & JwtPayload)
       : null;
   } catch {
     req.auth = null;

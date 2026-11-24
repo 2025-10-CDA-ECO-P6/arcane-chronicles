@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 import type { ZodType } from 'zod';
 
-type RequestSource = 'body' | 'query';
+type RequestSource = 'body' | 'query' | 'params';
 
 export const validate =
   (schema: ZodType, source: RequestSource = 'body') =>
@@ -20,7 +20,7 @@ export const validate =
 
     if (source === 'query') {
       Object.defineProperty(req, 'query', { value: result.data });
-    } else {
+    } else if (source === 'body') {
       req.body = result.data;
     }
     next();

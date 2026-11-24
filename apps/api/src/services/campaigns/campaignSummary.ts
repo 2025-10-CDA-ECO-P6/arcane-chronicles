@@ -47,7 +47,11 @@ export function toCampaignSummary(campaign: GmCampaignRow): CampaignSummary {
     currentChapter:
       status === 'COMPLETED' || !currentChapter
         ? null
-        : { position: currentChapter.position, title: currentChapter.title },
+        : {
+            position: currentChapter.position,
+            title: currentChapter.title,
+            progress: getProgress(currentChapter.objectives),
+          },
     counts: {
       chapters: campaign._count.chapters,
       quests: campaign._count.quests,

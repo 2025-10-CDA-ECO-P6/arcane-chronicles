@@ -5,11 +5,20 @@ import { toCampaignSummary } from './campaignSummary.js';
 
 type Chapter = GmCampaignRow['chapters'][number];
 
-const chapter = (position: number, status: Chapter['status'], games: Chapter['games'] = []) => ({
+const objectives = (completed: number, total: number) =>
+  Array.from({ length: total }, (_, index) => ({ isCompleted: index < completed }));
+
+const chapter = (
+  position: number,
+  status: Chapter['status'],
+  games: Chapter['games'] = [],
+  chapterObjectives: Chapter['objectives'] = [],
+) => ({
   position,
   title: `Chapitre ${position}`,
   status,
   games,
+  objectives: chapterObjectives,
 });
 
 const game = (startedAt: string, endedAt: string | null = null) => ({
@@ -38,7 +47,7 @@ describe('toCampaignSummary', () => {
 
     const summary = toCampaignSummary(row({ chapters: [chapter(1, 'NEW'), chapter(2, 'NEW')] }));
     expect(summary.status).toBe('NEW');
-    expect(summary.currentChapter).toEqual({ position: 1, title: 'Chapitre 1' });
+    expect(summary.currentChapter).toEqual({ position: 1, title: 'Chapitre 1', progress: 0 });
     expect(summary.lastSessionAt).toBeNull();
   });
 
@@ -47,7 +56,7 @@ describe('toCampaignSummary', () => {
       row({
         chapters: [
           chapter(1, 'COMPLETED', [game('2026-05-01T18:00:00Z', '2026-05-01T22:00:00Z')]),
-          chapter(2, 'IN_PROGRESS', [game('2026-05-08T18:00:00Z')]),
+          chapter(2, 'IN_PROGRESS', [game('2026-05-08T18:00:00Z')], objectives(1, 4)),
           chapter(3, 'NEW'),
         ],
       }),
@@ -55,7 +64,7 @@ describe('toCampaignSummary', () => {
 
     expect(summary.status).toBe('IN_PROGRESS');
     expect(summary.chapterStatuses).toEqual(['COMPLETED', 'IN_PROGRESS', 'NEW']);
-    expect(summary.currentChapter).toEqual({ position: 2, title: 'Chapitre 2' });
+    expect(summary.currentChapter).toEqual({ position: 2, title: 'Chapitre 2', progress: 25 });
     expect(summary.counts.sessions).toBe(2);
     expect(summary.lastSessionAt).toBe('2026-05-08T18:00:00.000Z');
     expect(summary.completedAt).toBeNull();
@@ -77,9 +86,6 @@ describe('toCampaignSummary', () => {
   });
 
   it('measures the progress with the completed objectives of every quest', () => {
-    const objectives = (completed: number, total: number) =>
-      Array.from({ length: total }, (_, index) => ({ isCompleted: index < completed }));
-
     expect(toCampaignSummary(row()).progress).toBe(0);
     expect(
       toCampaignSummary(
