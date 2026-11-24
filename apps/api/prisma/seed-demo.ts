@@ -15,10 +15,12 @@ async function main() {
       const ref = await seedReference(tx);
       await seedDemo(tx, ref, passwordHash);
     },
-    { timeout: 120_000 },
+    { timeout: 300_000 },
   );
 
-  console.log('Campagne de démonstration « L’archipel du néant » chargée.');
+  console.log(
+    'Campagnes de démonstration chargées : L’archipel du néant, La malédiction de Brumecombe, Les forges de Khaz Dumar.',
+  );
 }
 
 main()

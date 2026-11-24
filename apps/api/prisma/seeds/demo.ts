@@ -1,39 +1,37 @@
-import type {
-  ActionType,
-  Alignment,
-  Attitude,
-  CharacterType,
-  CreatureStatus,
-  ItemType,
-  Prisma,
-} from '@prisma/client';
-import { PLACEHOLDER_IMAGE_URL } from './placeholder.js';
+import type { CreatureStatus } from '@prisma/client';
+import {
+  addChapters,
+  addCharacters,
+  addQuests,
+  addSessions,
+  type AbilitySpec,
+  type CharacterSpec,
+  createCampaign,
+  createLibrary,
+  type Db,
+  effectId,
+  type EffectSpec,
+  type ItemSpec,
+  itemId,
+  type Lookup,
+  newContext,
+  pick,
+  type Stack,
+  toObjectives,
+} from './builder.js';
+import {
+  ARCHIPEL_CHAPTERS,
+  ARCHIPEL_CHARACTERS,
+  ARCHIPEL_LIBRARY,
+  ARCHIPEL_MAIN_OBJECTIVES,
+  ARCHIPEL_SIDE_QUESTS,
+} from './campaigns/archipel.js';
+import { BRUMECOMBE } from './campaigns/brumecombe.js';
+import { KHAZ_DUMAR } from './campaigns/khaz-dumar.js';
+import { demoImage } from './images.js';
 import type { ReferenceData } from './reference.js';
 
-type Db = Prisma.TransactionClient;
-
 export const DEMO_GM_EMAIL = 'maitre.ying@arcane-chronicles.test';
-
-interface Lookup {
-  ref: ReferenceData;
-  abilities: Map<string, string>;
-  effects: Map<string, string>;
-  items: Map<string, string>;
-}
-
-function pick(name: string, ...maps: Map<string, string>[]): string {
-  for (const map of maps) {
-    const id = map.get(name);
-    if (id) {
-      return id;
-    }
-  }
-  throw new Error(`Donnée introuvable : ${name}`);
-}
-
-const itemId = (l: Lookup, name: string) => pick(name, l.items, l.ref.items);
-const effectId = (l: Lookup, name: string) => pick(name, l.effects, l.ref.effects);
-const abilityId = (l: Lookup, name: string) => pick(name, l.abilities, l.ref.abilities);
 
 async function clearDemo(db: Db, gmId: string) {
   const inCampaigns = { campaign: { gmId } };
@@ -102,16 +100,6 @@ async function clearDemo(db: Db, gmId: string) {
   await db.item.deleteMany({ where: { ownerId: gmId } });
 }
 
-interface EffectSpec {
-  name: string;
-  diceCount?: number;
-  diceSides?: number;
-  bonus?: number;
-  damageType?: string;
-  repeatCount?: number;
-  description?: string;
-}
-
 const EFFECTS: EffectSpec[] = [
   { name: 'Lame d’azur', diceCount: 1, diceSides: 4, damageType: 'froid' },
   { name: 'Lame divine', diceCount: 2, diceSides: 6, bonus: 5, damageType: 'radiant' },
@@ -131,13 +119,6 @@ const EFFECTS: EffectSpec[] = [
   { name: 'Chute dans la cale', diceCount: 2, diceSides: 6, damageType: 'contondant' },
 ];
 
-interface AbilitySpec {
-  name: string;
-  description: string;
-  actionType: ActionType;
-  effect: string;
-}
-
 const ABILITIES: AbilitySpec[] = [
   {
     name: 'Griffes',
@@ -152,15 +133,6 @@ const ABILITIES: AbilitySpec[] = [
     effect: 'Souffle de brume',
   },
 ];
-
-interface ItemSpec {
-  name: string;
-  type: ItemType;
-  price: number;
-  description: string;
-  armorValue?: number;
-  effects?: string[];
-}
 
 const ITEMS: ItemSpec[] = [
   {
@@ -195,6 +167,7 @@ const ITEMS: ItemSpec[] = [
   },
   {
     name: 'Épée divine',
+    image: 'objet-epee-divine',
     type: 'WEAPON',
     price: 2000,
     description: 'Une lame unique dont l’éclat perce les nuages les plus sombres.',
@@ -202,6 +175,7 @@ const ITEMS: ItemSpec[] = [
   },
   {
     name: 'Armure divine',
+    image: 'objet-armure-divine',
     type: 'ARMOR',
     price: 1500,
     description:
@@ -210,6 +184,7 @@ const ITEMS: ItemSpec[] = [
   },
   {
     name: 'Anneau du néant',
+    image: 'objet-anneau-du-neant',
     type: 'ARTIFACT',
     price: 800,
     description:
@@ -249,53 +224,10 @@ const ITEMS: ItemSpec[] = [
   },
 ];
 
-interface Stats {
-  strength: number;
-  dexterity: number;
-  constitution: number;
-  intelligence: number;
-  wisdom: number;
-  charisma: number;
-}
-
-interface Stack {
-  item: string;
-  quantity: number;
-}
-
-interface CharacterSpec {
-  key: string;
-  name: string;
-  type: CharacterType;
-  race?: string;
-  class?: string;
-  background?: string;
-  occupation?: string;
-  level: number;
-  xp: number;
-  isUnique: boolean;
-  isBoss?: boolean;
-  alignment?: Alignment;
-  stats: Stats;
-  maxHp: number;
-  currentHp?: number;
-  attitude?: Attitude;
-  status?: CreatureStatus;
-  gold?: number;
-  wornArmor?: string;
-  inventory?: Stack[];
-  stock?: Stack[];
-  extraAbilities?: string[];
-  biography?: string;
-  personality?: string;
-  personalQuest?: string;
-  secrets?: string;
-  gmNotes?: string;
-}
-
 const CHARACTERS: CharacterSpec[] = [
   {
     key: 'goor',
+    image: 'personnage-goor',
     name: 'Goor',
     type: 'HERO',
     race: 'Orc',
@@ -369,6 +301,7 @@ const CHARACTERS: CharacterSpec[] = [
   },
   {
     key: 'erwil',
+    image: 'personnage-erwil',
     name: 'Erwïl, le forge-étoile',
     type: 'HERO',
     race: 'Nain',
@@ -473,6 +406,7 @@ const CHARACTERS: CharacterSpec[] = [
   },
   {
     key: 'atom',
+    image: 'personnage-capitaine-atom',
     name: 'Capitaine Atom',
     type: 'NPC',
     race: 'Humain',
@@ -505,6 +439,7 @@ const CHARACTERS: CharacterSpec[] = [
   },
   {
     key: 'marcel',
+    image: 'personnage-marcel',
     name: 'Marcel',
     type: 'NPC',
     race: 'Humain',
@@ -630,6 +565,7 @@ const CHARACTERS: CharacterSpec[] = [
   },
   {
     key: 'guard',
+    image: 'personnage-garde-du-pont',
     name: 'Garde du pont',
     type: 'NPC',
     race: 'Humain',
@@ -726,84 +662,10 @@ const CHARACTERS: CharacterSpec[] = [
   },
 ];
 
-async function createCharacter(db: Db, l: Lookup, campaignId: string, spec: CharacterSpec) {
-  const raceId = spec.race ? pick(spec.race, l.ref.races) : null;
-  const classId = spec.class ? pick(spec.class, l.ref.classes) : null;
-  const backgroundId = spec.background ? pick(spec.background, l.ref.backgrounds) : null;
-
-  const character = await db.character.create({
-    data: {
-      campaignId,
-      type: spec.type,
-      name: spec.name,
-      imageUrl: PLACEHOLDER_IMAGE_URL,
-      raceId,
-      classId,
-      backgroundId,
-      occupation: spec.occupation ?? null,
-      level: spec.level,
-      xp: spec.xp,
-      isUnique: spec.isUnique,
-      isBoss: spec.isBoss ?? false,
-      alignment: spec.alignment ?? null,
-      ...spec.stats,
-      maxHp: spec.maxHp,
-      currentHp: spec.currentHp ?? spec.maxHp,
-      attitude: spec.attitude ?? null,
-      status: spec.status ?? 'ACTIVE',
-      gold: spec.gold ?? 0,
-      wornArmorId: spec.wornArmor ? itemId(l, spec.wornArmor) : null,
-      biography: spec.biography ?? null,
-      personality: spec.personality ?? null,
-      personalQuest: spec.personalQuest ?? null,
-      secrets: spec.secrets ?? null,
-      gmNotes: spec.gmNotes ?? null,
-    },
-  });
-
-  const items = [
-    ...(spec.inventory ?? []).map((stack) => ({ ...stack, forSale: false })),
-    ...(spec.stock ?? []).map((stack) => ({ ...stack, forSale: true })),
-  ];
-  if (items.length > 0) {
-    await db.characterItem.createMany({
-      data: items.map((stack) => ({
-        characterId: character.id,
-        itemId: itemId(l, stack.item),
-        quantity: stack.quantity,
-        forSale: stack.forSale,
-      })),
-    });
-  }
-
-  const inherited = await db.ability.findMany({
-    where: {
-      OR: [
-        ...(raceId ? [{ raceAbilities: { some: { raceId } } }] : []),
-        ...(classId
-          ? [{ classAbilities: { some: { classId, requiredLevel: { lte: spec.level } } } }]
-          : []),
-        ...(backgroundId ? [{ backgroundAbilities: { some: { backgroundId } } }] : []),
-        ...(spec.extraAbilities ?? []).map((name) => ({ id: abilityId(l, name) })),
-      ],
-    },
-  });
-  if (inherited.length > 0) {
-    await db.characterAbility.createMany({
-      data: inherited.map((ability) => ({
-        characterId: character.id,
-        abilityId: ability.id,
-        usesRemaining: ability.maxUses,
-      })),
-    });
-  }
-
-  return character.id;
-}
-
 const SCENES = [
   {
     key: 'deck',
+    image: 'scene-pont-du-navire',
     title: 'Le pont du navire',
     narration: [
       'Le pont du Vent d’Éther est animé par une foule de voyageurs, de marins et de marchands qui vaquent à leurs occupations. Alors que le navire s’élève lentement dans les airs, les cordages se tendent et les voiles capturent les courants célestes. Tout autour, les paysages défilent : d’immenses îles flottantes couvertes de forêts, des falaises suspendues dans le vide et des cascades qui semblent tomber à l’infini à travers les nuages.',
@@ -813,6 +675,7 @@ const SCENES = [
   },
   {
     key: 'cabin',
+    image: 'scene-cabine-du-capitaine',
     title: 'La cabine du capitaine',
     narration: [
       'Derrière une porte de chêne sculptée, la cabine du capitaine respire la sobriété et le luxe à la fois : cartes célestes épinglées aux murs, instruments de navigation en laiton et grande baie vitrée ouverte sur la mer de nuages.',
@@ -821,6 +684,7 @@ const SCENES = [
   },
   {
     key: 'passengers',
+    image: 'scene-cabines-des-passagers',
     title: 'Les cabines des passagers',
     narration: [
       'Un couloir étroit et grinçant dessert une enfilade de cabines aux portes numérotées. L’odeur du bois ciré se mêle à celle des épices et des parchemins.',
@@ -829,6 +693,7 @@ const SCENES = [
   },
   {
     key: 'brig',
+    image: 'scene-geoles',
     title: 'Les geôles',
     narration: [
       'Au fond de la cale, sous la ligne de flottaison des nuages, l’équipage a aménagé quelques cellules sombres où l’on enferme les pirates capturés.',
@@ -855,56 +720,8 @@ export async function seedDemo(db: Db, ref: ReferenceData, passwordHash: string)
 
   const l: Lookup = { ref, abilities: new Map(), effects: new Map(), items: new Map() };
 
-  for (const spec of EFFECTS) {
-    const effect = await db.effect.create({
-      data: {
-        ownerId: gm.id,
-        isPublic: true,
-        name: spec.name,
-        diceCount: spec.diceCount ?? null,
-        diceSides: spec.diceSides ?? null,
-        bonus: spec.bonus ?? null,
-        damageType: spec.damageType ?? null,
-        repeatCount: spec.repeatCount ?? null,
-        description: spec.description ?? null,
-      },
-    });
-    l.effects.set(spec.name, effect.id);
-  }
-
-  for (const spec of ABILITIES) {
-    const ability = await db.ability.create({
-      data: {
-        ownerId: gm.id,
-        isPublic: true,
-        name: spec.name,
-        description: spec.description,
-        source: 'LEARNED',
-        actionType: spec.actionType,
-        abilityEffects: { create: { effectId: effectId(l, spec.effect) } },
-      },
-    });
-    l.abilities.set(spec.name, ability.id);
-  }
-
-  for (const spec of ITEMS) {
-    const item = await db.item.create({
-      data: {
-        ownerId: gm.id,
-        isPublic: true,
-        name: spec.name,
-        description: spec.description,
-        imageUrl: PLACEHOLDER_IMAGE_URL,
-        type: spec.type,
-        price: spec.price,
-        armorValue: spec.armorValue ?? null,
-        itemEffects: {
-          create: (spec.effects ?? []).map((name) => ({ effectId: effectId(l, name) })),
-        },
-      },
-    });
-    l.items.set(spec.name, item.id);
-  }
+  await createLibrary(db, l, gm.id, { effects: EFFECTS, abilities: ABILITIES, items: ITEMS });
+  await createLibrary(db, l, gm.id, ARCHIPEL_LIBRARY);
 
   const campaign = await db.campaign.create({
     data: {
@@ -912,18 +729,20 @@ export async function seedDemo(db: Db, ref: ReferenceData, passwordHash: string)
       title: 'L’archipel du néant',
       description:
         'Une quête incroyable au cœur d’un archipel d’îles flottantes, suspendues entre ciel et nuages. Chaque île cache des secrets anciens, des ruines oubliées et des créatures mystérieuses qui défient les lois de la gravité. Le vent guide les voyageurs d’un fragment de terre à l’autre, à travers des ponts naturels de brume et de lumière. Dans cet univers instable, chaque choix peut faire basculer l’équilibre du monde. Une aventure où courage, exploration et découverte s’entrelacent au-dessus du vide.',
-      imageUrl: PLACEHOLDER_IMAGE_URL,
+      imageUrl: demoImage('campagne-archipel-du-neant'),
+      createdAt: new Date('2026-08-20T09:00:00.000Z'),
     },
   });
+  const ctx = newContext(campaign.id, 'ARC');
 
   const chapter = await db.chapter.create({
     data: {
       campaignId: campaign.id,
       title: 'Une merveilleuse ascension',
       position: 1,
-      status: 'NEW',
-      imageUrl: PLACEHOLDER_IMAGE_URL,
-      mapUrl: PLACEHOLDER_IMAGE_URL,
+      status: 'COMPLETED',
+      imageUrl: demoImage('chapitre-une-merveilleuse-ascension'),
+      mapUrl: demoImage('carte'),
       narration: [
         'Les héros embarquent à bord d’un immense bateau volant, une véritable cité flottante portée par d’antiques mécanismes et d’immenses voiles battues par les vents célestes.',
         'Le pont principal grouille de vie : marchands ambulants, voyageurs venus des quatre coins du monde, marins affairés et aventuriers mystérieux se croisent dans une agitation permanente. Entre les étals d’épices rares, les cages d’animaux exotiques et les cartes anciennes vendues à prix d’or, chacun semble poursuivre un objectif différent au cœur des cieux.',
@@ -932,8 +751,9 @@ export async function seedDemo(db: Db, ref: ReferenceData, passwordHash: string)
       gmNotes: { create: GM_NOTES.map((content) => ({ content })) },
     },
   });
+  await addSessions(db, ctx, { ...chapter, position: 1 }, ['2026-09-05', '2026-09-19']);
 
-  const scenes = new Map<string, string>();
+  const { scenes, characters } = ctx;
   for (const [index, spec] of SCENES.entries()) {
     const scene = await db.scene.create({
       data: {
@@ -941,20 +761,18 @@ export async function seedDemo(db: Db, ref: ReferenceData, passwordHash: string)
         title: spec.title,
         position: index + 1,
         narration: spec.narration.join('\n\n'),
-        imageUrl: PLACEHOLDER_IMAGE_URL,
-        mapUrl: PLACEHOLDER_IMAGE_URL,
+        imageUrl: demoImage(spec.image),
+        mapUrl: demoImage('carte'),
+        playedAt: new Date('2026-09-05T18:30:00.000Z'),
       },
     });
     scenes.set(spec.key, scene.id);
   }
   const sceneId = (key: string) => pick(key, scenes);
 
-  const characters = new Map<string, string>();
-  for (const spec of CHARACTERS) {
-    characters.set(spec.key, await createCharacter(db, l, campaign.id, spec));
-  }
+  await addCharacters(db, l, ctx, [...CHARACTERS, ...ARCHIPEL_CHARACTERS]);
   const characterId = (key: string) => pick(key, characters);
-  const characterSpec = (key: string) => CHARACTERS.find((spec) => spec.key === key)!;
+  const characterSpec = (key: string) => ctx.characterSpecs.get(key)!;
 
   const group = async (scene: string, name: string, position: number) =>
     (await db.sceneGroup.create({ data: { sceneId: sceneId(scene), name, position } })).id;
@@ -1118,19 +936,21 @@ export async function seedDemo(db: Db, ref: ReferenceData, passwordHash: string)
     },
   });
 
-  await db.quest.create({
+  await addChapters(db, l, ctx, ARCHIPEL_CHAPTERS);
+
+  const mainQuest = await db.quest.create({
     data: {
       campaignId: campaign.id,
       relatedCharacterId: characterId('atom'),
-      title: 'L’embarquement',
+      title: 'Le secret du Néant',
       description:
-        'À bord du Vent d’Éther, nos héros débutent leur voyage à travers les îles flottantes. Ils devront s’équiper, recueillir des informations sur de mystérieux pirates et prêter main-forte à l’équipage lorsque des monstres volants attaquent le navire. En gagnant la confiance du capitaine et en se faisant remarquer par leurs actions, ils espèrent se rapprocher de la vérité.',
+        'À bord du Vent d’Éther, nos héros débutent leur voyage à travers les îles flottantes. Ils devront s’équiper, recueillir des informations sur de mystérieux pirates et prêter main-forte à l’équipage lorsque des monstres volants attaquent le navire. D’île en île, ils remonteront la piste des pirates jusqu’à la puissance qui les commande : le Néant, tapi sous l’archipel.',
       type: 'MAIN',
       status: 'ACTIVE',
       isRevealed: true,
       position: 1,
       rewardXp: 150,
-      rewardText: 'Passage vers l’archipel',
+      rewardText: 'Le salut de l’archipel',
       questRewardItems: { create: { itemId: itemId(l, 'Anneau du néant'), quantity: 1 } },
       objectives: {
         create: [
@@ -1185,7 +1005,7 @@ export async function seedDemo(db: Db, ref: ReferenceData, passwordHash: string)
     },
   });
 
-  await db.quest.create({
+  const treasureQuest = await db.quest.create({
     data: {
       campaignId: campaign.id,
       chapterId: chapter.id,
@@ -1195,8 +1015,8 @@ export async function seedDemo(db: Db, ref: ReferenceData, passwordHash: string)
       description:
         'Marcel, un marchand aussi curieux qu’opportuniste, est persuadé que le légendaire coffre caché dans la cabine du capitaine du Vent d’Éther renferme un trésor d’une valeur inestimable. Incapable d’agir lui-même sans attirer l’attention, il vous propose un marché : récupérer son contenu en toute discrétion en échange d’une généreuse récompense.',
       type: 'SIDE',
-      status: 'INACTIVE',
-      isRevealed: false,
+      status: 'COMPLETED',
+      isRevealed: true,
       position: 2,
       rewardXp: 75,
       rewardGold: 30,
@@ -1225,6 +1045,21 @@ export async function seedDemo(db: Db, ref: ReferenceData, passwordHash: string)
       },
     },
   });
+
+  await db.objective.updateMany({
+    where: { OR: [{ chapterId: chapter.id }, { questId: treasureQuest.id }] },
+    data: { isCompleted: true, completedAt: ctx.chapters.get(1)?.lastSessionEnd },
+  });
+  await db.objective.createMany({
+    data: toObjectives(l, ctx, ARCHIPEL_MAIN_OBJECTIVES, undefined, 7).map((objective) => ({
+      ...objective,
+      questId: mainQuest.id,
+    })),
+  });
+  await addQuests(db, l, ctx, ARCHIPEL_SIDE_QUESTS, 3);
+
+  await createCampaign(db, l, gm.id, BRUMECOMBE);
+  await createCampaign(db, l, gm.id, KHAZ_DUMAR);
 
   return { gmId: gm.id, campaignId: campaign.id };
 }
