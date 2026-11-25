@@ -1,4 +1,5 @@
 @use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
 @use '@/styles/functions' as *;
 
 $_colors: ('primary', 'secondary', 'third', 'gold', 'hostile');
@@ -15,8 +16,8 @@ $_colors: ('primary', 'secondary', 'third', 'gold', 'hostile');
   background-color: var(--background-color);
   color: var(--tag-color);
   font-size: $text-small-size;
-  font-weight: $font-weight-semibold;
   line-height: $line-height-tight;
+  @include glow(var(--tag-color), $glow-xs, $on: shape);
 
   @each $color in $_colors {
     &--#{$color} {

@@ -5,6 +5,8 @@ import type { CampaignCardProps } from './CampaignCard.types';
 
 import { CampaignCounts } from '@/components/campaign/CampaignCounts/CampaignCounts';
 import { CampaignProgress } from '@/components/campaign/CampaignProgress/CampaignProgress';
+import { CampaignProgressBar } from '@/components/campaign/CampaignProgressBar/CampaignProgressBar';
+import { FitText } from '@/components/lib/ui/FitText/FitText';
 import { Tag } from '@/components/lib/ui/Tag/Tag';
 
 import { CAMPAIGN_STATUS_DISPLAY } from '@/components/campaign/campaignStatus';
@@ -50,8 +52,18 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
         </div>
         <div className={styles.campaign_card__content}>
           <CampaignCounts counts={campaign.counts} />
-          <p>{campaign.description}</p>
-          {isInProgress && <CampaignProgress campaign={campaign} color={status.color} />}
+          <FitText className={styles.campaign_card__content__description}>
+            {campaign.description}
+          </FitText>
+          {isInProgress ? (
+            <CampaignProgress campaign={campaign} color={status.color} />
+          ) : (
+            <CampaignProgressBar
+              className={styles.campaign_card__progress}
+              progress={campaign.progress}
+              color={status.color}
+            />
+          )}
         </div>
       </Link>
     </li>

@@ -31,3 +31,12 @@
     line-clamp: $lines;
   }
 }
+
+@mixin untruncate {
+  display: block;
+  overflow: visible;
+  max-inline-size: none;
+  white-space: normal;
+  -webkit-line-clamp: unset;
+  line-clamp: none;
+}

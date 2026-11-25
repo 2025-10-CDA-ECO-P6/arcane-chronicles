@@ -18,7 +18,7 @@ export function PageHeader({ title, image, actions, children, className }: PageH
         <h1 className={styles['page-header__title']}>{title}</h1>
         {actions && <div className={styles['page-header__actions']}>{actions}</div>}
       </div>
-      {children}
+      {children && <div className={styles['page-header__content']}>{children}</div>}
     </header>
   );
 }

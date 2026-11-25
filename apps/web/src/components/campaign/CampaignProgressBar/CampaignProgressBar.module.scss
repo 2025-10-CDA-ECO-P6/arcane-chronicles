@@ -1,0 +1,22 @@
+@use '@/styles/variables' as *;
+
+.campaign-progress-bar {
+  display: flex;
+  flex-direction: column;
+  gap: $space-xs;
+
+  &__labels {
+    display: flex;
+    justify-content: space-between;
+    gap: $space-sm;
+  }
+
+  &__value {
+    color: var(--card-color, var(--primary-color));
+    font-weight: $font-weight-semibold;
+  }
+
+  &__label {
+    color: var(--text-color-secondary);
+  }
+}

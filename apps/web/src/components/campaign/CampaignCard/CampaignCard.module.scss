@@ -5,6 +5,7 @@
 $_colors: ('primary', 'secondary', 'third', 'gold', 'hostile');
 
 .campaign_card {
+  container: campaign-card / inline-size;
   display: flex;
   flex: 1 1 max(min(100%, 36rem), calc((100% - 2 * $space-lg) / 3));
   flex-direction: column;
@@ -13,8 +14,8 @@ $_colors: ('primary', 'secondary', 'third', 'gold', 'hostile');
   border-radius: $radius-xl;
   transition:
     transform 0.4s ease-out,
-    box-shadow 0.2s ease-out;
-  @include glow(var(--card-color), $glow-md, $on: shape);
+    filter 0.2s ease-out;
+  @include glow(var(--card-color), $glow-sm, $on: shape);
 
   @each $color in $_colors {
     &--#{$color} {
@@ -23,7 +24,14 @@ $_colors: ('primary', 'secondary', 'third', 'gold', 'hostile');
   }
 
   &:hover {
-    transform: scale(1.01);
+    transform: scale(1.005);
+    @include glow(var(--card-color), $glow-md, $on: shape);
+  }
+
+  &__link {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
   }
 
   &__header {
@@ -68,45 +76,56 @@ $_colors: ('primary', 'secondary', 'third', 'gold', 'hostile');
 
   &__content {
     display: flex;
+    flex: 1;
     flex-direction: column;
     gap: $space-md;
     padding: $space-md;
     border-radius: 0 0 $radius-xl $radius-xl;
+
+    &__description {
+      line-height: $line-height-normal;
+      @include truncate($lines: 5);
+    }
+  }
+
+  &__progress {
+    margin-block-start: auto;
   }
 }
 
 @include from(m) {
-  .campaign_card {
-    &--in-progress {
-      flex-basis: 100%;
+  .campaign_card--in-progress {
+    flex-basis: 100%;
+  }
+}
 
-      .campaign_card__link {
-        display: flex;
+@container campaign-card (min-width: 60rem) {
+  .campaign_card__link {
+    flex-direction: row;
+    min-block-size: 25.1rem;
+  }
 
-        .campaign_card__header {
-          min-inline-size: 40%;
+  .campaign_card__header {
+    inline-size: 40%;
 
-          &::after {
-            border-radius: $radius-xl 0 0 $radius-xl;
-            background-image:
-              fade(
-                right,
-                $color: var(--background-color-secondary),
-                $stops: (1 0%, 0.6 10%, 0 30%)
-              ),
-              fade(
-                bottom,
-                $color: var(--background-color-secondary),
-                $stops: (1 0%, 0.6 20%, 0 60%)
-              );
-          }
-
-          &__image {
-            inline-size: calc(100% - 0.2rem);
-            border-radius: $radius-xl 0 0 $radius-xl;
-          }
-        }
-      }
+    &::after {
+      border-radius: $radius-xl 0 0 $radius-xl;
+      background-image:
+        fade(right, $color: var(--background-color-secondary), $stops: (1 0%, 0.6 10%, 0 30%)),
+        fade(bottom, $color: var(--background-color-secondary), $stops: (1 0%, 0.6 20%, 0 60%));
     }
+
+    &__image {
+      inline-size: calc(100% - 0.2rem);
+      border-radius: $radius-xl 0 0 $radius-xl;
+    }
+  }
+
+  .campaign_card__content__description {
+    flex: 1 1 0;
+    min-block-size: 0;
+    -webkit-line-clamp: var(--fit-lines, 5);
+    line-clamp: var(--fit-lines, 5);
+    clip-path: inset(0 0 calc(100% - var(--fit-lines, 5) * 1lh) 0);
   }
 }
