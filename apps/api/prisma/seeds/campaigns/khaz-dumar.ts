@@ -5,6 +5,7 @@ export const KHAZ_DUMAR: CampaignSpec = {
   title: 'Les forges de Khaz Dumar',
   description:
     'Il y a cent ans, la grande cité naine de Khaz Dumar s’est tue en une seule nuit. Ses forges se sont éteintes, ses portes se sont scellées, et ses habitants ont fui sans jamais dire ce qu’ils avaient réveillé sous la montagne. Aujourd’hui, le dernier héritier de la cité veut rentrer chez lui. Une expédition souterraine à travers galeries oubliées, lacs sans fond et forges de magma, vers le cœur brûlant de la montagne.',
+  image: 'campagne-forges-de-khaz-dumar',
   createdAt: '2026-11-10T09:00:00.000Z',
   library: {
     effects: [

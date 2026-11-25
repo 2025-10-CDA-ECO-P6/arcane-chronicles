@@ -5,6 +5,7 @@ export const BRUMECOMBE: CampaignSpec = {
   title: 'La malédiction de Brumecombe',
   description:
     'Au bord des marais de Vasenoire, le village de Brumecombe se meurt : chaque nuit de brouillard, un enfant disparaît sans laisser de traces. Les villageois parlent d’une sorcière, d’une crypte engloutie et d’un seigneur qui ne serait jamais vraiment mort. Une enquête sombre, entre superstitions, eaux stagnantes et secrets de famille, où la vérité est plus terrible encore que la légende.',
+  image: 'campagne-malediction-de-brumecombe',
   createdAt: '2026-02-02T10:00:00.000Z',
   library: {
     effects: [
