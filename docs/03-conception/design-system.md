@@ -776,6 +776,87 @@ Composant React `Tag` (`apps/web/src/components/lib/ui/Tag/`) : une courte étiq
 <Tag text="En cours" color="primary" dot />
 ```
 
+## Badge de filtre (`FilterBadge`)
+
+Composant React `FilterBadge` (`apps/web/src/components/lib/ui/FilterBadge/`) : une pastille cliquable qui applique un filtre. Changer de filtre change l'adresse de la page (`?status=…`) : c'est donc un **lien** (`Link` de Next), pas un bouton. Le lien garde le clic molette, l'ouverture dans un onglet et le retour arrière, et le composant reste un composant serveur.
+
+| Prop | Rôle |
+|---|---|
+| `label` | texte du badge |
+| `href` | adresse filtrée, construite avec `buildUrl` (`lib/searchParams.ts`) |
+| `count` | nombre d'éléments correspondant au filtre, affiché après le texte (facultatif) |
+| `isActive` | filtre en cours : badge rempli de `--primary-color`, et `aria-current="true"` pour les lecteurs d'écran |
+| `className` | classe ajoutée |
+
+Tous les badges sont en `--primary-color` : bordure et léger halo, rempli au survol et quand le filtre est actif. Le lien ne remonte pas en haut de la page (`scroll={false}`) : la liste filtrée s'affiche sous les badges.
+
+```tsx
+<FilterBadge label="En cours" href="/dashboard/campaigns?status=IN_PROGRESS" isActive />
+```
+
+### Barre de filtres (`FilterToolbar`)
+
+Composant React `FilterToolbar` (`apps/web/src/components/lib/toolbar/FilterToolbar/`) : un badge « Toutes » puis un badge par option, dans une `<nav>` nommée par `label`, suivie de `children` (la barre de recherche). Sur mobile (en dessous de `m`, 768px), les badges sont remplacés par une liste déroulante (`FilterSelect`) avec les mêmes options ; le CSS affiche l'un ou l'autre. Il ne connaît pas les campagnes : la page lui donne les options et leurs nombres.
+
+| Prop | Rôle |
+|---|---|
+| `label` | nom de la barre (et du select) lu par les lecteurs d'écran |
+| `name` | paramètre de l'adresse modifié, par exemple `status` |
+| `options` | liste de `{ value, label, count? }` |
+| `pathname`, `params` | adresse de la page et ses paramètres actuels |
+| `allLabel` | texte du badge sans filtre, `Toutes` par défaut |
+| `allCount` | nombre total, affiché sur « Toutes » (facultatif) |
+| `children` | contenu placé à côté des badges, hors de la `<nav>` (par exemple `SearchBar`) |
+| `className` | classe ajoutée |
+
+`buildUrl(pathname, params, changes)` garde les autres paramètres de l'adresse et ne change que ceux de `changes` (une valeur `undefined` ou vide retire le paramètre). Un filtre et une recherche se cumulent donc : cliquer « En cours » après avoir cherché « dragon » donne `?search=dragon&status=IN_PROGRESS`. Une valeur inconnue dans l'adresse est ignorée : « Toutes » reste actif.
+
+```tsx
+<FilterToolbar
+  label="Filtrer les campagnes par statut"
+  name="status"
+  options={statusOptions}
+  pathname="/dashboard/campaigns"
+  params={params}
+>
+  <SearchBar … />
+</FilterToolbar>
+```
+
+Sur le tableau de bord, les nombres suivent la recherche : avec « dragon » cherché, « En cours » compte les campagnes en cours qui contiennent « dragon », et « Toutes » toutes celles qui le contiennent.
+
+### Filtre en liste déroulante (`FilterSelect`)
+
+Composant React `FilterSelect` (`apps/web/src/components/lib/ui/FilterSelect/`), affiché par `FilterToolbar` sur mobile : un `<select>` dans le conteneur `.form-select` (voir [Liste déroulante](#liste-déroulante-select)), avec `aria-label`. Chaque option affiche son nombre entre parenthèses, par exemple « En cours (2) ». Choisir une option change l'adresse aussitôt, sans bouton à valider : c'est un composant client (`'use client'`) qui appelle `router.push(buildUrl(…), { scroll: false })`. « Toutes » retire le paramètre ; une valeur inconnue dans l'adresse sélectionne « Toutes ». Ses props sont celles de `FilterToolbar`, sans `children`.
+
+## Barre de recherche (`SearchBar`)
+
+Composant React `SearchBar` (`apps/web/src/components/lib/ui/SearchBar/`) : un champ de recherche et un bouton loupe, dans une balise `<search>`, qui signale la zone de recherche aux lecteurs d'écran. Il réutilise les composants `Input` (`type="search"`, libellé masqué avec `srOnly`) et `Button` (icône `search-sharp`, texte « Rechercher » lu par les lecteurs d'écran).
+
+| Prop | Rôle |
+|---|---|
+| `label` | libellé du champ, lu par les lecteurs d'écran |
+| `name` | paramètre de l'adresse rempli par la recherche, par exemple `search` |
+| `pathname`, `params` | adresse de la page et ses paramètres actuels |
+| `placeholder` | texte indicatif du champ (facultatif) |
+| `className` | classe ajoutée |
+
+C'est un formulaire en `GET` envoyé à `pathname` : à la validation, le navigateur construit lui-même `?search=…`. Les autres paramètres de l'adresse (le filtre de statut) sont recopiés dans des champs cachés, pour ne pas être perdus. Le champ affiche la recherche en cours.
+
+Sur mobile (en dessous de `m`, 768px), seul le bouton rond (3,6rem, avec une bordure) est affiché. Fermé, le champ a la taille du bouton et se cache derrière lui ; au premier clic, il s'allonge vers la gauche depuis le bouton jusqu'à couvrir toute la largeur de son conteneur (`100cqi` : `FilterToolbar` est un conteneur, `container-type: inline-size`) et reçoit le focus. Pendant qu'il est ouvert, la barre porte `data-open` : `FilterToolbar` s'en sert (`:has([data-open])`) pour cacher le select dès l'ouverture (et ne le réafficher qu'une fois la pilule rétractée) : sinon ses angles dépasseraient autour de l'extrémité arrondie de la pilule pendant qu'elle glisse. Une fois ouvert, un clic sur la loupe ou Entrée lance la recherche. Échap le referme et rend le focus au bouton, tout comme un clic en dehors. Cette logique est dans le hook `useSearchBar` (`apps/web/src/hooks/`), construit sur `useDisclosure`. Le champ reste ouvert tant qu'une recherche est active. Fermé, il est en `visibility: hidden` : on ne peut pas y arriver avec Tab. À partir de 768px, la barre est toujours complète ; le premier clic sur la loupe, champ vide, place le focus dans le champ. Ce comportement demande du JavaScript : le composant est un composant client (`'use client'`).
+
+La page compare la recherche au titre et à la description avec `matchesSearch` (`lib/search.ts`), qui ignore les majuscules, les accents et le style d'apostrophe : « l'ile » trouve « L’Île ».
+
+```tsx
+<SearchBar
+  label="Rechercher une campagne"
+  name="search"
+  pathname="/dashboard/campaigns"
+  params={params}
+  placeholder="Rechercher une campagne"
+/>
+```
+
 ## Bandeau de page (`PageHeader`)
 
 Composant React `PageHeader` (`apps/web/src/components/lib/PageHeader/`) : le bandeau en haut d'une page, sur toute la largeur, avec le titre `h1` et une image de fond fondue dans le fond de la page en haut et en bas.
@@ -788,7 +869,9 @@ Composant React `PageHeader` (`apps/web/src/components/lib/PageHeader/`) : le ba
 | `children` | contenu ajouté sous le titre (facultatif) |
 | `className` | classe ajoutée |
 
-L'image passe au CSS par la variable `--page-header-image` ; les dégradés restent dans le SCSS.
+L'image passe au CSS par la variable `--page-header-image` ; les dégradés restent dans le SCSS. Le titre est aligné en bas du bandeau.
+
+Sur mobile (en dessous de `m`, 768px), l'image ne couvre que le bloc du titre (`page-header__top`, 16rem de haut au minimum) : le contenu passé en `children` (par exemple la barre de filtres) s'affiche en dessous, sur le fond de la page. À partir de 768px, l'image couvre tout le bandeau, titre et `children` compris.
 
 ```tsx
 <PageHeader title={campaign.title} image={campaign.imageUrl ?? campaignDefaultImage} />
@@ -1018,6 +1101,43 @@ Un texte trop long pour sa place (titre de campagne dans une carte, nom de perso
 Le second paramètre fixe une largeur maximale : `@include truncate(2, 30rem);`. Sans lui, c'est la largeur du conteneur qui décide. Dans les deux cas, l'élément doit avoir une largeur limitée (bloc, ou élément flex avec `min-inline-size: 0`), sinon le texte s'étale et n'est jamais coupé. `$lines` doit être un entier d'au moins 1, sinon la compilation échoue.
 
 Le texte complet reste dans le HTML : il est lu en entier par les lecteurs d'écran. Si l'information coupée est importante, on peut l'afficher au survol avec l'attribut `title`.
+
+Pour annuler la coupure dans un cas précis (une autre taille d'écran, une carte plus large), le mixin `untruncate` remet le texte en entier, qu'il ait été coupé sur une ou plusieurs lignes :
+
+```scss
+.character-bio {
+  @include truncate(3);
+
+  @include from(lg) {
+    @include untruncate;
+  }
+}
+```
+
+### Couper selon la place disponible (`FitText`)
+
+`truncate` coupe à un nombre de lignes fixe. Quand le texte doit plutôt **remplir la place qui reste** dans un bloc de hauteur fixée par ailleurs, et n'être coupé que s'il déborde, on utilise le composant client `FitText` (`apps/web/src/components/lib/ui/FitText/`) : il affiche un `<p>` et, avec le hook `useFitLines` (`apps/web/src/hooks/`), calcule combien de lignes entières tiennent dans sa hauteur (hauteur ÷ hauteur de ligne). Il passe ce nombre au CSS dans la variable `--fit-lines` et le recalcule quand la taille change (`ResizeObserver`).
+
+Côté CSS, le texte prend la place restante sans agrandir son parent (`flex: 1 1 0` et `min-block-size: 0`) et utilise la variable comme nombre de lignes. La hauteur de ligne doit être une valeur fixe (`$line-height-normal`, pas `normal`) pour que le calcul soit juste. Exemple de la carte de campagne : 5 lignes en colonne, et en ligne autant de lignes que la hauteur de la carte en permet.
+
+`line-clamp` place le « … » mais ne cache pas les lignes suivantes : quand la boîte est plus haute que le nombre de lignes, elles restent visibles sous le « … ». Le `clip-path` masque tout ce qui dépasse `--fit-lines` lignes (`1lh` vaut une hauteur de ligne). Il ne change pas la taille de la boîte : le hook continue de mesurer la vraie place disponible. Limiter la hauteur (`max-block-size`) aurait figé la mesure, et le texte n'aurait plus jamais regagné de lignes quand la carte s'agrandit.
+
+```scss
+.campaign_card__content__description {
+  line-height: $line-height-normal;
+  @include truncate(5);
+}
+
+@container campaign-card (min-width: 60rem) {
+  .campaign_card__content__description {
+    flex: 1 1 0;
+    min-block-size: 0;
+    -webkit-line-clamp: var(--fit-lines, 5);
+    line-clamp: var(--fit-lines, 5);
+    clip-path: inset(0 0 calc(100% - var(--fit-lines, 5) * 1lh) 0);
+  }
+}
+```
 
 ---
 

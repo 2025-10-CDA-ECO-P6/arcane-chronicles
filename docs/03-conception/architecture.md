@@ -56,8 +56,8 @@ arcane-chronicles/
 │   │       ├── app/          # routes (App Router)
 │   │       ├── assets/       # polices, police d'icônes, images, vidéos
 │   │       ├── components/   # composants repris de la page « composants » de Figma (lib/ : composants génériques ; campaign/ : cartes et progression des campagnes)
-│   │       ├── hooks/        # logique réutilisable (useAuth : connexion, inscription, déconnexion, erreurs de formulaire ; useDisclosure : ouverture d'une bulle)
-│   │       ├── lib/          # client API (apiFetch, serverGet), session (auth), campagnes, formats (dates, quantités), client Socket.io, polices, règles du mot de passe, classe de page
+│   │       ├── hooks/        # logique réutilisable (useAuth : connexion, inscription, déconnexion, erreurs de formulaire ; useDisclosure : ouverture d'une bulle ; useSearchBar : ouverture de la barre de recherche repliée ; useFitLines : nombre de lignes qui tiennent dans un bloc)
+│   │       ├── lib/          # client API (apiFetch, serverGet), session (auth), campagnes, formats (dates, quantités), paramètres d'adresse (buildUrl), recherche (matchesSearch), client Socket.io, polices, règles du mot de passe, classe de page
 │   │       └── styles/       # design system : variables, mixins, animations, classes globales
 │   └── api/                  # Express + Socket.io
 │       ├── Dockerfile
