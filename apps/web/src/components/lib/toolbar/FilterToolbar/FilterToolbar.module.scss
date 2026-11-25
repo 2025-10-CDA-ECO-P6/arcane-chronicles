@@ -1,0 +1,41 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.filter-toolbar {
+  container-type: inline-size;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-md;
+  padding: $space-md 0.5rem;
+
+  &__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-sm;
+
+    @include until(m) {
+      display: none;
+    }
+  }
+
+  &__select {
+    transition: visibility 0s 0.3s;
+
+    @include from(m) {
+      display: none;
+    }
+  }
+
+  &:has([data-open]) &__select {
+    visibility: hidden;
+    transition: visibility 0.3s;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__select {
+      transition: none;
+    }
+  }
+}

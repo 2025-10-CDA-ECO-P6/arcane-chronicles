@@ -1,0 +1,49 @@
+@use '@/styles/variables' as *;
+@use '@/styles/functions' as *;
+@use '@/styles/mixins' as *;
+
+.filter-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-xs;
+  inline-size: fit-content;
+  padding: $space-xs $space-md;
+  border: 0.1rem solid var(--primary-color);
+  border-radius: $radius-pill;
+  background-color: var(--background-color);
+  color: var(--text-color-primary);
+  font-size: $text-small-size;
+  line-height: $line-height-tight;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+  @include glow(var(--primary-color), $glow-xs, $on: shape);
+
+  &:hover {
+    background-color: var(--primary-color);
+    color: var(--background-color);
+  }
+
+  &:focus-visible {
+    outline: 0.2rem solid var(--primary-color);
+    outline-offset: 0.2rem;
+  }
+
+  &--active {
+    border-color: var(--primary-color);
+    background-color: var(--primary-color);
+    color: var(--background-color);
+  }
+
+  &__count {
+    font-weight: $font-weight-semibold;
+    opacity: 0.7;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
