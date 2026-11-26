@@ -1,3 +1,5 @@
+import { cookies } from 'next/headers';
+
 import type { Metadata } from 'next';
 
 import { Header } from '@/components/layout/Header/Header';
@@ -5,6 +7,7 @@ import { PageBody } from '@/components/layout/PageBody/PageBody';
 import { ArcaneProvider } from '@/context/ArcaneContext';
 
 import { getCurrentUser } from '@/lib/auth';
+import { SIDEBAR_COOKIE, isSidebarOpenFromCookie } from '@/lib/sidebar';
 import { cinzel, crimsonText, icons, inter } from '@/lib/fonts';
 import '@/styles/globals.scss';
 
@@ -15,6 +18,7 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
+  const isSidebarOpen = isSidebarOpenFromCookie((await cookies()).get(SIDEBAR_COOKIE)?.value);
 
   return (
     <html
@@ -22,7 +26,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       className={`${cinzel.variable} ${inter.variable} ${crimsonText.variable} ${icons.variable}`}
     >
       <PageBody>
-        <ArcaneProvider initialUser={user}>
+        <ArcaneProvider initialUser={user} initialSidebarOpen={isSidebarOpen}>
           <Header />
           <main>{children}</main>
         </ArcaneProvider>

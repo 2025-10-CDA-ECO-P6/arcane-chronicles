@@ -1,0 +1,53 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+$_sidebar-size: 31rem;
+$_duration: 0.3s;
+
+.sidebar {
+  position: sticky;
+  inset-block-start: var(--header-height, 0px);
+  display: none;
+  overflow: hidden;
+  flex-shrink: 0;
+  align-self: flex-start;
+  inline-size: $_sidebar-size;
+  block-size: calc(100dvh - var(--header-height, 0px));
+  transition: inline-size $_duration ease;
+
+  @include from(m) {
+    display: block;
+  }
+
+  &__panel {
+    overflow-y: auto;
+    inline-size: $_sidebar-size;
+    block-size: 100%;
+    padding: $space-lg;
+    border-inline-end: 0.1rem solid var(--border-color);
+    background-color: var(--background-color-secondary);
+    transition:
+      translate $_duration ease,
+      visibility 0s;
+  }
+
+  &--closed {
+    inline-size: 0;
+  }
+
+  &--closed &__panel {
+    visibility: hidden;
+    translate: -100% 0;
+    transition:
+      translate $_duration ease,
+      visibility 0s $_duration;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &,
+    &__panel,
+    &--closed &__panel {
+      transition: none;
+    }
+  }
+}

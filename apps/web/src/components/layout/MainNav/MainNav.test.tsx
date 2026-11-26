@@ -15,6 +15,8 @@ const mockSession = (isAuthenticated: boolean) => {
       : null,
     isAuthenticated,
     handleUser: vi.fn(),
+    isSidebarOpen: true,
+    toggleSidebar: vi.fn(),
   });
 };
 

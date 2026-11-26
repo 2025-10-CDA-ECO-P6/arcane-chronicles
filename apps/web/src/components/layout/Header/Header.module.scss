@@ -48,30 +48,7 @@
 
 @include until(m) {
   .header {
-    &__content {
-      gap: $space-sm;
-
-      &__menu:global(.btn) {
-        --btn-font-size: #{$text-body-size};
-      }
-
-      &__title {
-        font-size: $h4-size;
-      }
-    }
-
-    &__nav_wrapper {
-      gap: $space-sm;
-
-      &__nav {
-        gap: $space-sm;
-        font-size: $text-small-size;
-      }
-
-      &__logo {
-        inline-size: 3rem;
-      }
-    }
+    display: none;
   }
 }
 
@@ -95,12 +72,6 @@
     background-color: var(--background-color);
     @include glow();
     animation: slide-down 0.4s ease-out;
-  }
-}
-
-@include until(sm) {
-  .header {
-    display: none;
   }
 }
 

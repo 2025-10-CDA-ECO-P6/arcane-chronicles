@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { ArcaneProvider, useArcane } from './ArcaneContext';
@@ -51,5 +51,65 @@ describe('ArcaneProvider', () => {
     );
 
     expect(screen.getByText('guest')).toBeInTheDocument();
+  });
+});
+
+describe('ArcaneProvider sidebar', () => {
+  function SidebarProbe() {
+    const { isSidebarOpen, toggleSidebar } = useArcane();
+    return (
+      <button type="button" onClick={toggleSidebar}>
+        {isSidebarOpen ? 'open' : 'closed'}
+      </button>
+    );
+  }
+
+  it('starts with the sidebar open', () => {
+    render(
+      <ArcaneProvider initialUser={null}>
+        <SidebarProbe />
+      </ArcaneProvider>,
+    );
+
+    expect(screen.getByRole('button')).toHaveTextContent('open');
+  });
+
+  it('starts closed when the server read a closed sidebar in the cookie', () => {
+    render(
+      <ArcaneProvider initialUser={null} initialSidebarOpen={false}>
+        <SidebarProbe />
+      </ArcaneProvider>,
+    );
+
+    expect(screen.getByRole('button')).toHaveTextContent('closed');
+  });
+
+  it('remembers the state in a cookie', () => {
+    render(
+      <ArcaneProvider initialUser={null}>
+        <SidebarProbe />
+      </ArcaneProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button'));
+    expect(document.cookie).toContain('sidebar=closed');
+
+    fireEvent.click(screen.getByRole('button'));
+    expect(document.cookie).toContain('sidebar=open');
+  });
+
+  it('closes and opens the sidebar on each toggle', () => {
+    render(
+      <ArcaneProvider initialUser={null}>
+        <SidebarProbe />
+      </ArcaneProvider>,
+    );
+    const button = screen.getByRole('button');
+
+    fireEvent.click(button);
+    expect(button).toHaveTextContent('closed');
+
+    fireEvent.click(button);
+    expect(button).toHaveTextContent('open');
   });
 });
