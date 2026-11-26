@@ -22,7 +22,7 @@ export function AuthBanner({ className }: AuthBannerProps) {
         alt="Arcane Chronicles"
         sizes="8rem"
         quality={90}
-        priority
+        preload
       />
       <div className={styles.banner__content}>
         <p className={styles.banner__content__title}>Préparez vos campagnes en un seul lieu</p>
