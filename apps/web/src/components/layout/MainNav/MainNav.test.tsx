@@ -11,7 +11,7 @@ vi.mock('@/context/ArcaneContext', () => ({ useArcane: vi.fn() }));
 const mockSession = (isAuthenticated: boolean) => {
   vi.mocked(useArcane).mockReturnValue({
     currentUser: isAuthenticated
-      ? { id: '1', displayName: 'Maître Ying', email: 'mj@example.com' }
+      ? { id: '1', displayName: 'Maître Ying', email: 'mj@example.com', avatarUrl: null }
       : null,
     isAuthenticated,
     handleUser: vi.fn(),

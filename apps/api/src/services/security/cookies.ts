@@ -27,7 +27,8 @@ export const getCookieOptions = (): CookieOptions => ({
 });
 
 export const openSession = (res: Response, user: AuthPayload) => {
-  const token = jwt.sign(user, getJwtSecret(), { expiresIn: getJwtExpiresIn() });
+  const payload: AuthPayload = { id: user.id, displayName: user.displayName, email: user.email };
+  const token = jwt.sign(payload, getJwtSecret(), { expiresIn: getJwtExpiresIn() });
   const { exp } = jwt.decode(token) as JwtPayload & { exp: number };
 
   res.cookie('token', token, {

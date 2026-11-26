@@ -4,6 +4,7 @@ export interface AuthUser {
   id: string;
   displayName: string;
   email: string;
+  avatarUrl: string | null;
 }
 
 export interface RegisterValues extends RegisterInput {

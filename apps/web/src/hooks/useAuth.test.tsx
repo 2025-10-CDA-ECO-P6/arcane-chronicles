@@ -16,7 +16,7 @@ vi.mock('@/lib/api', async (importOriginal) => ({
 const push = vi.fn();
 const refresh = vi.fn();
 const handleUser = vi.fn();
-const user = { id: '1', displayName: 'Maître Ying', email: 'mj@example.com' };
+const user = { id: '1', displayName: 'Maître Ying', email: 'mj@example.com', avatarUrl: null };
 const credentials = { email: 'mj@example.com', password: 'secret' };
 const registerValues = {
   displayName: 'Maître Ying',

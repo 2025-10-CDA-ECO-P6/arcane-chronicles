@@ -16,6 +16,7 @@ const publicUser = {
   id: '0b7a7d1e-2f8c-4c55-9a39-3c1f5e1b9d42',
   displayName: 'Maître du jeu',
   email: 'mj@example.com',
+  avatarUrl: null as string | null,
 };
 let dbUser: typeof publicUser & { passwordHash: string; createdAt: Date; updatedAt: Date };
 
@@ -149,6 +150,22 @@ describe('POST /api/auth/login', () => {
     expect(cookie).toMatch(/HttpOnly/);
     expect(cookie).toMatch(/SameSite=Lax/);
     expect(cookie).toMatch(/Expires=/);
+  });
+
+  it('sends the avatar in the response but keeps only the identity in the token', async () => {
+    vi.mocked(UserModel.getByEmail).mockResolvedValue({
+      ...dbUser,
+      avatarUrl: 'https://example.com/avatar.webp',
+    });
+
+    const response = await request(app)
+      .post('/api/auth/login')
+      .send({ email: publicUser.email, password });
+
+    expect(response.body.avatarUrl).toBe('https://example.com/avatar.webp');
+    const token = getTokenCookie(response)?.split(';')[0].replace('token=', '') ?? '';
+    const payload = jwt.decode(token) as Record<string, unknown>;
+    expect(Object.keys(payload).sort()).toEqual(['displayName', 'email', 'exp', 'iat', 'id']);
   });
 
   it('finds the account whatever the case of the email', async () => {

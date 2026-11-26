@@ -36,7 +36,7 @@ describe('getCurrentUser', () => {
   });
 
   it('returns the user sent by GET /auth/me, forwarding the cookie', async () => {
-    const user = { id: '1', displayName: 'Maître Ying', email: 'mj@example.com' };
+    const user = { id: '1', displayName: 'Maître Ying', email: 'mj@example.com', avatarUrl: null };
     mockCookie('abc');
     vi.mocked(apiFetch.get).mockResolvedValue(user);
 
@@ -61,7 +61,7 @@ describe('requireCurrentUser', () => {
   });
 
   it('returns the user when the session is accepted', async () => {
-    const user = { id: '1', displayName: 'Maître Ying', email: 'mj@example.com' };
+    const user = { id: '1', displayName: 'Maître Ying', email: 'mj@example.com', avatarUrl: null };
     mockCookie('valid');
     vi.mocked(apiFetch.get).mockResolvedValue(user);
 

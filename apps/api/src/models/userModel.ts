@@ -6,11 +6,13 @@ interface NewUser {
   passwordHash: string;
 }
 
+const publicFields = { id: true, displayName: true, email: true, avatarUrl: true };
+
 export class UserModel {
   static create(user: NewUser) {
     return db.user.create({
       data: user,
-      select: { id: true, displayName: true, email: true },
+      select: publicFields,
     });
   }
 
@@ -21,7 +23,7 @@ export class UserModel {
   static getById(id: string) {
     return db.user.findUnique({
       where: { id },
-      select: { id: true, displayName: true, email: true },
+      select: publicFields,
     });
   }
 }

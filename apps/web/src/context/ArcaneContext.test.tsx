@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { ArcaneProvider, useArcane } from './ArcaneContext';
 
-const user = { id: '1', displayName: 'Maître Ying', email: 'mj@example.com' };
+const user = { id: '1', displayName: 'Maître Ying', email: 'mj@example.com', avatarUrl: null };
 let handleUser: ReturnType<typeof useArcane>['handleUser'];
 
 function SessionProbe() {

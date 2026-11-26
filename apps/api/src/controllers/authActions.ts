@@ -27,7 +27,7 @@ export const login = async (
       };
 
       openSession(res, authUser);
-      res.json(authUser);
+      res.json({ ...authUser, avatarUrl: user.avatarUrl });
     } else {
       res.status(401).json({ message: 'Invalid email or password' });
     }
