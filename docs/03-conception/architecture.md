@@ -133,7 +133,7 @@ Routes d'authentification (`routers/auth/`, actions dans `controllers/authAction
 
 | Route | Middlewares | Réponse |
 |---|---|---|
-| `POST /api/auth/login` | `loginLimiter`, `validate(loginSchema)` | 200 avec l'utilisateur (`id`, `displayName`, `email`) et le cookie de session ; 401 si l'e-mail ou le mot de passe est faux ; 422 si le corps est invalide ; 429 après trop d'échecs, avec `retryAfter` (secondes restantes) |
+| `POST /api/auth/login` | `loginLimiter`, `validate(loginSchema)` | 200 avec l'utilisateur (`id`, `displayName`, `email`, `avatarUrl`) et le cookie de session ; le jeton du cookie ne contient que l'identité (`id`, `displayName`, `email`), pas l'avatar, qui peut changer pendant la durée de vie du jeton ; 401 si l'e-mail ou le mot de passe est faux ; 422 si le corps est invalide ; 429 après trop d'échecs, avec `retryAfter` (secondes restantes) |
 | `POST /api/auth/logout` | aucun | 200 et suppression du cookie, même si la session a déjà expiré |
 | `POST /api/auth/register` | `registerLimiter`, `validate(registerSchema)` | 201 avec l'utilisateur et le cookie de session ; 409 si l'e-mail a déjà un compte ; 422 si le corps est invalide ; 429 après trop d'inscriptions |
 | `GET /api/auth/me` | `checkCookie` | 200 avec l'utilisateur lu en base ; 401 sans session valide. Permet au front de savoir qui est connecté au chargement d'une page |
@@ -244,6 +244,26 @@ Dans un composant serveur (page, layout), le navigateur n'est pas là pour joind
 
 Le temps réel passe par le client Socket.io (`apps/web/src/lib/socket.ts`), sur la même adresse sans préfixe `/api`.
 
+### Espace MJ : layout et sidebar
+
+Les pages du MJ (`app/(gm)/`) partagent un layout, `app/(gm)/layout.tsx`, qui affiche la sidebar à gauche et la page à droite.
+
+| Élément | Rendu | Rôle |
+|---|---|---|
+| `(gm)/layout.tsx` | serveur | Récupère le MJ (`getCurrentUser`) et ses campagnes (`getMyCampaigns`), puis les passe à la sidebar. Sans session valide, il n'affiche pas de sidebar et ne demande pas les campagnes : c'est la page qui redirige vers la connexion. |
+| `SidebarShell` | client | La coque (`<aside id="gm-sidebar">`) : elle lit l'état ouvert ou fermé dans `ArcaneContext` et anime l'ouverture. |
+| `Sidebar` et ses blocs | serveur | Le contenu, passé à la coque en `children` : profil, « Reprendre », « Mon atelier ». |
+
+Un layout ne peut pas passer de props à sa page : la page des campagnes appelle donc elle aussi `getMyCampaigns`. Les deux appels ne coûtent qu'une requête à l'API, car `getMyCampaigns` et `getSession` sont enveloppées dans `cache` de React, qui garde le résultat pendant le rendu d'une même requête.
+
+Seule la coque est un composant client : elle a besoin du contexte et d'un état. Le contenu reste rendu côté serveur, sans JavaScript envoyé au navigateur pour l'afficher. Un composant client peut afficher des composants serveur reçus en `children` ; s'il les importait lui-même, ils deviendraient des composants client.
+
+**État ouvert ou fermé** : `isSidebarOpen` et `toggleSidebar` dans `ArcaneContext`, que le bouton du `Header` utilise (affiché seulement dans l'espace MJ, avec `aria-expanded` et `aria-controls="gm-sidebar"`). L'état est gardé dans un cookie `sidebar` (`open` ou `closed`, un an, `SameSite=Lax`, fonctions dans `lib/sidebar.ts`), que le layout racine lit avec `cookies()` pour initialiser le contexte. Le serveur rend donc directement la sidebar dans le bon état. Avec le `localStorage`, que seul le navigateur peut lire, la page s'afficherait d'abord ouverte, puis se refermerait au chargement du JavaScript.
+
+**Mise à jour des données** : la sidebar est rendue côté serveur, elle ne se met pas à jour seule. Quand les futurs formulaires modifieront une campagne (titre, statut, image), il faudra demander à Next de refaire le rendu serveur : `router.refresh()` côté client, ou `revalidatePath()` dans une action serveur. La page n'est pas rechargée : seules les données changent, et l'état des composants client (sidebar ouverte, recherche en cours) est gardé.
+
+**Hauteur du header** : le `Header` publie sa hauteur dans la variable CSS `--header-height` (sur `<html>`, mise à jour par un `ResizeObserver`). La sidebar et le `PageHeader` collant s'en servent pour se placer juste en dessous.
+
 ---
 
 ## 6. Données
@@ -266,6 +286,8 @@ La deuxième, `20261123000000_campaign_publication` (RG20, versions publiques de
 | `campaigns_only_published_version_is_public_check` | `campaigns` | CHECK : seule une version publique (`published_from_id` renseigné) peut avoir `is_public` à vrai ; une campagne d'origine n'est jamais publique (RG20) |
 
 La troisième, `20261124000000_campaign_description_required`, rend la description d'une campagne obligatoire (`description` en `NOT NULL`) : chaque carte du tableau de bord l'affiche.
+
+La quatrième, `20261125000000_user_avatar`, ajoute à `users` la colonne facultative `avatar_url` (URL de l'image d'avatar). Sans avatar, l'interface affiche l'initiale du nom. L'envoi de l'image fait l'objet du ticket KAN-537.
 
 Prisma ignore ces contraintes lorsqu'il compare le schéma à la base : une nouvelle migration (`npm run prisma:migrate -- --name ...`) ne cherche pas à les supprimer. Toute modification ultérieure du modèle passe par une nouvelle migration, appliquée en production au démarrage de l'API (`prisma migrate deploy`).
 

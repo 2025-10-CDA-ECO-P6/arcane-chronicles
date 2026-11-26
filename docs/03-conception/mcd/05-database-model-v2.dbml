@@ -133,6 +133,7 @@ Table users {
   display_name varchar [not null]
   email varchar [not null, unique]
   password_hash varchar [not null]
+  avatar_url text
   created_at timestamp [not null, default: `now()`]
   updated_at timestamp [not null]
   Note: 'Game Masters only (players have no account).'

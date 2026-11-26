@@ -843,7 +843,7 @@ Composant React `SearchBar` (`apps/web/src/components/lib/ui/SearchBar/`) : un c
 
 C'est un formulaire en `GET` envoyé à `pathname` : à la validation, le navigateur construit lui-même `?search=…`. Les autres paramètres de l'adresse (le filtre de statut) sont recopiés dans des champs cachés, pour ne pas être perdus. Le champ affiche la recherche en cours.
 
-Sur mobile (en dessous de `m`, 768px), seul le bouton rond (3,6rem, avec une bordure) est affiché. Fermé, le champ a la taille du bouton et se cache derrière lui ; au premier clic, il s'allonge vers la gauche depuis le bouton jusqu'à couvrir toute la largeur de son conteneur (`100cqi` : `FilterToolbar` est un conteneur, `container-type: inline-size`) et reçoit le focus. Pendant qu'il est ouvert, la barre porte `data-open` : `FilterToolbar` s'en sert (`:has([data-open])`) pour cacher le select dès l'ouverture (et ne le réafficher qu'une fois la pilule rétractée) : sinon ses angles dépasseraient autour de l'extrémité arrondie de la pilule pendant qu'elle glisse. Une fois ouvert, un clic sur la loupe ou Entrée lance la recherche. Échap le referme et rend le focus au bouton, tout comme un clic en dehors. Cette logique est dans le hook `useSearchBar` (`apps/web/src/hooks/`), construit sur `useDisclosure`. Le champ reste ouvert tant qu'une recherche est active. Fermé, il est en `visibility: hidden` : on ne peut pas y arriver avec Tab. À partir de 768px, la barre est toujours complète ; le premier clic sur la loupe, champ vide, place le focus dans le champ. Ce comportement demande du JavaScript : le composant est un composant client (`'use client'`).
+Quand la place manque, seul le bouton rond est affiché. Le repliement dépend de la largeur de la toolbar et non de celle de l'écran : `@container (max-width: 66rem)`, `FilterToolbar` étant un conteneur. Il s'applique aussi dans tous les cas sur mobile (`until(m)`, sous 768px), et sur desktop quand la sidebar ouverte réduit la place. Les deux conditions incluent le même mixin local `_collapsed`, pour ne pas recopier le bloc (le CSS ne sait pas écrire « `@container` ou `@media` » en une seule condition). La taille du bouton, elle, dépend de l'écran (variable `--search-button-size`) : 3,2rem sans bordure sur desktop, 3,6rem avec une bordure sur mobile (`until(m)`), plus confortable au doigt. Fermé, le champ a la taille du bouton et se cache derrière lui ; au premier clic, il s'allonge vers la gauche depuis le bouton jusqu'à couvrir toute la largeur de son conteneur (`100cqi` : `FilterToolbar` est un conteneur, `container-type: inline-size`) et reçoit le focus. Pendant qu'il est ouvert, la barre porte `data-open` : `FilterToolbar` s'en sert (`:has([data-open])`) pour cacher le select dès l'ouverture (et ne le réafficher qu'une fois la pilule rétractée) : sinon ses angles dépasseraient autour de l'extrémité arrondie de la pilule pendant qu'elle glisse. Une fois ouvert, un clic sur la loupe ou Entrée lance la recherche. Échap le referme et rend le focus au bouton, tout comme un clic en dehors. Cette logique est dans le hook `useSearchBar` (`apps/web/src/hooks/`), construit sur `useDisclosure`. Le champ reste ouvert tant qu'une recherche est active. Fermé, il est en `visibility: hidden` : on ne peut pas y arriver avec Tab. À partir de 768px, la barre est toujours complète ; le premier clic sur la loupe, champ vide, place le focus dans le champ. Ce comportement demande du JavaScript : le composant est un composant client (`'use client'`).
 
 La page compare la recherche au titre et à la description avec `matchesSearch` (`lib/search.ts`), qui ignore les majuscules, les accents et le style d'apostrophe : « l'ile » trouve « L’Île ».
 
@@ -871,11 +871,62 @@ Composant React `PageHeader` (`apps/web/src/components/lib/PageHeader/`) : le ba
 
 L'image passe au CSS par la variable `--page-header-image` ; les dégradés restent dans le SCSS. Le titre est aligné en bas du bandeau.
 
-Sur mobile (en dessous de `m`, 768px), l'image ne couvre que le bloc du titre (`page-header__top`, 16rem de haut au minimum) : le contenu passé en `children` (par exemple la barre de filtres) s'affiche en dessous, sur le fond de la page. À partir de 768px, l'image couvre tout le bandeau, titre et `children` compris.
+Sur mobile (en dessous de `m`, 768px), l'image ne couvre que le bloc du titre (`page-header__top`) : le contenu passé en `children` (par exemple la barre de filtres) s'affiche en dessous, sur le fond de la page. À partir de 768px, l'image couvre tout le bandeau (16rem de haut au minimum), titre et `children` compris.
 
 ```tsx
 <PageHeader title={campaign.title} image={campaign.imageUrl ?? campaignDefaultImage} />
 ```
+
+### Bandeau collant
+
+Quand le bandeau a des `children` (une barre d'outils), il reste accessible pendant le défilement : une fois le bandeau entièrement dépassé, il revient en haut de l'écran, sous le header du site, en ne gardant que sa barre d'outils.
+
+| État | Ce qui change |
+|---|---|
+| Normal | bandeau complet, dans le flux de la page |
+| Collant (classe `sticky-header`) | `position: fixed` sous le header (`--header-height`) ; titre replié (`page-header__collapse` passe de `1fr` à `0fr`) ; plus de hauteur minimale ; image gardée, sans dégradé du bas, avec une lueur couleur du fond vers le bas (`box-shadow`) ; arrivée en glissant depuis le haut (`@keyframes slide-down`, 0,5s) |
+| Retour | quand on remonte jusqu'à sa place, le bandeau y revient et le titre se déplie en 0,3s |
+
+**Un élément invisible garde la place du bandeau** (`page-header-placeholder`). Le bandeau est dans cette enveloppe. En passant en `fixed`, il sort de la mise en page, et l'enveloppe garde sa hauteur complète (`min-block-size`, mesurée au passage). Le contenu de la page ne bouge donc jamais, quoi que fasse le bandeau. Au retour, l'enveloppe aligne le bandeau en bas (`display: grid; align-items: end`) : il réapparaît là où il était collé, et le titre se déplie vers le haut dans la place réservée. Une fois le bandeau revenu à sa hauteur complète, l'enveloppe la libère.
+
+**Une seule direction animée** : les transitions sont déclarées sur l'état normal, et `.sticky-header` a `transition: none`. Le navigateur utilise la `transition` de l'état d'arrivée : le passage en mode collant est instantané (le bandeau est hors de l'écran, seul le glissement se voit), le retour est animé.
+
+**Plier une hauteur en douceur** : on ne peut pas faire de transition vers `height: auto`. Le titre est donc dans une grille d'une ligne, dont on anime `grid-template-rows` entre `1fr` (sa hauteur naturelle) et `0fr` (0), avec `overflow: hidden` sur le bloc du titre.
+
+La détection est dans le hook `useStickyHeader` (`apps/web/src/hooks/`). Il ne calcule rien pendant le défilement :
+
+| Outil | Rôle |
+|---|---|
+| `IntersectionObserver` sur l'enveloppe | passage en mode collant quand elle est entièrement passée sous le header du site (`rootMargin` négatif de `--header-height`) |
+| `IntersectionObserver` sur un repère en bas de l'enveloppe (`page-header-placeholder__return-point`, de la hauteur du bandeau collé) | retour quand le repère est entièrement visible : la place du bandeau rejoint alors sa position collée, sans saut |
+| `ResizeObserver` | largeur de l'enveloppe (`--page-header-width`, car un élément `fixed` se dimensionne par rapport à l'écran et non à son parent), hauteur du bandeau collé (`--page-header-sticky-height`), libération de la place une fois le bandeau revenu à sa hauteur complète |
+
+Avec `prefers-reduced-motion`, ni glissement ni dépliage : le bandeau change d'état directement.
+
+## Sidebar de l'espace MJ
+
+Composants dans `apps/web/src/components/layout/Sidebar/`, affichés par le layout de l'espace MJ (voir [architecture §5](architecture.md)).
+
+| Composant | Contenu |
+|---|---|
+| `SidebarShell` (client) | La coque `<aside id="gm-sidebar" aria-label="Menu de l’espace MJ">` : position, largeur, animation d'ouverture |
+| `Sidebar` | Assemble le profil et les sections |
+| `SidebarProfile` | Avatar du MJ (ou son initiale, en Cinzel cyan, avec `getInitial`), nom en Cinzel, « Campagnes : N » et « En cours : N » |
+| `SidebarSection` | `<section>` nommée par son titre `h2` (Cinzel, orange, petites capitales), séparée de la précédente par un trait |
+| `SidebarLink` (client) | Lien avec icône, libellé et nombre ; actif (`aria-current="page"`, bordure gauche et fond cyan léger, texte lumineux) sur sa page et les pages en dessous (`/dashboard/campaigns` et `/dashboard/campaigns/:id`) |
+| `ResumeCampaignLink` (`components/campaign/`) | Encadré orange vers une campagne : vignette (image par défaut sans image), titre, « Chapitre X - Y % » (le chapitre en cours et sa progression), barre de progression de toute la campagne, chevron |
+
+**Sections**
+
+- **Reprendre** : les 3 campagnes en cours les plus récemment jouées, de la session la plus récente à la plus ancienne (`getCampaignsToResume`). Au-delà de 3, un lien « Voir plus » vers la liste filtrée (`?status=IN_PROGRESS`). Sans campagne en cours, un encadré de la même taille : « Aucune campagne en cours ».
+- **Mon atelier** : un `<nav>` avec le lien « Campagnes » et leur nombre. Les autres entrées (personnages, bibliothèque) arriveront avec leurs tickets.
+
+**Mise en page**
+
+- La sidebar est collante (`position: sticky`) sous le header (`--header-height`), de la hauteur de l'écran restante (`calc(100dvh - var(--header-height))`). C'est la page qui défile ; le contenu de la sidebar défile à part s'il dépasse.
+- Largeur 31rem. Fermée, la coque passe à une largeur de 0 et le panneau glisse vers la gauche (`translate: -100% 0`) en 0,3s, puis devient `visibility: hidden` à la fin du glissement, pour qu'on ne puisse plus y arriver avec Tab. À l'ouverture, il redevient visible tout de suite (délai de la transition de `visibility` à 0 dans un sens, à 0,3s dans l'autre).
+- Avec `prefers-reduced-motion`, l'ouverture et la fermeture sont immédiates.
+- Sous 768px (`until(m)`), la sidebar n'est pas affichée. Elle deviendra un panneau par-dessus la page, ouvert depuis la navigation mobile.
 
 ## Boîtes
 
