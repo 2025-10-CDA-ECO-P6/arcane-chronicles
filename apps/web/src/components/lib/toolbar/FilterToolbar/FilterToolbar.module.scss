@@ -7,8 +7,12 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: $space-md;
-  padding: $space-md 0.5rem;
+  gap: $space-sm;
+  padding: $space-md 0;
+
+  @include until(m) {
+    padding: 0;
+  }
 
   &__badges {
     display: flex;

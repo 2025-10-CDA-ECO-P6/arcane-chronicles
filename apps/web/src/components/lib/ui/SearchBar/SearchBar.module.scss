@@ -1,14 +1,63 @@
 @use '@/styles/variables' as *;
 @use '@/styles/mixins' as *;
 
-$_button-size: 3.6rem;
+$_collapse-below: 66rem;
+
+@mixin _collapsed {
+  position: relative;
+  inline-size: auto;
+  border-color: transparent;
+  background-color: transparent;
+
+  &__form > :first-child {
+    position: absolute;
+    z-index: 1;
+    inset-block: 0;
+    inset-inline-end: 0;
+    justify-content: center;
+    overflow: hidden;
+    inline-size: var(--search-button-size);
+    border: 0.1rem solid var(--primary-color);
+    border-radius: $radius-pill;
+    background-color: var(--background-color);
+    visibility: hidden;
+    transition:
+      inline-size 0.3s ease,
+      visibility 0s 0.3s;
+  }
+
+  &__input {
+    inline-size: 100%;
+    padding-inline-end: calc(var(--search-button-size) + #{$space-sm});
+  }
+
+  &__button {
+    position: relative;
+    z-index: 2;
+    inline-size: var(--search-button-size);
+    block-size: var(--search-button-size);
+  }
+
+  &--open &__form > :first-child {
+    inline-size: 100cqi;
+    visibility: visible;
+    transition:
+      inline-size 0.3s ease,
+      visibility 0s;
+  }
+}
 
 .search-bar {
+  --search-button-size: 3.2rem;
   inline-size: 100%;
   max-inline-size: 28rem;
   border-radius: $radius-pill;
   background-color: var(--background-color);
   border: 0.1rem solid var(--primary-color);
+
+  @include until(m) {
+    --search-button-size: 3.6rem;
+  }
 
   &__form {
     display: grid;
@@ -34,54 +83,16 @@ $_button-size: 3.6rem;
   &__button {
     grid-area: button;
     align-self: stretch;
-    border: none;
     border-radius: $radius-pill;
+    border: 0.1rem solid var(--primary-color);
+  }
+
+  @container (max-width: #{$_collapse-below}) {
+    @include _collapsed;
   }
 
   @include until(m) {
-    position: relative;
-    inline-size: auto;
-    border-color: transparent;
-    margin-inline-start: auto;
-    background-color: transparent;
-
-    &__form > :first-child {
-      position: absolute;
-      z-index: 1;
-      inset-block: 0;
-      inset-inline-end: 0;
-      justify-content: center;
-      overflow: hidden;
-      inline-size: $_button-size;
-      border: 0.1rem solid var(--primary-color);
-      border-radius: $radius-pill;
-      background-color: var(--background-color);
-      visibility: hidden;
-      transition:
-        inline-size 0.3s ease,
-        visibility 0s 0.3s;
-    }
-
-    &__input {
-      inline-size: 100%;
-      padding-inline-end: calc($_button-size + $space-sm);
-    }
-
-    &__button {
-      position: relative;
-      z-index: 2;
-      inline-size: $_button-size;
-      block-size: $_button-size;
-      border: 0.1rem solid var(--primary-color);
-    }
-
-    &--open &__form > :first-child {
-      inline-size: 100cqi;
-      visibility: visible;
-      transition:
-        inline-size 0.3s ease,
-        visibility 0s;
-    }
+    @include _collapsed;
   }
 
   @media (prefers-reduced-motion: reduce) {
