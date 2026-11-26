@@ -11,14 +11,23 @@ export function PageHeader({ title, image, actions, children, className }: PageH
   const placeholderRef = useRef<HTMLDivElement>(null);
   const pageHeaderRef = useRef<HTMLElement>(null);
   const returnPointRef = useRef<HTMLDivElement>(null);
-  const isSticky = useStickyHeader(placeholderRef, pageHeaderRef, returnPointRef);
+  const { isSticky, hasBeenSticky } = useStickyHeader(
+    placeholderRef,
+    pageHeaderRef,
+    returnPointRef,
+  );
 
   const imageSrc = typeof image === 'string' ? image : image?.src;
   const imageStyle = imageSrc
     ? ({ '--page-header-image': `url(${JSON.stringify(imageSrc)})` } as CSSProperties)
     : undefined;
 
-  const headerClassName = [styles['page-header'], isSticky && styles['sticky-header'], className]
+  const headerClassName = [
+    styles['page-header'],
+    isSticky && styles['sticky-header'],
+    !isSticky && hasBeenSticky && styles['page-header--returned'],
+    className,
+  ]
     .filter(Boolean)
     .join(' ');
 
@@ -32,11 +41,9 @@ export function PageHeader({ title, image, actions, children, className }: PageH
         />
       )}
       <header ref={pageHeaderRef} className={headerClassName} style={imageStyle}>
-        <div className={styles['page-header__collapse']}>
-          <div className={styles['page-header__top']}>
-            <h1 className={styles['page-header__title']}>{title}</h1>
-            {actions && <div className={styles['page-header__actions']}>{actions}</div>}
-          </div>
+        <div className={styles['page-header__top']}>
+          <h1 className={styles['page-header__title']}>{title}</h1>
+          {actions && <div className={styles['page-header__actions']}>{actions}</div>}
         </div>
         {children && <div className={styles['page-header__content']}>{children}</div>}
       </header>

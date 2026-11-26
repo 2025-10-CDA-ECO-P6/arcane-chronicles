@@ -1,4 +1,12 @@
 @use '@/styles/variables' as *;
+@use '@/styles/functions' as *;
+@use '@/styles/mixins' as *;
+
+.campaign-page {
+  @include until(m) {
+    padding-block-start: calc(#{fluid($space-lg, $space-2xl)} - #{$space-md});
+  }
+}
 
 .campaign-list {
   display: flex;

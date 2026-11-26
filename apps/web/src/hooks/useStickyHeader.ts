@@ -9,6 +9,7 @@ export function useStickyHeader(
   returnPointRef: RefObject<HTMLElement | null>,
 ) {
   const [isSticky, setIsSticky] = useState(false);
+  const [hasBeenSticky, setHasBeenSticky] = useState(false);
 
   useEffect(() => {
     const placeholder = placeholderRef.current;
@@ -20,6 +21,39 @@ export function useStickyHeader(
 
     let isStuck = false;
     let fullHeight = 0;
+    let headerHeight = readHeaderHeight();
+
+    const observeScroll = () => {
+      const belowHeader = { rootMargin: `-${headerHeight}px 0px 0px 0px` };
+      const placeholderObserver = new IntersectionObserver(([entry]) => {
+        if (!isStuck && !entry.isIntersecting && entry.boundingClientRect.top < headerHeight) {
+          isStuck = true;
+          fullHeight = entry.boundingClientRect.height;
+          placeholder.style.minBlockSize = `${fullHeight}px`;
+          setIsSticky(true);
+          setHasBeenSticky(true);
+        }
+      }, belowHeader);
+      const returnPointObserver = new IntersectionObserver(
+        ([entry]) => {
+          if (isStuck && entry.isIntersecting && entry.boundingClientRect.top >= headerHeight - 1) {
+            isStuck = false;
+            setIsSticky(false);
+          }
+        },
+        { ...belowHeader, threshold: [0.99, 1] },
+      );
+
+      placeholderObserver.observe(placeholder);
+      returnPointObserver.observe(returnPoint);
+
+      return () => {
+        placeholderObserver.disconnect();
+        returnPointObserver.disconnect();
+      };
+    };
+
+    let stopObservingScroll = observeScroll();
 
     const resizeObserver = new ResizeObserver(() => {
       const pageHeaderHeight = pageHeader.getBoundingClientRect().height;
@@ -29,39 +63,23 @@ export function useStickyHeader(
       } else if (pageHeaderHeight >= fullHeight) {
         placeholder.style.minBlockSize = '';
       }
-    });
 
-    const headerHeight = readHeaderHeight();
-    const belowHeader = { rootMargin: `-${headerHeight}px 0px 0px 0px` };
-    const placeholderObserver = new IntersectionObserver(([entry]) => {
-      if (!isStuck && !entry.isIntersecting && entry.boundingClientRect.top < headerHeight) {
-        isStuck = true;
-        fullHeight = entry.boundingClientRect.height;
-        placeholder.style.minBlockSize = `${fullHeight}px`;
-        setIsSticky(true);
+      const newHeaderHeight = readHeaderHeight();
+      if (newHeaderHeight !== headerHeight) {
+        headerHeight = newHeaderHeight;
+        stopObservingScroll();
+        stopObservingScroll = observeScroll();
       }
-    }, belowHeader);
-    const returnPointObserver = new IntersectionObserver(
-      ([entry]) => {
-        if (isStuck && entry.intersectionRatio === 1) {
-          isStuck = false;
-          setIsSticky(false);
-        }
-      },
-      { ...belowHeader, threshold: 1 },
-    );
+    });
 
     resizeObserver.observe(placeholder);
     resizeObserver.observe(pageHeader);
-    placeholderObserver.observe(placeholder);
-    returnPointObserver.observe(returnPoint);
 
     return () => {
       resizeObserver.disconnect();
-      placeholderObserver.disconnect();
-      returnPointObserver.disconnect();
+      stopObservingScroll();
     };
   }, [placeholderRef, pageHeaderRef, returnPointRef]);
 
-  return isSticky;
+  return { isSticky, hasBeenSticky };
 }

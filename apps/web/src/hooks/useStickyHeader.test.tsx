@@ -6,13 +6,16 @@ import { useStickyHeader } from './useStickyHeader';
 
 type Callback = (entries: Partial<IntersectionObserverEntry>[]) => void;
 
-const observers = new Map<Element, Callback>();
+const observers = new Map<Element, { callback: Callback; rootMargin?: string }>();
 let onResize: () => void = () => {};
 
 class IntersectionObserverStub {
-  constructor(private callback: Callback) {}
+  constructor(
+    private callback: Callback,
+    private options: IntersectionObserverInit = {},
+  ) {}
   observe(element: Element) {
-    observers.set(element, this.callback);
+    observers.set(element, { callback: this.callback, rootMargin: this.options.rootMargin });
   }
   disconnect() {}
 }
@@ -29,19 +32,28 @@ function StickyHeader() {
   const placeholderRef = useRef<HTMLDivElement>(null);
   const pageHeaderRef = useRef<HTMLElement>(null);
   const returnPointRef = useRef<HTMLDivElement>(null);
-  const isSticky = useStickyHeader(placeholderRef, pageHeaderRef, returnPointRef);
+  const { isSticky, hasBeenSticky } = useStickyHeader(
+    placeholderRef,
+    pageHeaderRef,
+    returnPointRef,
+  );
 
   return (
     <div ref={placeholderRef} data-testid="placeholder">
       <div ref={returnPointRef} data-testid="return-point" />
-      <header ref={pageHeaderRef}>{isSticky ? 'collé' : 'normal'}</header>
+      <header ref={pageHeaderRef} data-returned={!isSticky && hasBeenSticky}>
+        {isSticky ? 'collé' : 'normal'}
+      </header>
     </div>
   );
 }
 
 const fire = (testId: string, entry: Partial<IntersectionObserverEntry>) => {
-  act(() => observers.get(screen.getByTestId(testId))?.([entry]));
+  act(() => observers.get(screen.getByTestId(testId))?.callback([entry]));
 };
+
+const backInPlace = (top: number) =>
+  fire('return-point', { isIntersecting: true, boundingClientRect: { top } as DOMRectReadOnly });
 
 const leaveScreen = () =>
   fire('placeholder', {
@@ -58,6 +70,7 @@ describe('useStickyHeader', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    document.documentElement.style.removeProperty('--header-height');
   });
 
   it('becomes sticky once the page header has been scrolled past', () => {
@@ -92,17 +105,18 @@ describe('useStickyHeader', () => {
     render(<StickyHeader />);
     leaveScreen();
 
-    fire('return-point', { intersectionRatio: 0.5 });
+    document.documentElement.style.setProperty('--header-height', '0px');
+    backInPlace(-20);
     expect(screen.getByText('collé')).toBeInTheDocument();
 
-    fire('return-point', { intersectionRatio: 1 });
+    backInPlace(0);
     expect(screen.getByText('normal')).toBeInTheDocument();
   });
 
   it('frees the place once the page header is back to its full height', () => {
     render(<StickyHeader />);
     leaveScreen();
-    fire('return-point', { intersectionRatio: 1 });
+    backInPlace(0);
     const header = screen.getByRole('banner');
     const placeholder = screen.getByTestId('placeholder');
 
@@ -113,5 +127,31 @@ describe('useStickyHeader', () => {
     vi.spyOn(header, 'getBoundingClientRect').mockReturnValue({ height: 160 } as DOMRect);
     act(() => onResize());
     expect(placeholder.style.minBlockSize).toBe('');
+  });
+
+  it('follows the height of the site header when it changes', () => {
+    document.documentElement.style.setProperty('--header-height', '66px');
+    render(<StickyHeader />);
+    expect(observers.get(screen.getByTestId('return-point'))?.rootMargin).toBe('-66px 0px 0px 0px');
+
+    document.documentElement.style.setProperty('--header-height', '0px');
+    act(() => onResize());
+
+    expect(observers.get(screen.getByTestId('return-point'))?.rootMargin).toBe('-0px 0px 0px 0px');
+    leaveScreen();
+    backInPlace(0);
+    expect(screen.getByText('normal')).toBeInTheDocument();
+  });
+
+  it('marks the return only after a first sticky passage', () => {
+    render(<StickyHeader />);
+    const header = screen.getByRole('banner');
+    expect(header).toHaveAttribute('data-returned', 'false');
+
+    leaveScreen();
+    expect(header).toHaveAttribute('data-returned', 'false');
+
+    backInPlace(0);
+    expect(header).toHaveAttribute('data-returned', 'true');
   });
 });

@@ -64,7 +64,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           />
         </FilterToolbar>
       </PageHeader>
-      <div className="main-content">
+      <div className={`main-content ${styles['campaign-page']}`}>
         {campaigns.length === 0 && <h2>Aucune campagne pour l’instant</h2>}
         {campaigns.length > 0 && filtered.length === 0 && (
           <h2>Aucune campagne ne correspond à ces critères</h2>
