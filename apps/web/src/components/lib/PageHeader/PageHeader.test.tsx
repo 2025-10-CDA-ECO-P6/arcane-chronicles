@@ -1,9 +1,23 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PageHeader } from './PageHeader';
 
+class ObserverStub {
+  observe() {}
+  disconnect() {}
+}
+
 describe('PageHeader', () => {
+  beforeEach(() => {
+    vi.stubGlobal('IntersectionObserver', ObserverStub);
+    vi.stubGlobal('ResizeObserver', ObserverStub);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it('shows the title as the heading of the page', () => {
     render(<PageHeader title="Mes campagnes" />);
 
