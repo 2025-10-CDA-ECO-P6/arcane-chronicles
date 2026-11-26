@@ -884,14 +884,12 @@ Quand le bandeau a des `children` (une barre d'outils), il reste accessible pend
 | État | Ce qui change |
 |---|---|
 | Normal | bandeau complet, dans le flux de la page |
-| Collant (classe `sticky-header`) | `position: fixed` sous le header (`--header-height`) ; titre replié (`page-header__collapse` passe de `1fr` à `0fr`) ; plus de hauteur minimale ; image gardée, sans dégradé du bas, avec une lueur couleur du fond vers le bas (`box-shadow`) ; arrivée en glissant depuis le haut (`@keyframes slide-down`, 0,5s) |
-| Retour | quand on remonte jusqu'à sa place, le bandeau y revient et le titre se déplie en 0,3s |
+| Collant (classe `sticky-header`) | `position: fixed` sous le header (`--header-height`) ; titre masqué (`display: none` sur `page-header__top`) ; plus de hauteur minimale ; même padding du bas que l'état normal, pour que la barre d'outils ne bouge pas au retour ; image gardée, sans dégradé du bas, avec une lueur couleur du fond vers le bas (`box-shadow`) ; arrivée en glissant depuis le haut (`@keyframes slide-down`, 0,5s) |
+| Retour (classe `page-header--returned`) | quand on remonte jusqu'à sa place, le bandeau y revient d'un coup à sa taille complète, et seul le titre apparaît en fondu avec un léger glissement depuis le haut (`@keyframes title-return`) |
 
-**Un élément invisible garde la place du bandeau** (`page-header-placeholder`). Le bandeau est dans cette enveloppe. En passant en `fixed`, il sort de la mise en page, et l'enveloppe garde sa hauteur complète (`min-block-size`, mesurée au passage). Le contenu de la page ne bouge donc jamais, quoi que fasse le bandeau. Au retour, l'enveloppe aligne le bandeau en bas (`display: grid; align-items: end`) : il réapparaît là où il était collé, et le titre se déplie vers le haut dans la place réservée. Une fois le bandeau revenu à sa hauteur complète, l'enveloppe la libère.
+**Un élément invisible garde la place du bandeau** (`page-header-placeholder`). Le bandeau est dans cette enveloppe. En passant en `fixed`, il sort de la mise en page, et l'enveloppe garde sa hauteur complète (`min-block-size`, mesurée au passage). Le contenu de la page ne bouge donc jamais, quoi que fasse le bandeau. Au retour, l'enveloppe aligne le bandeau en bas (`display: grid; align-items: end`) : il réapparaît là où il était collé et reprend sa taille complète, qui remplit exactement la place réservée. L'enveloppe libère ensuite sa hauteur.
 
-**Une seule direction animée** : les transitions sont déclarées sur l'état normal, et `.sticky-header` a `transition: none`. Le navigateur utilise la `transition` de l'état d'arrivée : le passage en mode collant est instantané (le bandeau est hors de l'écran, seul le glissement se voit), le retour est animé.
-
-**Plier une hauteur en douceur** : on ne peut pas faire de transition vers `height: auto`. Le titre est donc dans une grille d'une ligne, dont on anime `grid-template-rows` entre `1fr` (sa hauteur naturelle) et `0fr` (0), avec `overflow: hidden` sur le bloc du titre.
+**Aucune hauteur animée** : grâce à l'enveloppe, la taille du bandeau peut changer d'un coup sans rien décaler. Les seules animations portent sur `transform`, `translate` et `opacity` (le glissement à l'arrivée, le fondu du titre au retour), qui ne recalculent pas la mise en page. La classe `page-header--returned` n'est ajoutée qu'une fois le bandeau déjà passé en mode collant (`hasBeenSticky`), pour que le fondu du titre ne se joue pas au premier chargement de la page.
 
 La détection est dans le hook `useStickyHeader` (`apps/web/src/hooks/`). Il ne calcule rien pendant le défilement :
 
@@ -899,9 +897,9 @@ La détection est dans le hook `useStickyHeader` (`apps/web/src/hooks/`). Il ne 
 |---|---|
 | `IntersectionObserver` sur l'enveloppe | passage en mode collant quand elle est entièrement passée sous le header du site (`rootMargin` négatif de `--header-height`) |
 | `IntersectionObserver` sur un repère en bas de l'enveloppe (`page-header-placeholder__return-point`, de la hauteur du bandeau collé) | retour quand le repère est entièrement visible : la place du bandeau rejoint alors sa position collée, sans saut |
-| `ResizeObserver` | largeur de l'enveloppe (`--page-header-width`, car un élément `fixed` se dimensionne par rapport à l'écran et non à son parent), hauteur du bandeau collé (`--page-header-sticky-height`), libération de la place une fois le bandeau revenu à sa hauteur complète |
+| `ResizeObserver` | largeur de l'enveloppe (`--page-header-width`, car un élément `fixed` se dimensionne par rapport à l'écran et non à son parent), hauteur du bandeau collé (`--page-header-sticky-height`), libération de la place une fois le bandeau revenu à sa hauteur complète ; quand la hauteur du header du site change (passage du cap des 768px), les deux `IntersectionObserver` sont recréés avec la nouvelle valeur |
 
-Avec `prefers-reduced-motion`, ni glissement ni dépliage : le bandeau change d'état directement.
+Avec `prefers-reduced-motion`, ni glissement ni fondu : le bandeau change d'état directement.
 
 ## Sidebar de l'espace MJ
 
