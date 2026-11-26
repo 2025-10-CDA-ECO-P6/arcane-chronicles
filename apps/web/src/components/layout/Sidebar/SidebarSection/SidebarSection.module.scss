@@ -1,0 +1,17 @@
+@use '@/styles/variables' as *;
+
+.sidebar-section {
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+  padding-block-start: $space-md;
+  border-block-start: 0.1rem solid var(--border-color);
+
+  &__title {
+    color: var(--secondary-color);
+    font-family: $font-family-title;
+    font-size: $text-body-size;
+    font-variant: small-caps;
+    text-transform: none;
+  }
+}

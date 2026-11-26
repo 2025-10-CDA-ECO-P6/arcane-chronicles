@@ -1,0 +1,29 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: $space-md;
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: $space-sm;
+  }
+
+  &__empty {
+    display: grid;
+    place-items: center;
+    min-block-size: 6.4rem;
+    padding: $space-sm;
+    color: var(--text-color-secondary);
+    font-size: $text-small-size;
+    @include box(secondary, $glow-sm, $rounded: true);
+  }
+
+  &__more {
+    align-self: flex-end;
+    font-size: $text-small-size;
+  }
+}

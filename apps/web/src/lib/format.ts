@@ -13,3 +13,5 @@ export const formatQuantity = (count: number, { singular, plural, none }: Quanti
 
 export const formatDate = (isoDate: string) =>
   new Date(isoDate).toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' });
+
+export const getInitial = (name: string) => name.trim().charAt(0).toLocaleUpperCase('fr-FR');

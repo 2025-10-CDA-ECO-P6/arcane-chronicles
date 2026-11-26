@@ -1,0 +1,45 @@
+@use '@/styles/variables' as *;
+@use '@/styles/functions' as *;
+@use '@/styles/mixins' as *;
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: $space-md;
+  padding: $space-sm $space-md;
+  border-inline-start: 0.3rem solid transparent;
+  border-radius: $radius-sm;
+  color: var(--text-color-primary);
+  text-decoration: none;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+
+  &:hover {
+    background-color: with-alpha(var(--primary-color), 0.1);
+  }
+
+  &:focus-visible {
+    outline: 0.2rem solid var(--primary-color);
+    outline-offset: 0.2rem;
+  }
+
+  &--active {
+    border-inline-start-color: var(--primary-color);
+    background-color: with-alpha(var(--primary-color), 0.15);
+    color: var(--primary-color);
+    @include glow(var(--primary-color), $glow-sm, $on: text);
+  }
+
+  &__icon {
+    font-size: $h4-size;
+  }
+
+  &__label {
+    flex: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}

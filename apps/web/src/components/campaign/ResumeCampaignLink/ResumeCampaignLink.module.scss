@@ -1,0 +1,54 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.resume-campaign {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  min-block-size: 6.4rem;
+  padding: $space-sm;
+  color: var(--text-color-primary);
+  text-decoration: none;
+  @include box(secondary, $glow-sm, $rounded: true);
+  background-color: var(--secondary-color-light);
+  transition:
+    box-shadow 0.3s ease,
+    transform 0.3s ease;
+
+  &:hover,
+  &:focus-visible {
+    @include box-glow(secondary, $glow-md);
+    transform: scale(0.99);
+  }
+
+  &__image {
+    flex-shrink: 0;
+    inline-size: 4.8rem;
+    block-size: 4.8rem;
+    object-fit: cover;
+    border-radius: $radius-sm;
+  }
+
+  &__info {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: $space-xs;
+    min-inline-size: 0;
+  }
+
+  &__title {
+    font-family: $font-family-title;
+    font-size: $text-small-size;
+    @include truncate;
+  }
+
+  &__progress {
+    font-size: $text-caption-size;
+  }
+
+  &__chevron {
+    flex-shrink: 0;
+    color: var(--secondary-color);
+  }
+}

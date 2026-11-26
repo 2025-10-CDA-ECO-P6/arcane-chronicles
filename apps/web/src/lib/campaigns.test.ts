@@ -1,8 +1,10 @@
 import { cookies } from 'next/headers';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { CampaignSummary } from '@arcane-chronicles/shared';
+
 import { ApiError, apiFetch } from '@/lib/api';
-import { getCampaign, getMyCampaigns } from './campaigns';
+import { getCampaign, getCampaignsToResume, getMyCampaigns } from './campaigns';
 
 vi.mock('next/headers', () => ({ cookies: vi.fn() }));
 vi.mock('@/lib/api', async (importOriginal) => ({
@@ -43,6 +45,46 @@ describe('getMyCampaigns', () => {
       headers: undefined,
       cache: 'no-store',
     });
+  });
+});
+
+describe('getCampaignsToResume', () => {
+  const campaign = (id: string, status: CampaignSummary['status'], lastSessionAt: string | null) =>
+    ({ id, status, lastSessionAt }) as CampaignSummary;
+
+  const ids = (campaigns: CampaignSummary[]) => campaigns.map((item) => item.id);
+
+  it('keeps only the campaigns in progress', () => {
+    const campaigns = [
+      campaign('new', 'NEW', null),
+      campaign('playing', 'IN_PROGRESS', '2026-11-20T18:30:00.000Z'),
+      campaign('done', 'COMPLETED', '2026-11-01T18:30:00.000Z'),
+    ];
+
+    expect(ids(getCampaignsToResume(campaigns))).toEqual(['playing']);
+  });
+
+  it('sorts them from the most recent session to the oldest', () => {
+    const campaigns = [
+      campaign('october', 'IN_PROGRESS', '2026-10-12T18:30:00.000Z'),
+      campaign('november', 'IN_PROGRESS', '2026-11-20T18:30:00.000Z'),
+      campaign('september', 'IN_PROGRESS', '2026-09-05T18:30:00.000Z'),
+    ];
+
+    expect(ids(getCampaignsToResume(campaigns))).toEqual(['november', 'october', 'september']);
+  });
+
+  it('puts a campaign without a session date last', () => {
+    const campaigns = [
+      campaign('no-date', 'IN_PROGRESS', null),
+      campaign('october', 'IN_PROGRESS', '2026-10-12T18:30:00.000Z'),
+    ];
+
+    expect(ids(getCampaignsToResume(campaigns))).toEqual(['october', 'no-date']);
+  });
+
+  it('returns an empty list when there is nothing to resume', () => {
+    expect(getCampaignsToResume([])).toEqual([]);
   });
 });
 

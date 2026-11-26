@@ -1,0 +1,45 @@
+@use '@/styles/variables' as *;
+@use '@/styles/functions' as *;
+@use '@/styles/mixins' as *;
+
+.sidebar-profile {
+  display: flex;
+  align-items: center;
+  gap: $space-md;
+
+  &__avatar {
+    display: grid;
+    overflow: hidden;
+    flex-shrink: 0;
+    place-items: center;
+    inline-size: 7.4rem;
+    block-size: 7.4rem;
+    border-radius: $radius-lg;
+    background-color: with-alpha(var(--primary-color), 0.15);
+    color: var(--primary-color);
+    font-family: $font-family-title;
+    font-size: $h2-size;
+
+    img {
+      inline-size: 100%;
+      block-size: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: $space-xs;
+    min-inline-size: 0;
+  }
+
+  &__name {
+    padding-block-end: $space-xs;
+    border-block-end: 0.1rem solid var(--border-color);
+    font-family: $font-family-title;
+    font-size: $text-body-size;
+    @include truncate;
+  }
+}
